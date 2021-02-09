@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 service anticipated_error
 
     function write_to_OS_error ( error anticipated_error )

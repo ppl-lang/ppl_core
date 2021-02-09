@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type object_type \
     child_types: non_union_object_type, union_object_type \
     factories: none

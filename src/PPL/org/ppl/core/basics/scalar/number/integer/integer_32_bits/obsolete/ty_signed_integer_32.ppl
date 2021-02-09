@@ -1,1 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type alias signed_integer_32 = signed_int_32

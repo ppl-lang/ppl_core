@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type mutable_set < element child_of:scalar_or_scalar_value usage:in_out >
 
 	inherit \

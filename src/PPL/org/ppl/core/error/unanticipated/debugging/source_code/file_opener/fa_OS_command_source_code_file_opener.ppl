@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 factory OS_command_source_code_file_opener type:source_code_file_opener
 
     att OS_command_template string private:yes

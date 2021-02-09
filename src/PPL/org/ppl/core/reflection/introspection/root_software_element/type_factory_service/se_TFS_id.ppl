@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 service TFS_id
 
     function id_to_capitalized_kind_string ( TFS_id ) -> string

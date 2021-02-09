@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type binary_operator<object usage:in_out>
 
 	function execute ( object_1 object, object_2 object ) -> object

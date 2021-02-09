@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 factory write_to_OS_error_unanticipated_error_handler type:unanticipated_error_handler
 
 	function handle_error

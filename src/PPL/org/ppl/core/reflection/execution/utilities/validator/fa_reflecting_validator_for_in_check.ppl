@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 factory reflecting_validator_for_in_check \
     type: object_validator<object:list<any>, error:check_program_reflection_error>
 

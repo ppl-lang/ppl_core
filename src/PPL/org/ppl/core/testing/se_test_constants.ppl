@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 service test_constants
 
     att TFS_test_command_id PPL_command_id = PPL_command_id.create ( "test_" )

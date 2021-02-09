@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 // TD should use fa_root_directory_source_code_file_supplier
 
 factory project_mode_source_code_file_supplier type:source_code_file_supplier

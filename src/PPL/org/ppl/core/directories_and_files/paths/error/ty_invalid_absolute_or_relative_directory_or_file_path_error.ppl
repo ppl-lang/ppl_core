@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type invalid_absolute_or_relative_directory_or_file_path_error
 
     inherit invalid_string_data_error

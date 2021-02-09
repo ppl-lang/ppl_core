@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type generified_parameters_of_child_type_getter
 
     function get ( child_type_path virtual_type_path, parent_generic_type_path virtual_type_path ) \

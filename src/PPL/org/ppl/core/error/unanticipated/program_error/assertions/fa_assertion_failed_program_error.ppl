@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 factory assertion_failed_program_error java: "extends RuntimeException"
 
 %fa_unanticipated_error_Java_code

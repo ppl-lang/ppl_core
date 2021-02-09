@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 service TFS_path
 
     function try_parse ( string ) -> TFS_path or parse_object_error<TFS_path>

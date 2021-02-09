@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type trying_object_filter < object usage:in, error child_of:runtime_error >
 
 	function try_is_accepted ( object object ) -> yes_no or t_error

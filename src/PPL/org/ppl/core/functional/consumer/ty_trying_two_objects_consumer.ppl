@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 type trying_two_objects_consumer < object_1 usage:in, object_2 usage:in, error child_of: anticipated_error >
 
 	function try_consume ( object_1 t_object_1, object_2 t_object_2 ) -> null or t_error

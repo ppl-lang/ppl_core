@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 factory key_value_pair
 	
 	function to_string = """{{key.to_string}}: {{se_object.to_string_or_null_string ( value )}}"""

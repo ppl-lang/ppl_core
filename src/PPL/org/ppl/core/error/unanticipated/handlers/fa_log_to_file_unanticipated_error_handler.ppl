@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// Copyright (C) 2015 - 2021 Christian Neumanns, email: chris@ppl-lang.dev
+
 factory log_to_file_unanticipated_error_handler type:unanticipated_error_handler
 
 	attributes access: private
