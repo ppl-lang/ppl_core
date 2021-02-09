@@ -1,0 +1,35 @@
+service TFS_attributes_info
+
+	function attributes ( TFS_path ) -> list<PPL_attribute> or null
+
+        case type of TFS_path
+        
+            when virtual_type_path c
+                const type_path type_path = c type_check:no
+                return se_type_attributes_info.attributes ( type_path )
+
+            when virtual_service_path c
+                const service_path service_path = c type_check:no
+                return se_service_attributes_info.attributes ( service_path )
+                
+            when virtual_factory_path
+                return null
+        .
+	.
+
+	function get_attribute_or_throw ( TFS_path, attribute_id PPL_attribute_id ) -> PPL_attribute or null
+
+        case type of TFS_path
+            when virtual_type_path c
+                const type_path type_path = c type_check:no
+                return se_type_attributes_info.get_attribute_or_throw ( type_path, i_attribute_id )
+
+            when virtual_service_path c
+                const service_path service_path = c type_check:no
+                return se_service_attributes_info.get_attribute_or_throw ( service_path, i_attribute_id )
+                
+            when virtual_factory_path
+                return null
+        .
+	.
+.

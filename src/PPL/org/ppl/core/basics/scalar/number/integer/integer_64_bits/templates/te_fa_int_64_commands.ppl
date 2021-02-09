@@ -1,0 +1,270 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+. ///
+
+template fa_int_64_commands
+
+	param type_id
+	param unary_minus_result_factory_id
+	param abs_result_factory_id
+
+%fa_number_functions<javaLong>
+
+	function to_string native:yes
+		script
+			java
+				return new fa_string ( String.valueOf ( javaLong ) );
+			end java
+		.
+	.
+	
+	// has_compare_to
+
+	function is_equal_to native:yes
+		script
+			java
+				return fa_yes_no.of ( equals ( i_other ) );
+			end java
+		.
+	.
+
+	function compare_to native:yes
+		script
+			java
+				return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+			end java
+		.
+	.
+
+	function min native:yes
+		script
+			java
+				return ( javaLong <= i_other.getJavaLong()) ? this : i_other;
+			end java
+		.
+	.
+
+	function max native:yes
+		script
+			java
+				return ( javaLong >= i_other.getJavaLong()) ? this : i_other;
+			end java
+		.
+	.
+
+	function is_between native:yes
+		script
+			java
+				return fa_yes_no.of ( javaLong >= i_min.getJavaLong() && javaLong <= i_max.getJavaLong() );
+			end java
+		.
+	.
+
+	function hash_code native:yes
+		script
+			java
+				return  new fa_signed_int_32 ( Long.hashCode ( javaLong ) );
+			end java
+		.
+	.
+
+	// arithmetics
+
+	function add native:yes
+		script
+			java
+				try {
+					return new fa_signed_int_64 ( Math.addExact ( javaLong, (long) i_operand.getJavaLong() ) );
+				} catch ( ArithmeticException e ) {
+					throw (RuntimeException) co_arithmetic_overflow_error ( "add", javaLong, (long) i_operand.getJavaLong() );
+				}
+			end java
+		.
+	.
+
+	function subtract native:yes
+		script
+			java
+				try {
+					return new fa_signed_int_64 ( Math.subtractExact ( javaLong, (long) i_operand.getJavaLong() ) );
+				} catch ( ArithmeticException e ) {
+					throw (RuntimeException) co_arithmetic_overflow_error ( "subtract", javaLong, (long) i_operand.getJavaLong() );
+				}
+			end java
+		.
+	.
+
+	function multiply native:yes
+		script
+			java
+				try {
+					return new fa_signed_int_64 ( Math.multiplyExact ( javaLong, (long) i_operand.getJavaLong() ) );
+				} catch ( ArithmeticException e ) {
+					throw (RuntimeException) co_arithmetic_overflow_error ( "multiply", javaLong, (long) i_operand.getJavaLong() );
+				}
+			end java
+		.
+	.
+
+	function divide native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong / i_operand.getJavaLong() );
+			end java
+		.
+	.
+
+	function remainder native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong % i_operand.getJavaLong() );
+			end java
+		.
+	.
+
+	function unary_minus native:yes
+		script
+			java
+				return new fa_{unary_minus_result_factory_id} ( -javaLong );
+			end java
+		.
+	.
+
+	function abs native:yes
+		script
+			java
+				return new fa_{abs_result_factory_id} ( Math.abs ( javaLong) );
+			end java
+		.
+	.
+
+	// booleanable
+
+	function and native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong & i_operand.getJavaLong() ) ;
+			end java
+		.
+	.
+
+	function or native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong | i_operand.getJavaLong() ) ;
+			end java
+		.
+	.
+
+	function xor native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong ^ i_operand.getJavaLong() ) ;
+			end java
+		.
+	.
+
+	function not native:yes
+		script
+			java
+				return new fa_signed_int_64 ( ~ javaLong ) ;
+			end java
+		.
+	.
+
+/// TD	
+	// bitshiftable
+
+	function shift_left native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong << i_count.getJavaLong() ) ;
+			end java
+		.
+	.
+
+	function shift_left_once native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong << 1 ) ;
+			end java
+		.
+	.
+
+	function shift_right native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong >> i_count.getJavaLong() ) ;
+			end java
+		.
+	.
+
+	function shift_right_once native:yes
+		script
+			java
+				return new fa_signed_int_64 ( javaLong >> 1 ) ;
+			end java
+		.
+	.
+.///
+
+    function to_float_64 = float_64.create_from_int_64 ( this )
+
+	// integer_to_string_converter
+
+	function to_hexadecimal_string native:yes
+		script
+			java
+				return new fa_string ( Long.toHexString ( javaLong ) );
+			end java
+		.
+	.
+
+	function to_octal_string native:yes
+		script
+			java
+				return new fa_string ( Long.toOctalString ( javaLong ) );
+			end java
+		.
+	.
+
+	function to_binary_string native:yes
+		script
+			java
+				return new fa_string ( Long.toBinaryString ( javaLong ) );
+			end java
+		.
+	.
+
+	creator try_parse ( string ) -> {type_id} or parse_object_error<{type_id}>
+
+        variable r {type_id}
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                long java_value = Long.parseLong ( i_string.getJavaString() );
+                v_r = new fa_{type_id} ( java_value );
+            } catch ( NumberFormatException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return parse_object_error<{type_id}>.create (
+                info = """'{{i_string}}' is not a valid 64 bits integer number.
+Reason: {{exception.to_string}}"""
+                cause = exception
+                data = string )
+        .
+
+        assert r is not null
+        return r
+    .
+
+%parse_or_throw_creator<{type_id}>
+
+.

@@ -1,0 +1,15 @@
+template fa_integer_java_header
+
+    java_header
+		import java.math.BigInteger;
+		import java.text.DecimalFormat;
+		
+		import org.ppl.core.basics.scalar.number.integer.big_integer.fa_signed_integer;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.java.se_java_utilities;
+	end java_header
+	
+.

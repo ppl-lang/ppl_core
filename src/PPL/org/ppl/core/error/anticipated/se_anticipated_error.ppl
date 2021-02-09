@@ -1,0 +1,27 @@
+service anticipated_error
+
+    function write_to_OS_error ( error anticipated_error )
+    
+        case type of i_error
+
+            when runtime_error re
+                se_runtime_error.write_to_OS_error ( re )
+
+            otherwise
+                OS.err.write_line ( "Error:" )
+                OS.err.write_line ( se_object.to_long_string ( error ) )
+        .
+    .
+
+    function info_with_causes ( error anticipated_error ) -> string
+
+        case type of i_error
+
+            when runtime_error re
+                return se_runtime_error.info_with_causes ( re )
+
+            otherwise
+                return error.to_string
+        .
+    .
+.

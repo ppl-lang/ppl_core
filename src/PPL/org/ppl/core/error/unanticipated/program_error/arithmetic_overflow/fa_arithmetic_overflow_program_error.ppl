@@ -1,0 +1,41 @@
+factory arithmetic_overflow_program_error java: "extends RuntimeException"
+
+%fa_unanticipated_error_Java_code
+
+    function to_string
+        return a_info
+    .
+    
+	function to_long_string
+
+        const r = fa_mutable_string.create
+        
+        r.append_line ( se_program_error_writer.to_long_string ( this ) )
+        
+        se_program_error_writer.append_label_value_line (
+            string = r
+            label = "Operand 1"
+            value = a_value_1 )
+
+        se_program_error_writer.append_label_value_line (
+            string = r
+            label = "Operand 2"
+            value = a_value_2 )
+        
+        return r.to_string
+    .
+    
+    creator create access:private kind:in_all
+    
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+        value_1 string,
+        value_2 string ) -> arithmetic_overflow_program_error
+	    
+        return create (
+            info = "Arithmetic overflow error."
+            source_code_location, script_state, value_1, value_2 )
+    .
+
+.

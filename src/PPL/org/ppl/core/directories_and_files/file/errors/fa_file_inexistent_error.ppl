@@ -1,0 +1,13 @@
+factory file_inexistent_error
+
+    function to_string = a_info
+    
+    creator create kind:in_all
+
+    creator create_for_file ( file ) -> file_inexistent_error
+    
+        return create (
+            info = """File {{i_file.to_string}} doesn't exist."""
+            resource = i_file )
+    .
+.

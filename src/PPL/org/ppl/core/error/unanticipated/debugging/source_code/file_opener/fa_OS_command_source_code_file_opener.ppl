@@ -1,0 +1,29 @@
+factory OS_command_source_code_file_opener type:source_code_file_opener
+
+    att OS_command_template string private:yes
+    
+    function open
+        
+        const OS_command = a_OS_command_template \
+            .replace_all (
+                to_replace = "[[line]]"
+                replace_by = i_line_number?.to_string if_null:"1" ) \ 
+            .replace_all (
+                to_replace = "[[file]]"
+                replace_by = i_source_code_file.to_current_OS_path.to_string ) 
+
+        // TD const error = se_OS_command_executor.try_start_process_and_continue ( OS_command_config.create
+        const error = se_OS_script_executor.try_start_instructions_and_continue ( instructions = OS_command )
+        se_wait.wait_seconds ( 1L ) // allow time to execute temporary file
+        
+        if error is not null then
+            OS.err.write_line ( """File '{{i_source_code_file.to_string}}' could not be opened with OS command '{{OS_command}}'. The following error occurred: {{error.info}}""" )
+        .
+    .
+    
+    creator create ( OS_command_template string ) -> source_code_file_opener
+        
+        this.OS_command_template = i_OS_command_template
+        return this
+    .
+.

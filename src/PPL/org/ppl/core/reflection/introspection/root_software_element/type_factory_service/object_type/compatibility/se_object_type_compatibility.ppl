@@ -1,0 +1,79 @@
+service object_type_compatibility
+
+    function is_object_type_1_parent_of_object_type_2_or_same -> yes_no
+        in object_type_1 object_type
+        in object_type_2 object_type
+        in config object_type_compatibility_config
+        
+        return is_compatible (
+            source = object_type_2
+            target = object_type_1
+            config )
+    .
+
+    function is_compatible -> yes_no
+        in source object_type
+        in target object_type
+        in config object_type_compatibility_config
+    
+        return check_compatible ( source, target, config ) =r null
+    .
+
+    function check_compatible -> object_type_incompatibility_error or null
+        in source object_type
+        in target object_type
+        in config object_type_compatibility_config
+        
+        // TD? add quick tests
+    
+        return source.check_compatible_to_other ( other = target, config )
+    .
+
+    function is_compatible_to_error -> yes_no
+        in object_type object_type
+        in config object_type_compatibility_config
+    
+        return is_compatible ( source = object_type, target = se_common_object_types.error, config )
+    .
+
+///
+    function is_compatible_to_anticipated_error -> yes_no
+        in object_type object_type
+        in config object_type_compatibility_config
+    
+        return is_compatible ( source = object_type, target = se_common_object_types.anticipated_error, config )
+    .
+.///
+
+    function is_compatible_to_non_error -> yes_no
+        in object_type object_type
+        in config object_type_compatibility_config
+    
+        return is_compatible ( source = object_type, target = se_common_object_types.non_error, config )
+    .
+
+    function check_type_paths_compatible -> object_type_incompatibility_error or null
+        in source type_path_object_type
+        in target type_path_object_type
+        in config object_type_compatibility_config
+
+        if i_config.type_paths_compatible_tester.is_compatible (
+            source = i_source.type_path, target = i_target.type_path ) then
+            return null
+        else
+            return object_type_incompatibility_error.create_with_reason (
+                reason = """Type '{{i_source.to_string}}' is not a child-type of '{{i_target.to_string}}'."""
+                source, target )
+        .
+    .
+
+    function is_type_path_1_parent_of_type_path_2_or_same -> yes_no
+        in type_path_1 virtual_type_path
+        in type_path_2 virtual_type_path
+        in config object_type_compatibility_config
+
+        return i_config.type_paths_compatible_tester.is_compatible (
+            source = i_type_path_2
+            target = i_type_path_1 )
+    .
+.

@@ -1,0 +1,64 @@
+factory unchecked_type_assignment_program_error java: "extends RuntimeException"
+
+%fa_unanticipated_error_Java_code
+
+    function to_string = a_info
+    
+	command to_long_string
+
+        const r = mutable_string.create
+        
+        r.append_line ( se_program_error_writer.to_long_string ( this ) )
+
+        if a_source_type is not null then
+            se_program_error_writer.append_label_value_line (
+                string = r
+                label = "Source type"
+                value = a_source_type )
+        .
+
+        if a_target_type is not null then
+            se_program_error_writer.append_label_value_line (
+                string = r
+                label = "Target type"
+                value = a_target_type )
+        .
+
+        if a_java_exception is not null then
+            variable java_message string
+            java
+                v_java_message = new fa_string ( getJava_exception().getJavaException().toString() );
+            end java
+            assert v_java_message is not null
+            se_program_error_writer.append_label_value_line (
+                string = r
+                label = "Java error"
+                value = v_java_message )
+        .
+        
+        return r.to_string
+    .
+    
+    creator create access:private kind:in_all
+
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+        source_type string,
+	    target_type string ) -> unchecked_type_assignment_program_error
+	    
+        return create (
+            info = """Type incompatibility error in an unchecked assignment. Source type '{{source_type}}' is not compatible to target type '{{target_type}}'."""
+            source_code_location, script_state, source_type, target_type, java_exception = null )
+    .
+
+	creator create_with_defaults_2 (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+	    java_exception java_exception ) -> unchecked_type_assignment_program_error
+	    
+        return create (
+            info = "Java type incompatibility error in an unchecked assignment."
+            source_code_location, script_state, source_type = null, target_type = null, java_exception )
+    .
+.

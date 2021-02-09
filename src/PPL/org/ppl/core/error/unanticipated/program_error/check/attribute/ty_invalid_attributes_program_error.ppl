@@ -1,0 +1,6 @@
+type invalid_attributes_program_error
+
+	inherit check_program_error
+	
+	function to_invalid_input_arguments_program_error -> invalid_input_arguments_program_error
+.

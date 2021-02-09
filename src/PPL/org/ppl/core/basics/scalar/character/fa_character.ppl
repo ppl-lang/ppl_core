@@ -1,0 +1,220 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory character type:character
+
+	java_header
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+	end java_header
+
+	java
+		private char javaChar ;
+
+		public char getJavaChar() { return javaChar; }
+
+		public fa_character ( char javaChar ) {
+			this.javaChar = javaChar;
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_character ) ) return false;
+			
+			char other_char = ((ty_character) other).getJavaChar();
+			return javaChar == other_char;
+		}
+		
+		@Override
+		public int hashCode() {
+			return Character.valueOf ( javaChar ).hashCode();
+		}
+
+		public int compareTo ( ty_character other ) {
+			if ( this == other ) return 0;
+			return Character.compare ( javaChar, other.getJavaChar() );
+		}
+
+	end java
+
+    function is_equal_to_ignore_case = to_lower_case =v i_other.to_lower_case
+
+	functions native:yes
+	
+        function to_string
+            java
+                return new fa_string ( String.valueOf ( javaChar ) );
+            end java
+        .
+    
+        // compare_to
+    
+        function is_equal_to
+            java
+                if ( this == i_other ) return fa_yes_no.a_yes;
+    
+                return fa_yes_no.of ( javaChar == i_other.getJavaChar() );
+            end java
+        .
+    
+        function compare_to
+            java
+                return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+            end java
+        .
+        
+        // has_min_max
+    
+        function min
+            java
+                return ( javaChar <= i_other.getJavaChar() ) ? this : i_other;
+            end java
+        .
+    
+        function max
+            java
+                return ( javaChar >= i_other.getJavaChar()) ? this : i_other;
+            end java
+        .
+    
+        function is_between
+            java
+                return fa_yes_no.of (
+                    javaChar >= i_min.getJavaChar() && 
+                    javaChar <= i_max.getJavaChar() );
+            end java
+        .
+    
+        function hash_code
+            java
+                return new fa_signed_int_32 ( hashCode() );
+            end java
+        .
+    
+        //
+        
+        function is_digit
+            java
+                return fa_yes_no.of ( Character.isDigit ( javaChar ) );
+            end java
+        .
+    
+        function is_non_zero_digit
+            java
+                return fa_yes_no.of (
+                    Character.isDigit ( javaChar ) && 
+                    javaChar != '0' );
+            end java
+        .
+    
+        function is_letter
+            java
+                return fa_yes_no.of ( Character.isLetter ( javaChar ) );
+            end java
+        .
+    
+        function is_lower_case_letter
+            java
+                return fa_yes_no.of ( Character.isLowerCase ( javaChar ) );
+            end java
+        .
+    
+        function is_upper_case_letter
+            java
+                return fa_yes_no.of ( Character.isUpperCase ( javaChar ) );
+            end java
+        .
+    
+        function is_digit_or_letter
+            java
+                return fa_yes_no.of (
+                    Character.isLetter ( javaChar ) || 
+                    Character.isDigit ( javaChar ) );
+            end java
+        .
+    
+        function is_space
+            java
+                return fa_yes_no.of ( Character.isSpaceChar ( javaChar ) );
+            end java
+        .
+    
+        function is_whitespace
+            java
+                return fa_yes_no.of ( Character.isWhitespace ( javaChar ) );
+            end java
+        .
+    
+        function repeat
+            java
+                return to_string().repeat ( i_count );
+            end java
+        .
+    
+        // to_...
+    
+        function to_lower_case
+            java
+                return new fa_character ( Character.toLowerCase ( javaChar ) );
+            end java
+        .
+    
+        function to_upper_case
+            java
+                return new fa_character ( Character.toUpperCase ( javaChar ) );
+            end java
+        .
+    
+
+        function to_integer
+            java
+                return new fa_zero_pos_32 ( (int) javaChar );
+            end java
+        .
+    .
+
+
+	// TD creator try_parse ( string ) -> character or parse_object_error<character>
+
+	creator parse ( string check: string.size =v 1 ) -> character
+		script
+		    variable r character
+			java
+				v_r = new fa_character ( i_string.getJavaString().charAt(0) );
+			end java
+			assert r is not null
+			
+			return r
+		.
+
+		tests
+			test string = "a"
+			verify result =v 'a'
+
+			test string = '''\'''
+			verify result =v '\\'
+
+			test string = "aa"
+			verify_error
+
+			test string = "\t"
+			verify v_result =v '\t'
+
+			test string = "\u0009"
+			verify result =v '\t'
+
+			test string = '''\u0009'''
+			verify_error
+		.
+	.
+
+.

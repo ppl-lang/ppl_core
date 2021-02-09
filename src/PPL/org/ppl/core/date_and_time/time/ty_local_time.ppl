@@ -1,0 +1,37 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type local_time
+
+	java_header
+		import java.time.LocalTime;
+	end java_header
+	
+	java
+		public LocalTime getJavaLocalTime();
+	end java
+
+	inherit has_hash_code, has_compare_to<local_time>
+
+	att hours hour_of_day
+
+	att minutes minutes_of_hour
+
+	att seconds seconds_of_minute
+
+	att nano_seconds nano_seconds_of_second
+
+    // see java.time.format.DateTimeFormatter for available options
+	function format ( pattern string default: "HH:mm:ss" ) -> string
+
+///	TD
+	function plus ( duration ) -> local_time
+	function minus ( duration ) -> local_time
+	...
+. ///
+
+.

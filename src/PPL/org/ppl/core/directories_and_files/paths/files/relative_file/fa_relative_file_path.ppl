@@ -1,0 +1,80 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory relative_file_path type:relative_file_path
+
+%fa_absolute_or_relative_directory_or_file_path < \
+    type_id: relative_file_path \
+    directory_or_file: file >
+
+	function to_string = a_value
+	
+	function directory
+	
+        var value string or null = null
+        java
+            Path parent = a_java_value.getParent();
+            if ( parent != null ) {
+                v_value = new fa_string ( parent.toString() );
+            }
+        end java
+        assert value may be null
+        
+        if value is null then
+            return null
+        .
+
+        return relative_directory_path.create ( value )
+        // TD ? o_result = fa_directory_path.co_create ( v_value & se_directory_constants.current_OS_directory_separator )
+    .
+
+	function file_name_without_extension = name.remove_extension
+
+	function file_name_extension = name.extension
+	
+	function to_absolute_file = file_path.create_for_relative_path ( path = this, root_directory )
+
+	function to_file_path = file_path.create_for_relative_path ( path = this, root_directory = i_root_directory_path )
+
+	function to_file = file.create ( to_file_path ( i_root_directory_path ) )
+
+	function try_to_existing_file
+	
+	    const file = to_file ( i_root_directory_path )
+	    
+	    if file.exists then
+            return file
+        else
+            return file_inexistent_error.create (
+                info = """File '{{this}}' doesn't exist in directory '{{i_root_directory_path.to_string}}'."""
+                resource = file )
+        .
+    .
+	
+	creator create kind:in_all
+
+        java
+            c_this.a_java_value = Paths.get ( i_value.getJavaString() );
+        end java
+        
+        return this
+    .
+
+    creator create_for_directory_and_name ( directory relative_directory_path, file_name ) -> relative_file_path
+
+        java
+            c_this.a_java_value = Paths.get (
+                i_directory.getJavaPath().toString(),
+                i_file_name.getValue().getJavaString() );
+        end java
+        
+        return this
+    .
+	
+%string_value_factory_try_parse_creator<relative_file_path>
+
+.

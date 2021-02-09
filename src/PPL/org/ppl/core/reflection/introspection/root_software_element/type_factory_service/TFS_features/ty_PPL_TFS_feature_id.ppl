@@ -1,0 +1,4 @@
+type PPL_TFS_feature_id
+
+    inherit PPL_identifier
+.

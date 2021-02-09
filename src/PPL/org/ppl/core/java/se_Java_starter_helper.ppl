@@ -1,0 +1,14 @@
+service Java_starter_helper
+
+    java_header
+        import org.ppl.core.OS.se_OS_process;
+        import org.ppl.core.error.unanticipated.handlers.java.se_Java_throwable_handler;
+    end java_header
+
+    java
+        public static void initAtApplicationLaunch ( String[] args ) {
+            se_OS_process.save_command_line_arguments ( args );
+            se_Java_throwable_handler.set_default_handler();
+        }
+    end java
+.

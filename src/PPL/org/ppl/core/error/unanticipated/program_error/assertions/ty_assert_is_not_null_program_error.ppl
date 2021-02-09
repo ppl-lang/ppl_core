@@ -1,0 +1,4 @@
+type assert_is_not_null_program_error
+
+	inherit program_error
+.

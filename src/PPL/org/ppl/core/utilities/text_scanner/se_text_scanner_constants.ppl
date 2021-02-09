@@ -1,0 +1,11 @@
+service text_scanner_constants
+
+	attributes type:regex
+
+		spaces_or_tabs_regex = regex.create ( '''[ \t]+''' )
+		portable_new_line_regex = regex.create ( '''\r?\n''' )
+		space_or_tab_line_regex = regex.create ( """[ \t]*{{portable_new_line_regex.value}}""" )
+		// space_or_tab_EOF_regex  = regex.create ( '''[ \t]*\z''' )
+	.
+
+.

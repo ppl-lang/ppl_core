@@ -1,0 +1,5 @@
+service string_parser
+
+	// TD att instance object_parser<string> = { string => string }
+	att instance object_parser<string> = fa_string_parser.create
+.

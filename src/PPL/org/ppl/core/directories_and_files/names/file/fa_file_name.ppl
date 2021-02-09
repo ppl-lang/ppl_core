@@ -1,0 +1,98 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory file_name
+
+	%string_value_factory_with_comparable_commands
+
+	function extension
+        
+        const separator_index = a_value.find_last ( se_file_name_extension.separator ) \
+            on_null: return null
+        if separator_index <# a_value.size then
+            return fa_file_name_extension.create ( a_value.substring_from ( separator_index + 1 ) )
+        else
+            return null
+        .
+    .
+    
+	function remove_extension
+        
+        const separator_index = a_value.find_last ( se_file_name_extension.separator ) \
+            on_null: return this
+        if separator_index ># 1 then
+            return fa_file_name.create ( a_value.substring_to ( separator_index - 1 ) )
+        else
+            return null
+        .
+    .
+    
+    function append_extension = create ( """{{a_value}}{{se_file_name_extension.separator}}{{i_extension}}""" )
+
+    function change_extension
+        const t = remove_extension
+        if t is not null then
+            return t.append_extension ( i_extension )
+        else
+            return create ( """{{se_file_name_extension.separator}}{{i_extension}}""" )
+        .
+    .
+
+	creator create kind:in_all
+	
+%string_value_factory_try_parse_creator<file_name>
+
+	tests
+        // name and extension
+
+        variable fn = file_name.create ( "name.ext" )
+        variable extension = fn.extension
+        verify extension is not null
+        verify extension.value =v "ext"
+
+        variable fn2 = fn.remove_extension
+        verify fn2 is not null
+        verify fn2.value =v "name"
+
+        fn2 = fn.append_extension ( file_name_extension.create ( "e2" ) )
+        verify fn2.value =v "name.ext.e2"
+
+        fn2 = fn.change_extension ( file_name_extension.create ( "e3" ) )
+        verify fn2.value =v "name.e3"
+
+        // no extension
+
+        fn = file_name.create ( "name" )
+        verify fn.extension is null
+
+        fn2 = fn.remove_extension
+        verify fn2 is not null
+        verify fn2.value =v "name"
+
+        fn2 = fn.append_extension ( file_name_extension.create ( "e2" ) )
+        verify fn2.value =v "name.e2"
+
+        fn2 = fn.change_extension ( file_name_extension.create ( "e3" ) )
+        verify fn2.value =v "name.e3"
+
+        // no name
+
+        fn = file_name.create ( ".ext" )
+        extension = fn.extension
+        verify extension is not null
+        verify extension.value =v "ext"
+
+        fn2 = fn.remove_extension
+        verify fn2 is null
+
+        fn2 = fn.append_extension ( file_name_extension.create ( "e2" ) )
+        verify fn2.value =v ".ext.e2"
+
+        fn2 = fn.change_extension ( file_name_extension.create ( "e3" ) )
+        verify fn2.value =v ".e3"
+    .
+.

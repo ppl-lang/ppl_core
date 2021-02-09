@@ -1,0 +1,7 @@
+service factory_constants
+    
+    attributes
+        id_prefix string = "fa_"
+        string_path factory_path = factory_path.create ( "org.ppl.core.basics.scalar.string.fa_string" )
+    .
+.

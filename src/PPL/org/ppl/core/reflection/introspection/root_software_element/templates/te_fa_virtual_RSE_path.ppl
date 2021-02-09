@@ -1,0 +1,46 @@
+template fa_virtual_RSE_path
+    
+    param RSE_kind
+    
+factory virtual_{RSE_kind}_path
+
+    function is_equal_to = a_value =v i_other.value
+
+	function id
+	    // foo.bar.ty_zar -> zar
+		const last_separator_index = a_value.find_last ( se_PPL_identifier_constants.id_separator )
+		assert last_separator_index is not null
+		const id = a_value.substring_from ( last_separator_index + 4 )
+		return fa_{RSE_kind}_id.create ( id )
+    .
+
+    function prefixed_id_string
+	    // foo.bar.ty_zar -> ty_zar
+		const last_separator_index = a_value.find_last ( se_PPL_identifier_constants.id_separator )
+		assert last_separator_index is not null
+		return a_value.substring_from ( last_separator_index + 1 )
+    .
+    
+    function library_path
+	    // foo.bar.ty_zar -> foo.bar
+		const last_separator_index = a_value.find_last ( se_PPL_identifier_constants.id_separator )
+		assert last_separator_index is not null
+		const path = a_value.substring_to ( last_separator_index - 1 )
+		return fa_library_path.create ( path )
+    .
+
+    function to_string = a_value
+
+    creator create kind:in_all
+
+%string_value_factory_try_parse_creator<virtual_{RSE_kind}_path>
+
+	creator create_from_library_path_and_id ( library_path, id {RSE_kind}_id ) -> virtual_{RSE_kind}_path
+	
+	    const prefix = se_{RSE_kind}_constants.id_prefix
+	    this.value = """{{i_library_path}}.{{prefix}}{{id}}"""
+	    return this
+    .
+
+.
+.

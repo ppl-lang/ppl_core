@@ -1,0 +1,113 @@
+template fa_mutable_set_commands
+
+    function is_empty native:yes
+        java
+            return fa_yes_no.of ( a_java_set.isEmpty() ) ;
+        end java
+    .
+
+    function add
+        java
+            try {
+                a_java_set.add ( i_element );
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+        end java
+        return this;
+    .
+
+    function add_if_not_contained native:yes
+        java
+            if ( a_java_set.contains ( i_element ) ) return this;
+            try {
+                a_java_set.add ( i_element );
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+            return this;
+        end java
+    .
+
+    function add_or_replace native:yes
+        java
+            try {
+                a_java_set.add ( i_element );
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+            return this;
+        end java
+    .
+
+    function remove
+        java
+            try {
+                a_java_set.remove ( i_element );
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+        end java
+        return this;
+    .
+
+    function remove_if_contained native:yes
+        java
+            try {
+                a_java_set.remove ( i_element );
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+            return this;
+        end java
+    .
+
+    function remove_all native:yes
+        java
+            try {
+                a_java_set.clear() ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+            return this;
+        end java
+    .
+
+    function replace
+        java
+            try {
+                a_java_set.remove ( i_to_replace );
+                a_java_set.add ( i_replace_by );
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+        end java
+        return this;
+    .
+
+    ///
+    function sort native:yes
+        java
+            a_java_set.sort ( se_comparator_Java_bridge.<t_element>PPL_to_Java_comparator ( i_comparator ) );
+        end java
+    .
+    .///
+
+    function make_immutable_or_null
+        if is_empty then
+            return null
+        else
+            return make_immutable
+        .
+    .
+
+    function copy_to_immutable_or_null
+        if is_empty then
+            return null
+        else
+            return copy_to_immutable
+        .
+    .
+
+
+.

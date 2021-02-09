@@ -1,0 +1,9 @@
+type TFS_path
+
+    inherit RSE_path
+        redefine
+           	function id -> TFS_id
+        .
+    .
+
+.

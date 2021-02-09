@@ -1,0 +1,46 @@
+service absolute_or_relative_file_path
+
+    function to_file -> file
+        in path absolute_or_relative_file_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+
+        case type of i_path
+            when relative_file_path
+                return i_path.to_file ( i_root_directory_for_relative_path )
+            when file_path
+                return i_path.to_file
+        .
+    .
+
+    function try_to_existing_file -> file or file_inexistent_error
+        in path absolute_or_relative_file_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+
+        case type of i_path
+            when relative_file_path
+                return i_path.try_to_existing_file ( i_root_directory_for_relative_path )
+            when file_path
+                return i_path.try_to_existing_file
+        .
+    .
+
+    function check_is_existing_file -> file_inexistent_error or null
+        in path absolute_or_relative_file_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+        
+        case type of try_to_existing_file ( i_path, i_root_directory_for_relative_path )
+            when file
+                return null
+            when file_inexistent_error error
+                return error
+        .
+    .
+
+    function is_existing_file -> yes_no
+        in path absolute_or_relative_file_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+        
+        return check_is_existing_file ( i_path, i_root_directory_for_relative_path ) =r null
+    .
+.
+    

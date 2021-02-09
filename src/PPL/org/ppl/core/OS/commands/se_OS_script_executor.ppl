@@ -1,0 +1,290 @@
+service OS_script_executor
+
+	attributes type:file_name_extension
+		Unix_script_file_extension = fa_file_name_extension.create ( "sh" )
+		Windows_script_file_extension = fa_file_name_extension.create ( "bat" )
+		current_OS_script_file_extension = \
+			if se_OS_config.OS_is_Windows \
+			then a_Windows_script_file_extension \
+			else a_Unix_script_file_extension
+	.
+	
+	function script_file_extension ( for_Windows yes_no ) -> file_name_extension
+	    return if i_for_Windows then a_Windows_script_file_extension else a_Unix_script_file_extension
+    .
+	
+	// execute instructions
+
+    function try_start_instructions_and_continue -> anticipated_error or null
+        in instructions string
+        in config OS_command_config or null default:null
+    	in delete_script_file_on_exit yes_no default:yes
+        
+        const script_file = try_create_temporary_OS_script_file (
+            instructions, delete_script_file_on_exit ) on_error:return_error
+        return try_start_script_file_and_continue ( script_file, config )
+    .
+
+    function try_run_instructions_and_wait -> signed_integer_32 or anticipated_error
+        in instructions string
+        in config OS_command_config or null default:null
+    	in delete_script_file_on_exit yes_no default:yes
+        
+        const script_file = try_create_temporary_OS_script_file (
+            instructions, delete_script_file_on_exit ) on_error:return_error
+        return try_run_script_file_and_wait ( script_file, config )
+    .
+
+    function try_start_instructions_in_new_window_and_continue -> anticipated_error or null
+        in instructions string
+        in config OS_command_config or null default:null
+    	in delete_script_file_on_exit yes_no default:yes
+        
+        const script_file = try_create_temporary_OS_script_file (
+            instructions, delete_script_file_on_exit ) on_error:return_error
+        return try_start_script_file_in_new_window_and_continue ( script_file, config )
+    .
+
+    function try_run_instructions_in_new_window_and_wait -> anticipated_error or null
+        in instructions string
+        in config OS_command_config or null default:null
+    	in delete_script_file_on_exit yes_no default:yes
+        
+        const script_file = try_create_temporary_OS_script_file (
+            instructions, delete_script_file_on_exit ) on_error:return_error
+        return try_run_script_file_in_new_window_file_and_wait ( script_file, config )
+    .
+
+	// execute script file
+
+    function try_start_script_file_and_continue -> OS_process_error or null
+        %existing_file_input_argument_2<script_file>
+        in config OS_command_config or null default:null
+
+        const new_config = create_config ( script_file, config )
+        return se_OS_command_executor.try_start_process_and_continue ( new_config )
+    .
+
+    function try_run_script_file_and_wait -> signed_integer_32 or OS_process_error
+        %existing_file_input_argument_2<script_file>
+        in config OS_command_config or null default:null
+        
+        const new_config = create_config ( script_file, config )
+        return se_OS_command_executor.try_run_process_and_wait ( new_config )
+    .
+
+    function try_start_script_file_in_new_window_and_continue -> OS_process_error or null
+        %existing_file_input_argument_2<script_file>
+        in config OS_command_config or null default:null
+        in window_title string or null default:null
+        
+        const new_config = OS_run_in_new_terminal_config (
+			script_file,
+			config,
+			window_title,
+			wait_until_finished = no )
+        
+        return se_OS_command_executor.try_start_process_and_continue ( new_config )
+    .
+
+    function try_run_script_file_in_new_window_file_and_wait -> OS_process_error or null
+        %existing_file_input_argument_2<script_file>
+        in config OS_command_config or null default:null
+        in window_title string or null default:null
+        
+        const new_config = OS_run_in_new_terminal_config (
+			script_file,
+			config,
+			window_title,
+			wait_until_finished = yes )
+        
+        case type of se_OS_command_executor.try_run_process_and_wait ( new_config )
+            when signed_integer_32
+                return null
+            when OS_process_error e
+                return e
+        .
+    .
+    
+    functions private:yes
+    
+		function create_config -> OS_command_config
+			in script_file file
+			in config OS_command_config or null
+
+            const command_tokens = mutable_list_with_nulls<null or string>.create
+                
+            command_tokens.append ( i_script_file.to_string )
+            
+            if i_config?.command_tokens as specified_arguments is not null then
+                repeat for each specified_argument in specified_arguments
+                    command_tokens.append ( specified_argument )
+                .
+            .
+
+            return OS_command_config.create (
+                command_tokens = command_tokens.make_immutable
+                environment_variables = i_config?.environment_variables
+                working_directory = i_config?.working_directory
+                input_redirect  = i_config?.input_redirect  if_null:ty_OS_command_config.input_redirect.default
+                output_redirect = i_config?.output_redirect if_null:ty_OS_command_config.output_redirect.default
+                error_redirect  = i_config?.error_redirect  if_null:ty_OS_command_config.error_redirect.default )
+        .
+        
+		function OS_run_in_new_terminal_config -> OS_command_config
+			in script_file file
+			in config OS_command_config or null
+			in window_title string or null
+			in wait_until_finished yes_no
+			
+			if se_OS_config.OS_is_Windows then
+			    return Windows_run_in_new_terminal_config ( script_file, config, window_title, wait_until_finished )
+            else
+			    return Unix_run_in_new_terminal_config ( script_file, config, window_title, wait_until_finished )
+            .
+        .
+
+		function Unix_run_in_new_terminal_config -> OS_command_config
+			in script_file file
+			in config OS_command_config or null
+			in window_title string or null
+			in wait_until_finished yes_no
+			
+            // Linux:
+            // xterm
+            // opens new terminal and waits until new terminal is closed
+            // xterm &
+            // opens new terminal and does not wait until new terminal is closed
+            // xterm -title 'foo bar'
+            // opens new terminal and displays foo bar in title of new terminal
+            // xterm -e 'echo Hi && read -p "Type <Enter> to continue: "'
+            // opens new terminal and displays Hi (executes echo Hi) and asks to press Enter; then returns to calling window
+            // xterm -title $'foo \'bar\'' -e $'echo Hi \'Albert\' && read -p "Type <Enter> to continue: "' &
+            // opens new terminal with title foo 'bar' and displays Hi 'Albert' and asks to press Enter, without waiting in the calling window
+
+            const command_tokens = mutable_list_with_nulls<null or string>.create
+            
+            command_tokens.append ( "xterm" )
+
+            if i_window_title is not null then
+                command_tokens.append ( "-title" )
+                command_tokens.append ( i_window_title )
+            .
+            
+            command_tokens.append ( "-e" )
+            
+            if i_config?.working_directory as working_directory is not null then
+                // TD to be checked
+                command_tokens.append ( "cd" )
+                command_tokens.append ( working_directory.to_string )
+                command_tokens.append ( "&&" )
+            .
+
+            ///
+            if i_ask_press_Enter_after_command then
+                v_command = v_command & ''' && read -p "Press <Enter> to continue: "'''
+            .
+            .///
+
+            command_tokens.append ( script_file.to_string )
+            
+            if i_config?.command_tokens as specified_arguments is not null then
+                repeat for each specified_argument in specified_arguments
+                    command_tokens.append ( specified_argument )
+                .
+            .
+
+            if not i_wait_until_finished then
+                command_tokens.append ( "&" )
+            .
+            
+            return OS_command_config.create (
+                command_tokens = command_tokens.make_immutable
+                environment_variables = i_config?.environment_variables
+                working_directory = null
+                input_redirect  = i_config?.input_redirect  if_null:ty_OS_command_config.input_redirect.default
+                output_redirect = i_config?.output_redirect if_null:ty_OS_command_config.output_redirect.default
+                error_redirect  = i_config?.error_redirect  if_null:ty_OS_command_config.error_redirect.default )
+        .
+
+		function Windows_run_in_new_terminal_config -> OS_command_config
+			in script_file file
+			in config OS_command_config or null
+			in window_title string or null
+			in wait_until_finished yes_no
+
+            // syntax:
+            // cmd.exe /c start "title" /d work_dir /wait cmd arg1 arg2 ...
+
+            const command_tokens = mutable_list_with_nulls<null or string>.create \
+                .append ( "cmd.exe" ) \
+                .append ( "/c" ) \
+                .append ( "start" ) \
+                .append ( """"{{? window_title}}"""" )
+                
+            if i_config?.working_directory as working_directory is not null then
+                command_tokens.append ( "/d" )
+                command_tokens.append ( working_directory.to_string )
+            .
+
+            if i_wait_until_finished then
+                command_tokens.append ( "/wait" )
+            .
+            
+            command_tokens.append ( i_script_file.to_string )
+            
+            if i_config?.command_tokens as specified_arguments is not null then
+                repeat for each specified_argument in specified_arguments
+                    command_tokens.append ( specified_argument )
+                .
+            .
+
+            return OS_command_config.create (
+                command_tokens = command_tokens.make_immutable
+                environment_variables = i_config?.environment_variables
+                working_directory = null
+                input_redirect  = i_config?.input_redirect  if_null:ty_OS_command_config.input_redirect.default
+                output_redirect = i_config?.output_redirect if_null:ty_OS_command_config.output_redirect.default
+                error_redirect  = i_config?.error_redirect  if_null:ty_OS_command_config.error_redirect.default )
+        .
+
+		function try_create_temporary_OS_script_file -> file or directory_or_file_error
+			in instructions string
+			in delete_script_file_on_exit yes_no default:yes
+
+            case type of se_text_file_writer.create_temporary_text_file (
+                file_name_extension = a_current_OS_script_file_extension
+                delete_file_on_exit = delete_script_file_on_exit
+                text = i_instructions )
+                
+                when file file
+                    if not se_OS_config.OS_is_Windows then
+                        file.try_set_executable_permission ( permission = yes, only_for_owner = yes ) \
+                            on_error:return_error
+                    .
+                    return file
+
+                when directory_or_file_error e
+                    return e
+            .
+        .
+    .
+    
+    tests
+///
+        // const r = start_script_file_and_continue (
+        // const r = run_script_file_and_wait (
+        // const r = start_script_file_in_new_window_and_continue (
+        const r = run_script_file_in_new_window_file_and_wait (
+//            script_file = file.parse_or_throw ( '''C:\aa\work\tests\bat_files\open_Notepad.bat''' ) )
+//            script_file = file.parse_or_throw ( '''C:\aa\work\tests\bat_files\echo_qwe.bat''' ) )
+            script_file = file.parse_or_throw ( '''C:\aa\work\tests\bat_files\echo_qwe and pause.bat''' ) )
+//            script_file = file.parse_or_throw ( '''C:\aa\work\tests\bat_files\echo_qwe_and_pause.bat''' ) )
+        %wle<r>
+        verify r is null
+        
+        se_wait.wait_seconds ( 4L )
+.///
+    .
+.
+ 

@@ -1,0 +1,50 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_mutable_map_creators
+
+    creator create ( maintain_added_order yes_no default:yes ) -> mutable_map<key:t_key, value:t_value>
+
+        this.maintain_added_order = i_maintain_added_order
+
+        java
+            if ( i_maintain_added_order.getJavaBoolean() ) {
+                c_this.a_java_map = new LinkedHashMap<t_key, t_value>() ;
+            } else {
+                c_this.a_java_map = new HashMap<t_key, t_value>() ;
+            }
+        end java
+        
+        return this
+    .
+
+    creator create_sorted_by_key -> mutable_map<key:t_key, value:t_value>
+
+        this.maintain_added_order = no
+
+        java
+            // Java doc.: this implementation is not synchronized
+            c_this.a_java_map = new TreeMap<t_key, t_value> (
+                se_comparator_Java_bridge.scalar_or_scalar_value_Java_comparator );
+
+            // Generates null pointer error when value is null
+            // Java doc.: this class does not permit the use of null keys or values because ...
+            // c_this.a_java_map = new ConcurrentSkipListMap<t_key, t_value>();
+        end java
+        
+        return this
+    .
+
+    creator create_singleton ( key t_key, value t_value, maintain_added_order yes_no default:yes ) \
+        -> mutable_map<key:t_key, value:t_value>
+
+        // return create ( i_maintain_added_order ).add ( i_key, i_value )
+        const r = create ( i_maintain_added_order )
+        r.add ( i_key, i_value )
+        return r
+    .
+.

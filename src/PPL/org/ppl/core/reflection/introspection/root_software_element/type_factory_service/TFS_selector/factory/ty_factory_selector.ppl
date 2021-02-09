@@ -1,0 +1,9 @@
+type factory_selector
+
+	inherit TFS_selector
+		redefine
+			att path virtual_factory_path
+		.
+	.
+.
+

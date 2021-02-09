@@ -1,0 +1,19 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type directory_or_file_path
+
+	inherit absolute_or_relative_directory_or_file_path
+	
+		redefine
+			att value and_check: se_directory_or_file_path.is_absolute_path ( i_value ) \
+                message: """'{{i_value}}' is not an absolute directory or file path.""" \
+                id: invalid_directory_or_file_path \
+                data: i_value
+        .
+    .
+.

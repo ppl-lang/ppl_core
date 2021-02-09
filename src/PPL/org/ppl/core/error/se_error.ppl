@@ -1,0 +1,12 @@
+service error
+
+    function write_to_OS_error ( error )
+    
+        case type of i_error
+            when anticipated_error ae
+                se_anticipated_error.write_to_OS_error ( ae )
+            when unanticipated_error ue
+                se_unanticipated_error.write_to_OS_error ( ue )
+        .
+    .
+.

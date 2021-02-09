@@ -1,0 +1,9 @@
+type runtime_error
+
+	inherit anticipated_error
+
+    att cause runtime_error or null default:null
+
+    // TD remove
+    att java_exception java_exception or null default:null
+.

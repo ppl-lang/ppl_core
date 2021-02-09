@@ -1,0 +1,4 @@
+type type_parameters_of_type_path_getter
+
+    function get ( type_path virtual_type_path ) -> map<key:type_parameter_id, value:type_parameter>
+.

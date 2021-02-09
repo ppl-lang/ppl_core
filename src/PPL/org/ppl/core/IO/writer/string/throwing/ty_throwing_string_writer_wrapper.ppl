@@ -1,0 +1,14 @@
+type throwing_string_writer_wrapper
+
+	inherit closable_IO_resource
+
+	att writer string_writer
+
+	function write ( string ) -> throwing_string_writer_wrapper
+
+	function write_line ( string ) -> throwing_string_writer_wrapper
+
+	function write_new_line -> throwing_string_writer_wrapper
+	
+	function flush -> throwing_string_writer_wrapper
+.

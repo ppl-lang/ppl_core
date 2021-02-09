@@ -1,0 +1,5 @@
+type function < in usage:in, out usage:out >
+
+	function apply ( in t_in ) -> out
+
+.

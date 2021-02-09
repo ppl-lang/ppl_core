@@ -1,0 +1,5 @@
+type TFS_selector
+
+	att path TFS_path
+
+.

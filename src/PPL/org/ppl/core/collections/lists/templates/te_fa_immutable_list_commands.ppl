@@ -1,0 +1,17 @@
+template fa_immutable_list_commands
+
+    functions native:yes
+
+        function first
+            java
+                return a_java_list.get ( 0 );
+            end java
+        .
+    
+        function last
+            java
+                return a_java_list.get ( a_java_list.size() - 1 ) ;
+            end java
+        .
+    .    
+.

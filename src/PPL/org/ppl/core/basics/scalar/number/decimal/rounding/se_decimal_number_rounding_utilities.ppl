@@ -1,0 +1,72 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service decimal_number_rounding_utilities
+
+	java_header
+		import java.math.RoundingMode;
+
+		import org.ppl.core.basics.scalar.enumerated.ty_enumerated;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+	end java_header
+
+	java
+		public static RoundingMode ppl_to_java_rounding_mode ( ty_enumerated i_ppl_mode ) {
+
+			return RoundingMode.valueOf ( i_ppl_mode.to_string().getJavaString().toUpperCase() );
+		}
+	end java
+	
+	test
+		script
+			var mode = ty_decimal_number_rounding_mode.ceiling
+			var ok yes_no
+			java
+				v_ok = fa_yes_no.of ( ppl_to_java_rounding_mode ( v_mode ) == RoundingMode.CEILING );
+			end java
+			assert ok is not null
+			verify v_ok
+
+			v_mode = ty_decimal_number_rounding_mode.down
+			java
+				v_ok = fa_yes_no.of ( ppl_to_java_rounding_mode ( v_mode ) == RoundingMode.DOWN );
+			end java
+			verify v_ok
+
+			v_mode = ty_decimal_number_rounding_mode.floor
+			java
+				v_ok = fa_yes_no.of ( ppl_to_java_rounding_mode ( v_mode ) == RoundingMode.FLOOR );
+			end java
+			verify v_ok
+
+			v_mode = ty_decimal_number_rounding_mode.half_down
+			java
+				v_ok = fa_yes_no.of ( ppl_to_java_rounding_mode ( v_mode ) == RoundingMode.HALF_DOWN );
+			end java
+			verify v_ok
+
+			v_mode = ty_decimal_number_rounding_mode.half_even
+			java
+				v_ok = fa_yes_no.of ( ppl_to_java_rounding_mode ( v_mode ) == RoundingMode.HALF_EVEN );
+			end java
+			verify v_ok
+
+			v_mode = ty_decimal_number_rounding_mode.half_up
+			java
+				v_ok = fa_yes_no.of ( ppl_to_java_rounding_mode ( v_mode ) == RoundingMode.HALF_UP );
+			end java
+			verify v_ok
+
+			v_mode = ty_decimal_number_rounding_mode.up
+			java
+				v_ok = fa_yes_no.of ( ppl_to_java_rounding_mode ( v_mode ) == RoundingMode.UP );
+			end java
+			verify v_ok
+		end
+	end
+
+end

@@ -1,0 +1,11 @@
+type type_parameter_assignment_map_builder
+
+    function add -> type_parameter_assignment_map_builder
+        in id string
+        in object_type object_type or null
+        in kind string
+    .
+    
+    function get_map -> map<key:type_parameter_id, value:type_parameter_assignment>
+    
+.

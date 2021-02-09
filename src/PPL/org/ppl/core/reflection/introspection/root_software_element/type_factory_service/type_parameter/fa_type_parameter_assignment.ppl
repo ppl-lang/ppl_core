@@ -1,0 +1,58 @@
+factory type_parameter_assignment
+
+    function is_equal_to
+    
+        if a_id.value #v i_other.id.value then
+            return no
+        .
+        
+        if a_object_type =r null and i_other.object_type #r null or \
+            a_object_type #r null and i_other.object_type =r null then
+            return no
+        .
+        
+        if a_object_type is not null then
+            if i_other.object_type as other_object_type is not null then
+                if a_object_type #v other_object_type then
+                    return no
+                .
+            .
+        .
+        
+        return a_kind =v i_other.kind
+    .
+
+    function to_string
+        
+        const r = mutable_string.create
+        
+        r.append ( a_id.to_string )
+        r.append ( ":" )
+        
+        case enum of a_kind
+            when default, only
+            when wildcard
+                r.append ( "*" )
+            when child_of, parent_of // , only
+                r.append ( a_kind.to_string )
+                r.append ( ":" )
+        .
+        
+        if a_object_type is not null then
+            r.append ( a_object_type.to_string )
+        .
+        
+        return r.to_string
+    .
+
+    creator create kind:in_all
+    
+    creator create_default ( id type_parameter_id, object_type object_type or null ) -> type_parameter_assignment
+
+        this.id = i_id
+        this.object_type = i_object_type
+        this.kind = type_parameter_assignment_kind.default
+        
+        return this
+    .
+.

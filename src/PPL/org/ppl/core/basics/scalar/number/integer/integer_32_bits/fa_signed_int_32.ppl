@@ -1,0 +1,94 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory signed_int_32
+
+	java_header
+		import java.lang.Integer;
+		import java.lang.NumberFormatException;
+		import java.text.DecimalFormat;
+
+		import org.ppl.core.basics.scalar.character.fa_character;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+
+		import org.ppl.core.error.unanticipated.program_error.arithmetic_overflow.ty_arithmetic_overflow_program_error;
+		import org.ppl.core.error.unanticipated.program_error.java.se_PEC;
+
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.java.se_java_utilities;
+		import org.ppl.core.error.java.se_Java_exception;
+	end java_header
+
+	java
+		private int a_java_value ;
+
+		public int getJavaInt() { return a_java_value; }
+
+		public fa_signed_int_32 ( int i_java_value ) {
+			a_java_value = i_java_value;
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+		
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_signed_int_32 ) ) return false;
+
+			int other_int = ((ty_signed_int_32) other).getJavaInt();
+			return a_java_value == other_int;
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_java_value;
+		}
+
+		public int compareTo ( ty_signed_int_32 other ) {
+			if ( this == other ) return 0;
+			return Integer.compare ( a_java_value, other.getJavaInt() );
+		}
+		
+		private ty_arithmetic_overflow_program_error co_arithmetic_overflow_error ( String i_command_id, long i_value_1, long i_value_2 ) {
+
+            return se_PEC.arithmetic_overflow (
+                this.getClass(),
+                i_command_id,
+                0, null,
+                String.valueOf ( i_value_1 ),
+                String.valueOf ( i_value_2 ) );
+		}
+	end java
+	
+%fa_int_32_commands < \
+    type_id: signed_int_32 \
+    unary_minus_result_factory_id: signed_int_32 \
+    abs_result_factory_id: signed_int_32 >
+
+    tests
+        verify parse_or_throw ( "1" ) =v 1
+        verify parse_or_throw ( "0" ) =v 0
+        verify parse_or_throw ( "-1" ) =v -1
+
+        verify parse_or_throw ( "2147483647" ) =v 2147483647
+        verify parse_or_throw ( "-2147483648" ) =v se_signed_int_32_constants.min_value
+        
+        try
+            parse_or_throw ( "a" )
+            verify no
+        catch_any
+            verify yes
+        .
+
+        try
+            parse_or_throw ( "2147483648" )
+            verify no
+        catch_any
+            verify yes
+        .
+    .
+.

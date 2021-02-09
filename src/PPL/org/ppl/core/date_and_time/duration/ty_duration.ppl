@@ -1,0 +1,33 @@
+type duration
+
+    java_header
+        import java.time.Duration;
+    end java_header
+
+    java
+        public Duration getJavaDuration();
+    end java
+
+    functions
+        
+        to_milli_seconds -> zero_pos_64
+        to_seconds       -> zero_pos_64
+        to_minutes       -> zero_pos_64
+        to_hours         -> zero_pos_64
+        to_days          -> zero_pos_64
+        
+        plus ( duration ) -> duration
+        plus_milli_seconds ( milli_seconds pos_64 ) -> duration
+        plus_seconds ( seconds pos_64 ) -> duration
+        plus_minutes ( minutes pos_64 ) -> duration
+        plus_hours ( hours pos_64 ) -> duration
+        plus_days ( days pos_64 ) -> duration
+        
+        minus ( duration ) -> duration
+        minus_milli_seconds ( milli_seconds pos_64 ) -> duration
+        minus_seconds ( seconds pos_64 ) -> duration
+        minus_minutes ( minutes pos_64 ) -> duration
+        minus_hours ( hours pos_64 ) -> duration
+        minus_days ( days pos_64 ) -> duration
+    .
+.

@@ -1,0 +1,29 @@
+factory invalid_output_argument_program_error java: "extends RuntimeException"
+
+%fa_unanticipated_error_Java_code
+
+	function to_string
+	    
+	    const value = se_object.to_string_or_null_string ( a_invalid_value )
+	    return """Value '{{value}}' is invalid for output argument '{{a_id}}'. Reason: {{a_info}}"""
+    .
+	
+	function to_long_string = se_program_error_writer.error_with_check_to_long_string (
+	    program_error = this, failure_info )
+    
+
+	creator create access:private kind:in_all
+
+	creator create_with_defaults -> invalid_output_argument_program_error
+    	in id PPL_command_output_argument_id
+    	in invalid_value any
+	    in source_code_location bug_source_code_location
+	    in script_state script_state or null
+        in failure_info program_check_failure_info or null
+	    
+        const info = se_check_program_error.define_description (
+            failure_info, default = "Invalid output argument value." )
+        
+        return create ( info, id, invalid_value, source_code_location, script_state, failure_info )
+    .
+.

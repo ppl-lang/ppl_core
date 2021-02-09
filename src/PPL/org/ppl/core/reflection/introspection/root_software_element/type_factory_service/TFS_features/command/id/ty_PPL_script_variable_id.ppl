@@ -1,0 +1,5 @@
+type PPL_script_variable_id
+
+    inherit PPL_TFS_feature_id
+
+.

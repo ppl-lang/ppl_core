@@ -1,0 +1,13 @@
+factory file_empty_error
+
+    function to_string = a_info
+    
+    creator create kind:in_all
+    
+    creator create_for_file ( file ) -> file_empty_error
+    
+        return create (
+            info = """File {{i_file.to_string}} is empty."""
+            resource = i_file )
+    .
+.

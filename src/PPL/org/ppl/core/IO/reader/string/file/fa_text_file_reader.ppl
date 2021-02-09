@@ -1,0 +1,76 @@
+factory text_file_reader type:text_file_reader
+
+	java_header
+		import java.io.FileInputStream;
+		import java.io.FileNotFoundException;
+
+		import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.IO.reader.string.java.fa_Java_BufferedReader_string_reader;
+	end java_header
+
+    att delegate string_reader access:private
+
+	functions
+        try_read_character = a_delegate.try_read_character
+        try_read_line      = a_delegate.try_read_line
+        try_read_all       = a_delegate.try_read_all
+        try_close          = a_delegate.try_close
+    .
+
+	creator create -> text_file_reader or file_read_error
+        %existing_file_input_argument
+        in character_set supported_character_set or null default:null
+
+        this.file = i_file
+        this.character_set = i_character_set
+
+        variable java_exception java_exception or null = null
+        java
+            try {
+                FileInputStream file_input_stream = new FileInputStream ( i_file.getJavaFile() );
+                c_this.a_delegate = new fa_Java_BufferedReader_string_reader ( file_input_stream );
+            } catch ( FileNotFoundException e ) { 
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+        assert java_exception may be null
+    
+        if java_exception is null then
+            return this
+        else
+            return file_read_error.create (
+                info = """Error reading file {{i_file.to_string}}. Cause: {{java_exception.to_string}}"""
+                java_exception,
+                resource = i_file )
+        .
+    .
+
+	tests
+        const file = se_text_file_writer.create_temporary_text_file (
+            delete_file_on_exit = yes
+            text = '''line 1
+line 2
+line 3''' ) on_error: throw_error
+			
+        const reader = fa_text_file_reader.create ( file ) on_error: throw_error
+        
+        const char = reader.try_read_character on_error: throw_error
+        verify char is not null
+        verify char =v 'l'
+
+        const line = reader.try_read_line on_error: throw_error
+        verify line is not null
+        verify line.to_string =v "ine 1"
+        
+        const rest = reader.try_read_all on_error: throw_error
+        verify rest is not null
+        verify rest =v '''line 2
+line 3'''
+
+        const char2 = reader.try_read_character on_error: throw_error
+        verify char2 is null
+
+        const error = reader.try_close
+        verify error is null
+    .
+.

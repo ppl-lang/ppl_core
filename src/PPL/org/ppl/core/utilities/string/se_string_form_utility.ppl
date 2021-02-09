@@ -1,0 +1,222 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service string_form_utility
+
+	att default_label_width positive_32 default:15
+	att default_label_value_separator string default:": "
+	att default_value_width positive_32 default: 120 - a_default_label_width - a_default_label_value_separator.size
+	
+	
+	function create_label_value_string -> string
+		in label string
+		in value string or null
+		in label_width positive_32 default:a_default_label_width
+		in value_width positive_32 default:a_default_value_width
+		in label_value_separator string default:a_default_label_value_separator
+		in right_align_label yes_no default:yes
+		in null_object_symbol string or null default:se_string_constants.null		
+		
+		script
+			const writer = memory_string_writer.create
+			try_write_label_value (
+			    writer, label, value, label_width, value_width, label_value_separator, right_align_label, null_object_symbol )
+			const r = writer.get_result
+			assert r is not null
+			return r
+		.
+		test
+			test label = "city" value = "Paris" label_width = 10 value_width = 75
+			verify result =v "      city: Paris"
+
+			test label = "city" value = "Paris" label_width = 10 value_width = 3
+			verify result =v '''      city: Par
+            is'''
+
+			test label = "city" value = "Paris" label_width = 2 value_width = 4 label_value_separator = " = "
+			verify result =v '''ci = Pari
+ty   s'''
+
+			test label = "a very important message" value = "You should always be honest!" label_width = 8 value_width = 10
+			verify result =v '''a very i: You should
+mportant   always be
+ message   honest!'''
+		.
+	.
+
+
+	function append_label_value
+		in mutable_string mutable_string
+		in label string
+		in value string or null
+		in label_width positive_32 default:a_default_label_width
+		in value_width positive_32 default:a_default_value_width
+		in label_value_separator string default:a_default_label_value_separator
+		in right_align_label yes_no default:yes
+		in null_object_symbol string or null default:se_string_constants.null		
+		
+        use resource const writer = mutable_string_string_writer.create ( i_mutable_string )
+            try_write_label_value ( writer, label, value, label_width, value_width, label_value_separator, right_align_label, null_object_symbol )
+        .
+	.
+	
+	
+	function try_write_label_value -> IO_error or null
+		in writer string_writer
+		in label string
+		in value string or null
+		in label_width positive_32 default:a_default_label_width
+		in value_width positive_32 default:a_default_value_width
+		in label_value_separator string default:a_default_label_value_separator
+		in right_align_label yes_no default:yes
+		in null_object_symbol string or null default:se_string_constants.null		
+		
+		script
+			var label_remaining string or null = prepare_label ( i_label )
+			var value_remaining = prepare_value ( i_value if_null: i_null_object_symbol )
+
+			var on_first_line = yes
+
+			repeat while not ( value_remaining =r null and label_remaining =r null )
+
+                // label
+                create_label_line (
+                    label = label_remaining
+                    label_width = i_label_width
+                    right_align = i_right_align_label
+                    on_first_line = on_first_line ) \
+                    ( const label_line = result
+                    label_remaining = label_remaining )
+
+                // value
+                create_value_line (
+                    value = value_remaining
+                    value_width = i_value_width ) \
+                    ( const value_line = result
+                    value_remaining = value_remaining )
+                    
+			    try
+                    if not on_first_line then
+                        error? writer.try_write_new_line
+                    .
+                    
+                    error? writer.try_write ( label_line )
+                
+                    // separator
+                    if on_first_line then
+                        error? writer.try_write ( i_label_value_separator )
+                    else
+                        error? writer.try_write ( " ".repeat ( i_label_value_separator.size ) )
+                    .
+                    
+                    if value_line is not null then
+                        error? writer.try_write ( value_line )
+                    .
+                on IO_error e
+                    return e
+                .
+					
+				on_first_line = no
+			.
+			return null
+		.
+	.
+
+
+	commands private:yes
+
+		function prepare_label ( label string ) -> string
+
+			return label.replace_all ( 
+				to_replace = se_string_constants.current_OS_new_line
+				replace_by = "|" ).replace_all ( 
+				to_replace = se_string_constants.tab
+				replace_by = "   " )
+		.
+
+		function prepare_value ( value string or null ) -> string or null
+		
+			if value is null then
+				return null
+			.
+
+			return value.replace_all (
+				to_replace = se_string_constants.tab
+				replace_by = "   " )
+		.
+
+		function create_label_line
+			in label string or null
+			in label_width positive_32
+			in right_align yes_no
+			in on_first_line yes_no
+			
+			out result string
+			out label_remaining string or null
+			
+			script
+				if i_label is null then
+					return result = se_string_constants.space.repeat ( i_label_width ), label_remaining = null
+				.
+				
+				if label.size <= i_label_width then
+				    const r = if i_on_first_line and i_right_align \
+				        then i_label.pad_left ( width = i_label_width ) \
+				        else i_label.pad_right ( width = i_label_width )
+					return result = r, \
+					    label_remaining = null
+				else
+					return result = label.substring_to ( i_label_width ), \
+					    label_remaining = label.substring_from ( i_label_width + 1 )
+				.
+			.
+		.
+
+		function create_value_line
+			in value string or null
+			in value_width positive_32
+
+			out result string or null
+			out value_remaining string or null
+
+			script
+				if i_value is null then
+					return result = null, value_remaining = null
+				.
+				
+				const new_line_index = i_value.find_first ( se_string_constants.current_OS_new_line )
+					
+				var num_chars positive_32
+				if new_line_index is null then
+					num_chars = i_value_width
+				else
+					if new_line_index <= i_value_width then
+						num_chars = new_line_index + se_string_constants.current_OS_new_line.size - 1
+					else
+						num_chars = i_value_width
+					.
+				.
+					
+				variable r string or null
+				variable vr string or null
+				if value.size <= num_chars then
+					r = value
+					vr = null
+				else
+					r = value.substring_to ( num_chars )
+					vr = value.substring_from ( num_chars + 1 )
+				.
+
+                if r is not null then
+    				r = r.remove_all_substrings ( se_string_constants.current_OS_new_line )
+                .
+				
+				return result = r, value_remaining = vr
+			.
+		.
+	.
+.

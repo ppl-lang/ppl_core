@@ -1,0 +1,6 @@
+type finite_iterator_with_size < element >
+
+	inherit finite_iterator <t_element>
+
+	function size -> zero_pos_64
+.

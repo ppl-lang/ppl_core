@@ -1,0 +1,42 @@
+service Java_string_writer
+
+    java_header
+        import java.io.IOException;
+        import java.io.Writer;
+        
+        import org.ppl.core.basics.scalar.string.fa_string;
+        import org.ppl.core.error.anticipated.runtime.IO.ty_IO_error;
+        import org.ppl.core.IO.writer.string.ty_string_writer;
+    end java_header
+
+    java
+        public static Writer PPL_to_Java_writer ( ty_string_writer PPL_writer ) {
+            
+            return new Writer() {
+            
+                public void write ( char[] cbuf, int off, int len ) throws IOException {
+                    String s = new String ( cbuf, off, len );
+                    ty_IO_error error = PPL_writer.try_write ( new fa_string ( s ) );
+                    if ( error != null ) {
+                        throw new IOException ( error.to_string().getJavaString() );
+                    }
+                }
+                
+                public void close() throws IOException {
+                 	ty_IO_error error = PPL_writer.try_close();
+                    if ( error != null ) {
+                        throw new IOException ( error.to_string().getJavaString() );
+                    }
+                }
+                
+                public void flush() throws IOException {
+                 	ty_IO_error error = PPL_writer.try_flush();
+                    if ( error != null ) {
+                        throw new IOException ( error.to_string().getJavaString() );
+                    }
+                }
+            };
+        }
+    end java
+.
+    

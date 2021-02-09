@@ -1,0 +1,7 @@
+type finite_iterator < element >
+
+	inherit iterator_base
+
+	function next -> null or object_reference <t_element>
+
+.

@@ -1,0 +1,22 @@
+service file_name_extension
+
+    att regex regex = fa_regex.create ( '''[^\.]+''' )
+    
+    att separator string = "."
+
+    functions
+
+        is_valid ( string ) -> yes_no = check_is_valid ( string ) =r null
+
+        check_is_valid ( string ) -> invalid_string_data_error or null
+
+            if i_string.matches_regex ( a_regex ) then
+                return null
+            else
+                return invalid_string_data_error.create (
+                    info = """'{{i_string}}' is an invalid file name extension, because it contains a dot (.)."""
+                    data = i_string )
+            .
+        .
+    .
+.

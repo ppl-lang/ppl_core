@@ -1,0 +1,5 @@
+type virtual_module_id
+    
+    inherit string_value
+.
+    

@@ -1,0 +1,37 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type local_date_time
+
+	java_header
+		import java.time.LocalDateTime;
+	end java_header
+	
+	java
+		public LocalDateTime getJavaLocalDateTime();
+	end java
+
+	inherit has_hash_code, has_compare_to<local_date_time>
+
+    functions
+
+        date -> local_date
+    
+        time -> local_time
+    
+        plus ( duration ) -> local_date_time
+        
+        minus ( duration ) -> local_date_time
+        
+        to_zoned_date_time ( time_zone_offset default:se_time_zone_constants.system_default ) -> date_time
+        
+        // see java.time.format.DateTimeFormatter for available options
+        format ( pattern string default: "YYYY-MM-dd HH:mm:ss" ) -> string
+    
+        format_to_long_default_locale -> string
+    .
+.

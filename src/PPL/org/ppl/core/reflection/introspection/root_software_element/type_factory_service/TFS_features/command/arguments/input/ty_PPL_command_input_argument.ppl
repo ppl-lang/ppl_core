@@ -1,0 +1,11 @@
+record type PPL_command_input_argument
+
+    inherit PPL_command_argument
+        redefine
+            att id PPL_command_input_argument_id
+        .
+    .
+
+	att default_value_code string or null
+
+.

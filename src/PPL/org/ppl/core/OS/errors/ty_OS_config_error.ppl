@@ -1,0 +1,5 @@
+type OS_config_error
+
+    inherit runtime_error
+    
+.

@@ -1,0 +1,26 @@
+service common_object_types
+
+	attributes type:standard_object_type
+	
+		any       = fa_any_object_type.create
+		null      = null_object_type.create
+		non_null  = non_null_object_type.create
+		non_error = standard_object_type.create ( se_common_type_paths.non_error )
+		error     = standard_object_type.create ( se_common_type_paths.error )
+		none      = fa_none_object_type.create
+
+        string = standard_object_type.create ( se_common_type_paths.string )
+        character = standard_object_type.create ( se_common_type_paths.character )
+
+        directory_or_file_path = standard_object_type.create ( se_common_type_paths.directory_or_file_path )
+        directory_path = standard_object_type.create ( se_common_type_paths.directory_path )
+        file_path = standard_object_type.create ( se_common_type_paths.file_path )
+		
+		anticipated_error = standard_object_type.create ( se_common_type_paths.anticipated_error )
+    .
+    
+	attributes type:union_object_type
+
+        string_or_null = union_object_type.create_nullable ( a_string )
+	.
+.

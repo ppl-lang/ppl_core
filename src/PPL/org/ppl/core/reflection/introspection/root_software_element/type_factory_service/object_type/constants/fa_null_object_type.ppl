@@ -1,0 +1,41 @@
+factory null_object_type type:standard_object_type
+
+%fa_type_path_object_type_functions<standard_object_type>
+
+    function check_compatible_to_other
+    
+        if i_other.is_nullable then
+            return null
+        else
+            return object_type_incompatibility_error.create_with_reason (
+                reason = """'null' is only compatible to a nullable type (e.g. string or null). But type '{{i_other.to_string}}' is not nullable."""
+                source = this
+                target = i_other )
+        .
+    .
+
+    function is_nullable = yes
+    
+    function to_nullable = this
+        
+    function to_non_nullable
+    
+        throw """Type '{{type_path}}' cannot be converted to a non-nullable."""
+    .
+            
+    function uses_type_parameters = no
+
+    function type_selector = fa_standard_type_selector.create ( a_type_path )
+
+	function to_string = a_type_path.id.value
+	
+	function to_long_string = a_type_path.value
+
+
+    creator create -> standard_object_type
+
+        this.type_path = se_common_type_paths.null
+        return this
+    .
+.
+

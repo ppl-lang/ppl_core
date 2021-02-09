@@ -1,0 +1,25 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service character_set_utilities
+
+	java_header
+		import java.nio.charset.Charset;
+
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+	end java_header
+	
+	// TD attribute supported_character_set_list type:!indexed_list<supported_character_set> end
+	// use Charset.availableCharsets() 
+			
+	// must be supported by Java: US-ASCII; ISO-8859-1; UTF-8; UTF-16BE; UTF-16LE; UTF-16 (see Java doc. of java.nio.charset.Charset)
+	function is_supported native:yes ( character_set string ) -> yes_no
+        java
+            return fa_yes_no.of ( Charset.isSupported ( i_character_set.getJavaString() ) );
+        end java
+    .
+.

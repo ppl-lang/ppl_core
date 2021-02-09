@@ -1,0 +1,11 @@
+type virtual_service_path
+
+    inherit TFS_path
+        redefine
+           	function id -> service_id
+        .
+    .
+
+    inherit has_equal_to<virtual_service_path>
+
+.

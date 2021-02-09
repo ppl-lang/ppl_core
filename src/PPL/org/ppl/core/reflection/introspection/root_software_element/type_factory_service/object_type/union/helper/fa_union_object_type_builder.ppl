@@ -1,0 +1,97 @@
+factory union_object_type_builder
+
+    att members mutable_indexed_list<non_union_object_type> \
+        default: mutable_indexed_list<non_union_object_type>.create \
+        access:private
+        
+    function has_members = not a_members.is_empty
+    
+    function get_members = a_members.copy_to_immutable 
+
+    function add_object_type
+
+        case type of i_object_type
+            when union_object_type union_object_type
+                repeat for each member in union_object_type.members
+                    add_member ( member )
+                .
+            when non_union_object_type member
+                add_member ( member )
+        .
+        
+        return this
+    .
+    
+    function add_member
+
+        if a_members.is_empty then
+            a_members.append ( i_member )
+            return this
+        .
+        
+        repeat for each existing_member in a_members
+            if i_member =v existing_member then
+                return this // i_member is contained already
+            .
+        .
+
+        case type of i_member
+
+            when type_parameter_object_type
+                a_members.append ( i_member )
+                return this
+                
+            otherwise
+                repeat from index = a_members.size down to 1
+                    const existing_member = a_members.get ( index )
+                    
+                    case type of existing_member
+                        when type_parameter_object_type
+                            next repeat
+                        otherwise
+                    .
+
+                    if se_object_type_compatibility.is_object_type_1_parent_of_object_type_2_or_same (
+                        object_type_1 = existing_member
+                        object_type_2 = i_member 
+                        config ) then
+                        
+                        return this // a parent type exists already
+                    .
+                    
+                    if se_object_type_compatibility.is_object_type_1_parent_of_object_type_2_or_same (
+                        object_type_1 = i_member
+                        object_type_2 = existing_member 
+                        config ) then
+                        
+                        a_members.remove_at_index ( index ) // remove existing child type
+                    .
+                .
+        
+                a_members.append ( i_member )
+                
+                return this
+        .
+    .
+
+    function remove_member_at_index
+    
+        a_members.remove_at_index ( i_index )
+        
+        return this
+    .
+
+    function create_object_type
+    
+        // TD? 'non_null or null' -> any
+    
+        case value of a_members.size
+            when 1
+                return a_members.first
+            otherwise
+                return union_object_type.create ( members = a_members.make_immutable, i_known_parent_object_type )
+        .
+    .
+    
+    creator create kind:in_all
+.

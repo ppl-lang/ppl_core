@@ -1,0 +1,6 @@
+type unanticipated_error_wrapper
+
+    inherit runtime_error
+    
+    att unanticipated_error unanticipated_error
+.

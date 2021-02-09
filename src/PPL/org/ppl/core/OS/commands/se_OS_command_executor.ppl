@@ -1,0 +1,218 @@
+service OS_command_executor
+
+    java_header
+        import java.io.File;
+        import java.lang.ProcessBuilder.Redirect;
+        import java.util.ArrayList;
+        import java.util.List;
+        import java.util.Map;
+
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.error.java.fa_java_exception;
+    end java_header
+
+    
+    function try_start_process_and_continue ( config OS_command_config ) -> OS_process_error or null
+
+        case type of try_start_process ( config, wait_until_finished = no )
+            when null
+                return null
+            when OS_process_error e
+                return e
+            when signed_integer_32
+                throw "case error"
+        .
+    .
+
+    function try_run_process_and_wait ( config OS_command_config ) -> signed_integer_32 or OS_process_error
+        
+        case type of try_start_process ( config, wait_until_finished = yes )
+            when signed_integer_32 i
+                return i
+            when OS_process_error e
+                return e
+            when null
+                throw "case error"
+        .
+    .
+
+    functions private:yes
+
+        function try_start_process -> signed_integer_32 or OS_process_error or null
+            in config OS_command_config
+            in wait_until_finished yes_no
+            
+            // command tokens
+            
+            java
+                List<String> command_tokens = new ArrayList<String>();
+            end java
+            const OS_is_Windows = OS_config.OS_is_Windows
+            assert OS_is_Windows is not null // avoid compiler's 'not used' error
+            repeat for each token in i_config.command_tokens
+                if token is null then
+                    java
+                        // doesn't work
+                        // command_tokens.add ( "" );
+
+                        if ( c_OS_is_Windows.getJavaBoolean() ) {
+                            command_tokens.add ( "\"\"" );
+                        } else {
+                            command_tokens.add ( "''" );
+                        }
+                    end java
+                else
+                    java
+                        command_tokens.add ( c_token.getJavaString() );
+                    end java
+                .
+            .
+            java
+                ProcessBuilder builder = new ProcessBuilder ( command_tokens );
+            end java
+                
+            // environment variables
+            
+            if i_config.environment_variables as environment_variables is not null
+                java
+                    Map<String, String> environment = builder.environment();
+                end java
+                repeat for each name, value in environment_variables
+                    if value is null then
+                        java
+                            environment.put ( c_name.getJavaString(), "" );
+                        end java
+                    else
+                        java
+                            environment.put ( c_name.getJavaString(), c_value.getJavaString() );
+                        end java
+                    .
+                .
+            .
+                
+            // working_directory
+            
+            if i_config.working_directory as working_directory is not null then
+                java
+                    builder.directory ( c_working_directory.getJavaFile() );
+                end java
+            .
+                
+            // input redirection
+
+            case type of i_config.input_redirect
+                when OS_input_redirect_inherit
+                    java
+                        builder.redirectInput ( Redirect.INHERIT );
+                    end java
+                when OS_input_redirect_pipe
+                    java
+                        builder.redirectInput ( Redirect.PIPE );
+                    end java
+                when OS_input_redirect_from_file OS_input_redirect_from_file
+                    const file = file.create ( OS_input_redirect_from_file.file_path )
+                    java
+                        File file = c_file.getJavaFile();
+                        builder.redirectInput ( Redirect.from ( file ) );
+                    end java
+                when OS_input_redirect
+                    throw "case error"
+            .
+
+                
+            // output redirection
+
+            case type of i_config.output_redirect
+                when OS_output_redirect_inherit
+                    java
+                        builder.redirectOutput ( Redirect.INHERIT );
+                    end java
+                when OS_output_redirect_pipe
+                    java
+                        builder.redirectOutput ( Redirect.PIPE );
+                    end java
+                when OS_output_redirect_to_file OS_output_redirect_to_file
+                    const file = file.create ( OS_output_redirect_to_file.file_path )
+                    const append = OS_output_redirect_to_file.append
+                    java
+                        File file = c_file.getJavaFile();
+                        if ( c_append.getJavaBoolean() ) {
+                            builder.redirectOutput ( Redirect.appendTo ( file ) );
+                        } else {
+                            builder.redirectOutput ( Redirect.to ( file ) );
+                        }
+                    end java
+                when OS_output_redirect
+                    throw "case error"
+            .
+
+            // error redirection
+
+            case type of i_config.error_redirect
+                when OS_output_redirect_inherit
+                    java
+                        builder.redirectError ( Redirect.INHERIT );
+                    end java
+                when OS_output_redirect_pipe
+                    java
+                        builder.redirectError ( Redirect.PIPE );
+                    end java
+                when OS_output_redirect_to_file OS_output_redirect_to_file
+                    const file = file.create ( OS_output_redirect_to_file.file_path )
+                    const append = OS_output_redirect_to_file.append
+                    java
+                        File file = c_file.getJavaFile();
+                        if ( c_append.getJavaBoolean() ) {
+                            builder.redirectError ( Redirect.appendTo ( file ) );
+                        } else {
+                            builder.redirectError ( Redirect.to ( file ) );
+                        }
+                    end java
+                when OS_output_redirect
+                    throw "case error"
+            .
+                
+            // execute
+            
+            variable java_exception java_exception or null = null
+            variable r signed_integer_32 or null = null
+            java
+                try {
+                    Process process = builder.start();
+                    if ( i_wait_until_finished.getJavaBoolean() ) {
+                        int exit_value = process.waitFor();
+                        v_r = new fa_signed_int_32 ( exit_value ) ;
+                    }
+                } catch ( Exception e ) {
+                    v_java_exception = new fa_java_exception ( e );
+                }
+            end java
+
+            if java_exception is null then
+                return r
+            else
+                return OS_process_error.create (
+                    info = """Executing OS command '{{? i_config.command_tokens.first}}' generated the following error:
+{{java_exception.to_string}}"""
+                    config,
+                    java_exception )
+            .
+        .
+    .
+    
+    tests
+        ///
+        const config = OS_command_config.create ( command_tokens = [ "notepad.exe" ] )
+        const r1 = try_start_process_and_continue ( config )
+        verify r1 is null
+        
+        const r2 = try_run_process_and_wait ( config )
+        case type of r2
+            when signed_integer_32 i
+                verify i =v 0
+            otherwise
+                verify no
+        .
+        .///
+    .
+.

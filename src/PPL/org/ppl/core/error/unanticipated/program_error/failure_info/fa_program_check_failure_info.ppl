@@ -1,0 +1,52 @@
+factory program_check_failure_info
+
+    function to_string
+        return a_message if_null: "PPL_check_error_info"
+    .
+    
+    function to_long_string
+
+        const r = fa_mutable_string.create
+        
+        if a_message is not null then
+            se_program_error_writer.append_label_value_line (
+                string = r
+                label = "Message"
+                value = a_message )
+        .
+        
+        if a_source_code is not null then
+            se_program_error_writer.append_label_value_line (
+                string = r
+                label = "Condition"
+                value = a_source_code )
+        .
+        
+        if a_check_comparison_values is not null then
+            r.append ( a_check_comparison_values.to_long_string )
+        .
+        
+        if a_id is not null then
+            se_program_error_writer.append_label_value_line (
+                string = r
+                label = "Id"
+                value = a_id )
+        .
+        
+        if a_data is not null then
+            se_program_error_writer.append_label_value_line (
+                string = r
+                label = "Data"
+                value = a_data.to_string )
+        .
+        
+        if r.is_empty then
+            r.append ( "No error info" )
+        .
+
+        return r.to_string
+    .
+    
+    creator create kind:in_all
+    
+.

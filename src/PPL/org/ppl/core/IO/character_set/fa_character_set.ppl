@@ -1,0 +1,15 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory character_set
+
+	%string_value_factory_with_is_equal_to_commands
+
+	function is_supported = se_character_set_utilities.is_supported ( a_value )
+	
+	%scalar_value_factory_creator
+.

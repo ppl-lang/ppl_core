@@ -1,0 +1,41 @@
+factory type_parameter_assignment_map_builder
+
+    att map mutable_map<key:type_parameter_id, value:type_parameter_assignment> \
+        default:mutable_map<key:type_parameter_id, value:type_parameter_assignment>.create access:private
+
+    function add
+    
+        variable the_kind type_parameter_assignment_kind
+        case value of i_kind
+            when "default"
+                the_kind = type_parameter_assignment_kind.default
+            when "only"
+                the_kind = type_parameter_assignment_kind.only
+            when "child_of"
+                the_kind = type_parameter_assignment_kind.child_of
+            when "parent_of"
+                the_kind = type_parameter_assignment_kind.parent_of
+            when "wildcard"
+                the_kind = type_parameter_assignment_kind.wildcard
+            otherwise
+                throw """Unexpected value {{i_kind}}"""
+        .
+        
+        const assignment = type_parameter_assignment.create (
+            id = type_parameter_id.create ( i_id )
+            object_type,
+            kind = the_kind )
+        
+        a_map.add (
+            key = assignment.id
+            value = assignment )
+        
+        return this
+    .
+    
+    function get_map = a_map.make_immutable
+    
+	
+	creator create kind:in_all
+	
+.

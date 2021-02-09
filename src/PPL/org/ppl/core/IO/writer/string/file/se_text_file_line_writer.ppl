@@ -1,0 +1,77 @@
+service text_file_line_writer
+
+    // TD new_file, existing_file
+    // TD IO_error -> file_write_error
+
+    function write_lines_to_new_or_existing_file -> IO_error or null
+		in lines list<string or null>
+		%new_or_existing_file_input_argument
+		%supported_character_set_input_argument
+		
+        return try_write_lines_and_close ( lines, file, character_set, append_mode = no )
+    .
+
+    function write_line_to_new_or_existing_file -> IO_error or null
+		in line string or null
+		%new_or_existing_file_input_argument
+		%supported_character_set_input_argument
+		
+        return try_write_line_and_close ( line, file, character_set, append_mode = no )
+    .
+
+	function append_lines_to_new_or_existing_file -> IO_error or null
+		in lines list<string or null>
+		%new_or_existing_file_input_argument
+		%supported_character_set_input_argument
+
+        return try_write_lines_and_close ( lines, file, character_set, append_mode = yes )
+    .
+
+	function append_line_to_new_or_existing_file -> IO_error or null
+		in line string or null
+		%new_or_existing_file_input_argument
+		%supported_character_set_input_argument
+
+        return try_write_line_and_close ( line, file, character_set, append_mode = yes )
+    .
+
+	functions private:yes
+        
+        function try_write_lines_and_close -> IO_error or null
+    		in lines list<string or null>
+            %new_or_existing_file_input_argument
+            %supported_character_set_input_argument
+            in append_mode yes_no
+    
+            const writer = text_file_writer.create_for_new_or_existing_file (
+                file, character_set, append_mode ) on_error:return_error
+            repeat for each line in i_lines
+                try_write_line ( line, writer ) on_error:return_error
+            .
+            return writer.try_close
+        .
+
+        function try_write_line_and_close -> IO_error or null
+    		in line string or null
+            %new_or_existing_file_input_argument
+            %supported_character_set_input_argument
+            in append_mode yes_no
+    
+            const writer = text_file_writer.create_for_new_or_existing_file (
+                file, character_set, append_mode ) on_error:return_error
+            try_write_line ( line, writer ) on_error:return_error
+            return writer.try_close
+        .
+
+        function try_write_line -> IO_error or null
+    		in line string or null
+    		in writer string_writer
+    
+            if line is not null then
+                return i_writer.try_write_line ( line )
+            else
+                return i_writer.try_write_new_line
+            .
+        .
+    .
+.

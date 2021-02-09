@@ -1,0 +1,45 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type test_context
+
+	attributes
+	
+        message_handler test_message_handler default:se_testing.default_test_message_handler
+        
+        // root_library_id library_id voidable:yes default:void
+    
+        include_path_regex regex or null default:null
+    
+        exclude_path_regex regex or null default:null
+    
+        display_info_messages yes_no default:yes
+    .
+
+    functions
+    
+        RSEs_tested_count -> zero_pos_32
+
+		test_errors_found -> yes_no
+
+		test_error_count -> zero_pos_32
+		// verify_fail_count zero_positive_32
+		// program_error_count zero_positive_32
+		
+		test_error_list -> indexed_list<test_error>
+
+	    start
+	    
+	    stop
+	    
+	    handle_RSE_test_start ( RSE_id_path TFS_path )
+	    
+	    handle_test_error ( test_error )
+
+    	handle_info_message ( message string )
+    .
+.

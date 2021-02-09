@@ -1,0 +1,57 @@
+factory string_string_reader
+
+	java_header
+		import java.io.StringReader;
+		
+		import org.ppl.core.IO.reader.string.java.fa_Java_BufferedReader_string_reader;
+	end java_header
+
+    att delegate string_reader access:private
+
+	functions
+        try_read_character = a_delegate.try_read_character
+        try_read_line      = a_delegate.try_read_line
+        try_read_all       = a_delegate.try_read_all
+        try_close          = a_delegate.try_close
+    .
+
+    creator create kind:in_all
+    
+        this.string = i_string
+        java
+            c_this.a_delegate = new fa_Java_BufferedReader_string_reader (
+                new StringReader ( i_string.getJavaString() ) );
+        end java
+        return this
+    .
+    
+    tests
+        const reader = string_string_reader.create ( '''abc
+line_2
+line_3
+line_4''' )
+        const char1 = reader.try_read_character on_error: throw_error
+        verify char1 is not null
+        verify char1 =v 'a'
+
+        const char2 = reader.try_read_character on_error: throw_error
+        verify char2 is not null
+        verify char2 =v 'b'
+
+        const line1 = reader.try_read_line on_error: throw_error
+        verify line1 is not null
+        verify line1.to_string =v "c"
+        
+        const line2 = reader.try_read_line on_error: throw_error
+        verify line2 is not null
+        verify line2.to_string =v "line_2"
+
+        const rest = reader.try_read_all on_error: throw_error
+        verify rest is not null
+        verify rest =v '''line_3
+line_4'''
+
+        const char3 = reader.try_read_character on_error: throw_error
+        verify char3 is null
+    .
+.

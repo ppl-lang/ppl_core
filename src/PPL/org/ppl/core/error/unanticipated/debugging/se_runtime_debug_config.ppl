@@ -1,0 +1,45 @@
+service runtime_debug_config
+
+    variable att config runtime_debug_config default: runtime_debug_config.create
+    
+    function set_PPL_error_handler ( handler unanticipated_error_handler )
+
+        a_config = runtime_debug_config.create (
+            unanticipated_error_handler = i_handler
+            Java_throwable_handler = a_config.Java_throwable_handler
+            source_code_file_supplier = a_config.source_code_file_supplier
+            source_code_instruction_supplier = a_config.source_code_instruction_supplier
+            source_code_file_opener = a_config.source_code_file_opener )
+    .
+    
+    function set_Java_throwable_handler ( handler Java_throwable_handler )
+
+        a_config = runtime_debug_config.create (
+            unanticipated_error_handler = a_config.unanticipated_error_handler
+            Java_throwable_handler = i_handler
+            source_code_file_supplier = a_config.source_code_file_supplier
+            source_code_instruction_supplier = a_config.source_code_instruction_supplier
+            source_code_file_opener = a_config.source_code_file_opener )
+    .
+    
+    function set_source_code_file_opener ( opener source_code_file_opener )
+
+        a_config = runtime_debug_config.create (
+            unanticipated_error_handler = a_config.unanticipated_error_handler
+            Java_throwable_handler = a_config.Java_throwable_handler
+            source_code_file_supplier = a_config.source_code_file_supplier
+            source_code_instruction_supplier = a_config.source_code_instruction_supplier
+            source_code_file_opener = i_opener )
+    .
+    
+    function set_source_code_file_supplier ( supplier source_code_file_supplier )
+
+        a_config = runtime_debug_config.create (
+            unanticipated_error_handler = a_config.unanticipated_error_handler
+            Java_throwable_handler = a_config.Java_throwable_handler
+            source_code_file_supplier = i_supplier
+            source_code_instruction_supplier = a_config.source_code_instruction_supplier
+            source_code_file_opener = a_config.source_code_file_opener )
+    .
+    
+.

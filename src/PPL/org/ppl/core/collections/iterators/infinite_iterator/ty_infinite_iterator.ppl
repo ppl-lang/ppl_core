@@ -1,0 +1,6 @@
+type infinite_iterator < element >
+
+	inherit iterator_base
+
+	function next -> t_element
+.

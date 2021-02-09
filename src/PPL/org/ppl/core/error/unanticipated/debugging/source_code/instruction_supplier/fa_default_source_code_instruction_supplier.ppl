@@ -1,0 +1,17 @@
+factory default_source_code_instruction_supplier type:source_code_instruction_supplier
+
+    function get
+
+        case type of se_text_file_line_reader.try_read_nth_line ( file = i_source_code_file, n = i_line_number.to_pos_64 )
+            when string s
+                return s.trim_whitespace
+            when null
+                return null
+            when error e
+                OS.err.write_line ( """Line {{line_number}} could not be read from file '{{i_source_code_file.to_string}}'. The following error occurred: {{e.info}}""" )
+                return null
+        .
+    .
+    
+    creator create kind:in_all
+.

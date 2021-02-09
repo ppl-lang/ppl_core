@@ -1,0 +1,163 @@
+service object_attributes
+
+	java_header
+		import java.lang.reflect.InvocationTargetException;
+
+		import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		import org.ppl.core.reflection.execution.object.se_object_reflection;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.info.se_TFS_attribute_info_java_helper;
+		import org.ppl.core.reflection.java.se_Java_reflection_constants;
+	end java_header
+
+	java
+		private static ty_non_null _require_attribute_value ( ty_non_null i_object, String i_attribute_id )
+			throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+
+			return se_TFS_attribute_info_java_helper._require_class_attribute_value (
+			    i_object.getClass(), i_object, i_attribute_id );
+		}
+	end java
+
+
+	function for_each_attribute ( object non_null, consumer object_consumer<PPL_attribute> )
+
+        java
+            se_TFS_attribute_info_java_helper._for_each_attribute_of_class (
+                se_object_reflection.type_path_of_object ( i_object ),
+                i_object.getClass(),
+                attribute -> { i_consumer.consume ( attribute ); } );
+        end java
+	.
+
+    function attributes ( object non_null ) -> list<PPL_attribute> or null
+
+        const r = mutable_list<PPL_attribute>.create
+        
+        for_each_attribute ( object, consumer = { attribute ->
+            r.append ( attribute )
+        } )
+
+        r.sort_by_key ( key_getter = { attribute => attribute.order_in_source_code }, descending = no ) 
+        
+        return r.make_immutable_or_null
+    .
+    
+    function attribute_values ( object non_null ) -> map<key:PPL_attribute_id, value:any> or null
+    
+        const attributes = attributes ( object ) on_null: return null
+        const r = mutable_map_with_nulls<key:PPL_attribute_id, value:any>.create
+        repeat for each attribute in attributes
+            const attribute_id = attribute.id
+            r.add (
+                key = attribute_id
+                value = get_value_or_throw ( i_object, attribute_id ) )
+        .
+        return r.make_immutable
+    .
+
+
+    // TD try_get_value
+    // TD get_value_or_null
+    // TD get_value_or_default
+    
+	function get_value_or_throw ( object non_null, attribute_id PPL_attribute_id ) -> any
+
+		script
+		    var r any
+			java
+				v_r = _require_attribute_value ( i_object, i_attribute_id.getValue().getJavaString() );
+			end java
+			assert r may be null
+			return r
+		.
+		test
+			const today = fa_local_date.today
+			test object = today, attribute_id = fa_PPL_attribute_id.create ( "month" )
+			const month month = result type_check:no
+			verify month =v today.month
+
+			test object = today, attribute_id = fa_PPL_attribute_id.create ( "illegal" )
+			verify_error
+		.
+	.
+
+
+///
+	function sorted_attribute_value_map
+		in object non_null
+
+		out result map<key:string, value:any> or null
+		
+		script
+			const r = mutable_map_with_nulls<key:string, value:any>.create_sorted_by_key
+			populate_attribute_value_map (
+				object = i_object
+				map = r )
+			result = r.make_immutable_or_null
+		.
+		
+		test
+			const today = fa_local_date.today
+			test today
+			verify result.size =v 3
+			const year year = result.get ( "year" ) type_check:no
+			verify year =v today.year
+			const month month = result.get ( "month" ) type_check:no
+			verify month =v today.month
+			const day day_of_month = result.get ( "day" ) type_check:no
+			verify day =v today.day
+			
+			test "qwe"
+			verify result is null
+		.
+	.
+
+	function attribute_value_map
+		in object non_null
+
+		out result map<key:string, value:any> or null
+		
+		script
+			const r = mutable_map_with_nulls<key:string, value:any>.create
+			populate_attribute_value_map (
+				object = i_object
+				map = r )
+			result = r.make_immutable_or_null
+		.
+	.
+	
+	functions access:private
+
+        command populate_attribute_value_map
+            in object non_null
+            in map mutable_map<key:string, value:any>
+    
+            script
+                java
+                    Exception[] ea = new Exception[] {null};
+                    se_TFS_attribute_info_java_helper._for_each_attribute_getter_of_class (
+                        i_object.getClass(), 
+                        (getterMethod, annotation) -> {
+                            ty_string id = new fa_string ( annotation.objectReference().id() );
+    
+                            ty_non_null value = null;
+                            try {
+                                value = (ty_non_null) getterMethod.invoke ( i_object, se_Java_reflection_constants.emptyObjectArray );
+                            } catch ( Exception exp ) {
+                                ea[0] = exp;
+                            }
+                            i_map.add ( id, value );
+    
+                        } );
+                    if ( ea[0] != null ) {
+                        throw ea[0];
+                    }
+                end java
+            .
+        .
+    .    
+.///
+
+.

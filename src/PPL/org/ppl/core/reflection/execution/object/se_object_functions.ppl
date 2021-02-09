@@ -1,0 +1,68 @@
+service object_functions
+
+	java_header
+        import java.util.function.Consumer;
+
+		import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.reflection.execution.object.se_object_reflection;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.info.se_TFS_function_info_Java_helper;
+	end java_header
+	
+	java
+	    public static void forEachFunction ( ty_non_null object, Consumer<ty_PPL_command> consumer ) {
+
+            try {
+/*
+                se_TFS_function_info_Java_helper.forEachFunctionInClass (
+                    se_object_reflection.type_path_of_object ( object ),
+                    object.getClass(),
+                    function -> { consumer.accept ( function ); } );
+*/
+                se_TFS_function_info_Java_helper.forEachFunctionInTFSPath (
+                    se_object_reflection.type_path_of_object ( object ),
+                    function -> { consumer.accept ( function ); } );
+                    
+            } catch ( Exception e ) {
+                throw new RuntimeException ( e );
+            }
+        }
+	end java
+
+	function for_each_function ( object non_null, consumer object_consumer<PPL_command> )
+
+        java
+            /*
+            se_TFS_function_info_Java_helper.forEachFunctionInClass (
+                se_object_reflection.type_path_of_object ( object ),
+                object.getClass(),
+                function -> { consumer.consume ( function ); } );
+            */
+            forEachFunction ( i_object, function -> { i_consumer.consume ( function ); } );
+        end java
+	.
+
+    function functions ( object non_null ) -> list<PPL_command> = \
+        mutable_functions_list ( object ).make_immutable
+
+    function functions_sorted_by_id ( object non_null ) -> list<PPL_command>
+    
+        const list = mutable_functions_list ( object )
+        list.sort_by_key ( key_getter = { function => function.id.value } )
+
+        return list.make_immutable
+    .
+
+    functions access:private
+
+        function mutable_functions_list ( object non_null ) -> mutable_list<PPL_command>
+    
+            const r = mutable_list<PPL_command>.create
+            
+            for_each_function ( object, consumer = { function ->
+                r.append ( function )
+            } )
+    
+            return r
+        .
+    .
+.

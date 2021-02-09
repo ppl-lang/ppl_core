@@ -1,0 +1,33 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory invalid_attributes_program_error java: "extends RuntimeException"
+
+%fa_unanticipated_error_Java_code
+
+	function to_string = """Invalid attribute values (attributes_check violation). Reason: {{a_info}}"""
+	
+	function to_long_string = se_program_error_writer.error_with_check_to_long_string (
+	    program_error = this, failure_info )
+    
+
+    function to_invalid_input_arguments_program_error = invalid_input_arguments_program_error.create_with_defaults (
+        source_code_location, script_state, failure_info )
+    
+	creator create access:private kind:in_all
+
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+        failure_info program_check_failure_info or null ) -> invalid_attributes_program_error
+	    
+        const info = se_check_program_error.define_description (
+            failure_info, default = "Invalid attribute values (attributes_check violation)." )
+	    
+        return create ( info, source_code_location, script_state, failure_info )
+    .
+.

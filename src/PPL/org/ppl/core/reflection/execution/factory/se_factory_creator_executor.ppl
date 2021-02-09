@@ -1,0 +1,26 @@
+service factory_creator_executor
+
+    java_header
+        import org.ppl.core.collections.java.se_Java_collection_converter;
+        import org.ppl.core.reflection.execution.java.se_dynamic_Java_execution;
+        
+        import org.ppl.core.error.java.se_Java_exception;
+    end java_header
+
+    function execute -> non_null
+        in factory_path factory_path
+        in creator_id PPL_command_id
+		in input_arguments list<child_of: any> or null
+		
+		variable r non_null
+        java
+            v_r = (ty_non_null) se_dynamic_Java_execution.invokeStaticClassMethod ( 
+                i_factory_path.getValue().getJavaString(),
+                i_creator_id.getValue().getJavaString(),
+                se_Java_collection_converter.PPL_list_to_Java_Object_Array ( i_input_arguments ) );
+        end java
+
+        assert r is not null
+        return r
+    .
+.

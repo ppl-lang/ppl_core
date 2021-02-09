@@ -1,0 +1,4 @@
+type object_validator < object usage:in, error child_of:anticipated_error usage:out>
+
+	function validate ( object t_object ) -> t_error or null
+.

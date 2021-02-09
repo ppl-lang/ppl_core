@@ -1,0 +1,36 @@
+factory Java_exception_runtime_error
+
+    java_header
+        import org.ppl.core.error.java.fa_Java_exception_wrapper;
+    end java_header
+
+	java
+		public static ty_Java_exception_runtime_error createForException ( Exception exception ) {
+			
+			return create_for_exception ( new fa_Java_exception_wrapper ( exception ) );
+		}
+	end java
+	
+	att cause
+	    get
+	        variable r runtime_error or null = null
+	        java
+                ty_Java_exception_wrapper cause = a_exception.cause();
+                if ( cause != null ) v_r = create_for_exception ( cause );
+	        end java
+	        return r;
+	    .
+	    set
+	        throw "Illegal call to setter of Java_exception_runtime_error."
+	    .
+    .
+
+    function to_string = a_exception.to_string
+
+    creator create kind:in_all
+    
+    creator create_for_exception ( exception Java_exception_wrapper ) -> Java_exception_runtime_error
+        
+        return create ( info = i_exception.message, exception )
+    .
+.

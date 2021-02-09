@@ -1,0 +1,46 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service character_set_constants
+
+	java_header
+		import java.nio.charset.Charset;
+	end java_header
+	
+
+	// Note: the following attribute must be defined before the other attributes below,
+	// because they (indirectly) refer to this attribute
+	// According to Java documentation of java.nio.charset.Charset
+	att character_set_regex regex default: fa_regex.create ( '''^[a-zA-Z0-9][a-zA-Z0-9\.:_-]*$''' )
+
+	
+	attributes type:supported_character_set
+
+		// The following character sets must be supported by Java (see Java doc. of java.nio.charset.Charset)
+
+		US_ASCII   = supported_character_set.create ( "US-ASCII" )
+
+		ISO_8859_1 = supported_character_set.create ( "ISO-8859-1" )
+
+		UTF_8      = supported_character_set.create ( "UTF-8" )
+		UTF_16     = supported_character_set.create ( "UTF-16" )
+		UTF_16BE   = supported_character_set.create ( "UTF-16BE" )
+		UTF_16LE   = supported_character_set.create ( "UTF-16LE" )
+    .
+	
+	att default_character_set supported_character_set
+		default
+            var name string
+            java
+                v_name = new fa_string ( Charset.defaultCharset().name() );
+            end java
+            assert name is not null
+            
+            return fa_supported_character_set.create ( name )
+        .
+    .
+.

@@ -1,0 +1,57 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory enumerated type:enumerated
+
+	java
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_enumerated ) ) return false;
+
+			int other_int = ((ty_enumerated) other).getIndex().getJavaInt();
+			return a_index.getJavaInt() == other_int;
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_index.getJavaInt();
+		}
+
+		public int compareTo ( ty_enumerated other ) {
+			if ( this == other ) return 0;
+			return Integer.compare ( a_index.getJavaInt(), other.getIndex().getJavaInt() );
+		}
+
+	end java
+
+	function to_string = a_value
+	
+	// has_compare_to
+
+	function is_equal_to = a_index =v i_other.index
+
+	function compare_to = a_index.compare_to ( i_other.index )
+	
+	// has_min_max
+
+	function min = if this <= i_other then this else i_other
+
+	function max = if this >= i_other then this else i_other
+
+	function is_between = a_index.is_between (
+        min = i_min.index
+        max = i_max.index )
+
+	function hash_code = a_index
+
+
+	creator create kind:in_all
+
+.

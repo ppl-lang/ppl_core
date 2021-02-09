@@ -1,0 +1,4 @@
+type invalid_command_line_argument_error
+
+    inherit invalid_string_data_error
+.

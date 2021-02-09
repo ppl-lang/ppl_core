@@ -1,0 +1,11 @@
+type virtual_factory_path
+
+    inherit TFS_path
+        redefine
+           	function id -> factory_id
+        .
+    .
+
+    inherit has_equal_to<virtual_factory_path>
+
+.

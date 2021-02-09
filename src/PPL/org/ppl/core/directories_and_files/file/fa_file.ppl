@@ -1,0 +1,414 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory file
+
+	java_header
+		import java.io.File;
+		import java.io.IOException;
+		import java.nio.file.attribute.BasicFileAttributes;
+		import java.nio.file.Files;
+		import java.time.Instant;
+
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_64_bits.zero_positive_64.fa_zero_pos_64;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.error.java.se_Java_exception;
+		import org.ppl.core.date_and_time.date_time.local.fa_local_date_time;
+	end java_header
+
+	java
+		private File a_java_value ;
+
+		public File getJavaFile() {return a_java_value;}
+		
+		/*
+		public fa_file ( File i_java_value ) {
+
+			if (i_java_value == null) {
+				throw new IllegalArgumentException ("Input for fa_file constructor cannot be null.");
+			}
+
+			a_java_value = i_java_value;
+			
+			// TD set a_path
+		}
+		*/
+
+		public static ty_file createFromFile ( File file ) {
+		    return create ( new fa_file_path ( file ) ); 
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_file ) ) return false;
+			
+			File other_file = ((ty_file) other).getJavaFile();
+			return a_java_value.equals ( other_file );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_java_value.hashCode();
+		}
+
+		public int compareTo ( ty_file other ) {
+			if ( this == other ) return 0;
+			return a_java_value.compareTo ( other.getJavaFile() );
+		}
+	end java
+	
+	%fa_directory_or_file_commands<file>
+
+	function directory = fa_directory.create ( a_path.directory )
+
+	function size_in_bytes
+	
+	    variable r zero_pos_64
+        java
+            v_r = new fa_zero_pos_64 ( a_java_value.length() );
+        end java
+        assert r is not null
+        
+        return r
+	.
+
+
+    // create file
+
+	function try_create = try_create_common
+    
+    function try_create_if_not_exists
+        
+        if not exists then
+    	    return try_create_common
+        else
+            return null
+        .
+    .
+
+	function try_create_path
+
+	    if directory.try_create_path_if_not_exists as dir_error is null then
+            return try_create_common
+        else
+            return dir_error
+        .
+    .
+    
+	function try_create_path_if_not_exists
+
+        if not exists then
+            if directory.try_create_path_if_not_exists as dir_error is null then
+                return try_create_common
+            else
+                return dir_error
+            .
+        else
+            return null
+        .
+    .
+
+	function try_create_common private:yes -> create_file_error or null
+
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Files.createFile ( a_java_value.toPath() );
+            }
+            catch ( Exception e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return fa_create_file_error.create (
+                info = """File '{{a_path.to_current_OS_path}}' could not be created."""
+                cause = exception
+                resource = this )
+        else
+            return null
+        .
+    .
+    
+    // delete file
+    
+    function try_delete = try_delete_common
+	
+    function try_delete_if_exists
+        
+        if exists then
+            return try_delete_common
+        else
+            return null
+        .
+    .
+	
+	function try_delete_common access:private -> delete_file_error or null
+        
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Files.delete ( a_java_value.toPath() );
+            } catch ( IOException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return fa_delete_file_error.create (
+                info = """File '{{a_path.to_current_OS_path}}' could not be deleted."""
+                cause = exception
+                resource = this )
+        else
+            return null
+        .
+    .
+    
+    // rename file
+	
+    function try_rename = try_rename_common ( new_file_name )
+    
+    function try_rename_if_exists
+        
+        if exists then
+            return try_rename_common ( new_file_name )
+        else
+            return null
+        .
+    .
+
+    function try_rename_common access:private ( new_file_name file_name ) -> file or rename_file_error
+
+		const renamed_file = file.create_for_name ( file_name = i_new_file_name, directory = a_path.directory )
+
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Files.move ( a_java_value.toPath(), c_renamed_file.getJavaFile().toPath() );
+            } catch ( IOException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return fa_rename_file_error.create (
+                info = """File '{{a_path.to_current_OS_path}}' could not be renamed to '{{i_new_file_name}}'."""
+                cause = exception
+                resource = this )
+        else
+            return renamed_file
+        .
+    .
+	
+	
+    // create for path
+
+	creator create kind:in_all
+        
+        this.path = i_path
+
+        java
+            c_this.a_java_value = new File ( i_path.getValue().getJavaString() );
+        end java
+        
+        return this
+	.
+	
+    creator create_for_relative_path -> file
+        in path relative_file_path
+        in root_directory directory_path
+        
+        return create ( file_path.create_for_relative_path ( path, root_directory ) )
+    .
+        
+    creator create_for_absolute_or_relative_path -> file
+        in path absolute_or_relative_file_path
+        in root_directory directory_path
+        
+        case type of i_path
+            when file_path p
+                return create ( p )
+            when relative_file_path p
+                return create_for_relative_path ( path = p, root_directory )
+        .
+    .
+    
+    // create for name
+    
+    creator create_for_name ( file_name, directory directory_path ) -> file
+        return create ( file_path.create_for_name ( file_name, directory ) )
+    .
+
+    // create in working directory
+    
+    creator create_for_relative_path_in_working_directory ( path relative_file_path ) -> file
+        return create_for_relative_path ( path, root_directory = se_OS_directories.current_working_directory_path )
+    .
+    
+    creator create_for_absolute_or_relative_path_in_working_directory ( path absolute_or_relative_file_path ) -> file
+        
+        return create_for_absolute_or_relative_path (
+            path,
+            root_directory = se_OS_directories.current_working_directory_path )
+    .
+    
+    creator create_for_name_in_working_directory ( file_name ) -> file
+        return create_for_name ( file_name, directory = se_OS_directories.current_working_directory_path )
+    .
+    
+    
+    // all creators with string as input
+
+	creator try_parse ( string ) -> file or parse_object_error<file>
+	    
+	    case type of file_path.try_parse ( string )
+	        when file_path path
+	            return create ( path )
+            when parse_object_error<*> e
+                return parse_object_error<file>.create (
+                    info = """'{{i_string}}' is an invalid file path."""
+                    cause = e
+                    data = i_string )
+        .
+    .
+
+%parse_or_throw_creator<file>
+
+	creator try_parse_relative_path ( path string, root_directory directory_path ) -> file or parse_object_error<file>
+	    
+	    case type of relative_file_path.try_parse ( path )
+	        when relative_file_path p
+	            return create_for_relative_path ( path = p, root_directory )
+            when parse_object_error<*> e
+                return parse_object_error<file>.create (
+                    info = """'{{i_path}}' is an invalid relative file path."""
+                    cause = e
+                    data = i_path )
+        .
+    .
+		
+	creator try_parse_absolute_or_relative_path ( path string, root_directory directory_path ) \
+	    -> file or parse_object_error<file>
+        
+        if se_directory_or_file_path.is_absolute_path ( path ) then
+            return try_parse ( path )
+        else
+            return try_parse_relative_path ( path, root_directory )
+        .
+    .
+
+	creator try_parse_file_name ( name string, directory directory_path ) -> file or parse_object_error<file>
+	    
+	    case type of fa_file_name.try_parse ( i_name )
+	        when file_name n
+	            return create_for_name ( file_name = n, directory )
+            when parse_object_error<*> e
+                return parse_object_error<file>.create (
+                    info = """'{{i_name}}' is an invalid file name."""
+                    cause = e
+                    data = i_name )
+        .
+    .
+
+	creator try_parse_file_name_in_working_directory ( name string ) -> file or parse_object_error<file>
+	    return try_parse_file_name ( name, directory = se_OS_directories.current_working_directory_path )
+    .
+
+	creator try_parse_relative_path_in_working_directory ( path string ) -> file or parse_object_error<file>
+	    return try_parse_relative_path ( path, root_directory = se_OS_directories.current_working_directory_path )
+    .
+	
+	creator try_parse_absolute_or_relative_path_in_working_directory ( path string ) -> file or parse_object_error<file>
+	    return try_parse_absolute_or_relative_path ( path, root_directory = se_OS_directories.current_working_directory_path )
+    .
+    
+	tests
+        // tests are currently only valid for Windows
+        if not se_OS_config.OS_is_Windows then
+            exit script
+        end if
+        
+        var file file = co_create ( fa_file_path.create ( '''c:\level_1\level_2\file_name.ext''' ) )
+        verify v_file.path.value =v '''c:\level_1\level_2\file_name.ext'''
+        verify v_file.to_current_OS_path =v '''c:\level_1\level_2\file_name.ext'''
+        verify v_file.name.value =v "file_name.ext"
+        variable extension = v_file.name.extension
+        verify extension is not null
+        verify extension.value =v "ext"
+        verify v_file.directory.path.value =v '''c:\level_1\level_2'''
+
+        v_file = parse_or_throw ( '''C:\file_name''' )
+        verify v_file.path.value =v '''C:\file_name'''
+        verify v_file.to_current_OS_path =v '''C:\file_name'''
+        verify v_file.name.value =v "file_name"
+        verify v_file.name.extension is null
+        verify v_file.directory.path.value =v '''C:\'''
+
+        v_file = co_create ( fa_file_path.create ( '''c:/level.1/level_2/file.name.ext''' ) )
+        // verify v_file.path.value =v '''c:/level.1/level_2/file.name.ext'''
+        verify v_file.to_current_OS_path =v '''c:\level.1\level_2\file.name.ext'''
+        verify v_file.name.value =v "file.name.ext"
+        extension = v_file.name.extension
+        verify extension is not null
+        verify extension.value =v "ext"
+        // verify v_file.directory.path.value =v '''c:\level.1\level_2\'''
+        verify v_file.directory.path.to_current_OS_path =v '''c:\level.1\level_2'''
+
+        v_file = co_create ( fa_file_path.create ( "c:\\wsertiuzweriwiurqwezr\\ieurfiweriufwierwf.txt" ) )
+        verify not v_file.exists
+
+        v_file = se_empty_file_utilities.try_create_new_empty_temporary_file ( delete_file_on_exit = yes ) type_check:no
+        verify v_file.exists
+            
+        v_file.try_delete
+        verify not v_file.exists
+
+        v_file.try_create
+        verify v_file.exists
+
+        try
+            v_file.try_create
+            verify no
+        catch_any
+            verify yes
+        .
+        verify v_file.exists
+
+        const original_name file_name = v_file.name
+        const new_name file_name = fa_file_name.create ( "sdfgsdg4dfg3dfgdssdfsadf90_78ju.bar" )
+        const renamed_file file = v_file.try_rename ( new_file_name = c_new_name ) type_check:no
+        verify v_file.name =v c_original_name
+        verify not v_file.exists
+        verify c_renamed_file.name =v c_new_name
+        verify c_renamed_file.exists
+
+        try
+            renamed_file.try_create
+            verify no
+        catch_any
+            verify yes
+        .
+
+        c_renamed_file.try_delete
+        verify not c_renamed_file.exists
+
+        try
+            renamed_file.try_delete
+            verify no
+        catch_any
+            verify yes
+        .
+        verify not c_renamed_file.exists
+    .
+.

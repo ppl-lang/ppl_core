@@ -1,0 +1,6 @@
+type binary_reader
+
+	inherit string_or_binary_reader
+
+	// TD
+.

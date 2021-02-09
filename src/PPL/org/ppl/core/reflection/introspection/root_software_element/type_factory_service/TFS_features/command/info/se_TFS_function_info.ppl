@@ -1,0 +1,96 @@
+service TFS_function_info
+
+	java_header
+	    import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+	end java_header
+
+	function for_each_command_in_TFS ( TFS_path, consumer object_consumer<PPL_command> )
+
+        java
+            se_TFS_function_info_Java_helper.forEachFunctionInTFSPath (
+                i_TFS_path,
+                command -> { i_consumer.consume ( command ); } );
+        end java
+	.
+	
+    function try_get_command ( TFS_path, command_id PPL_command_id ) -> PPL_command or reflection_error
+
+        script    
+            variable r PPL_command or null = null
+            variable java_exception java_exception or null = null
+            java
+                try {
+                    v_r = se_TFS_function_info_Java_helper._require_command_for_TFS_id_path ( i_TFS_path, i_command_id );
+                } catch ( Exception e ) {
+                    v_java_exception = new fa_java_exception ( e );
+                }
+            end java
+            assert java_exception may be null
+    
+            if java_exception is not null then
+                return reflection_error.create (
+                    info = """Could not retrieve '{{i_command_id}}' in '{{i_TFS_path}}'. Reason:
+    {{java_exception.to_string}}"""
+                    java_exception )
+            .
+            
+            assert r is not null
+            return r
+        .
+		test
+            case type of try_get_command (
+                TFS_path = se_common_type_paths.non_error,
+		        command_id = PPL_command_id.create ( "to_string" ) )
+
+                when PPL_command r
+                    verify r.id.value =v "to_string"
+                    verify r.input_argument_list is null
+                    verify r.output_argument_list is not null
+
+                otherwise
+                    verify no
+            .
+		.
+    .
+
+    function get_command_or_throw ( TFS_path, command_id PPL_command_id ) -> PPL_command
+
+	    const r = try_get_command ( TFS_path, command_id ) on_error: throw_error
+	    return r
+    .
+
+	function require_sorted_command_id_string_list_for_TFS_id_path
+		in TFS_id_path TFS_path
+
+		out result indexed_list<string> or null
+		
+		script
+			const r = mutable_indexed_list<string>.create
+
+			java
+				Class<?> interface_class = se_Java_reflection_class_loader.getClassOrThrow (
+				    i_TFS_id_path.getValue().getJavaString() );
+
+				se_TFS_function_info_Java_helper.forEachFunctionMethodInClass (
+					interface_class,
+					method -> {
+						c_r.append ( new fa_string ( method.getName() ) );
+					} );
+			end java
+
+			r.sort ( { object_1.compare_to_ignore_case(object_2) } )
+
+			return r.make_immutable_or_null
+		.
+	.
+
+    // helper for se_TFS_function_info_Java_helper
+	function create_mutable_input_argument_list -> mutable_list<ty_PPL_command_input_argument>
+	    return mutable_list<ty_PPL_command_input_argument>.create
+    .
+
+	function create_mutable_output_argument_list -> mutable_list<ty_PPL_command_output_argument>
+	    return mutable_list<ty_PPL_command_output_argument>.create
+    .
+.

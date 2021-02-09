@@ -1,0 +1,75 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_mutable_or_immutable_set_commands
+
+	param size_factory
+	
+	// ty_mutable_or_immutable_collection
+
+    function element_type native:yes
+        java
+            return t_element;
+        end java
+    .
+    
+    function size native:yes
+        java
+            return new fa_{size_factory} ( a_java_set.size() );
+        end java
+    .
+
+    function iterator native:yes
+        java
+            return new fa_Java_Spliterator_wrapper_iterator_with_size<t_element> ( a_java_set.spliterator(), a_java_set.size(), t_element );
+        end java
+    .
+
+    function to_string = """Set with {{size}} {{if size #v 1 then "elements" else "element"}}"""
+    
+    
+    // ty_mutable_or_immutable_set
+
+    function contains native:yes
+        java
+            return fa_yes_no.of ( a_java_set.contains ( i_element ) );
+        end java
+    .
+
+    function stream native:yes
+        java
+            return new fa_stream<t_element> ( Collections.unmodifiableSet ( a_java_set ).stream(), t_element );
+        end java
+    .
+
+    function sorted_stream
+        
+        // return key_stream.sort_by_key ( key_getter = { return object.value } )
+        const comparator object_comparator<scalar_or_scalar_value> = { object_1.to_string.compare_to ( object_2.to_string ) }
+        return stream.sort ( comparator )
+    .
+
+    function to_long_string
+
+        const r = mutable_string.create
+        
+        r.append ( "[# " )
+
+        repeat for each item in iterator is_last:is_last
+            // r.append ( item.to_string )
+            r.append ( se_object.to_long_string_or_null_string ( item ) )
+
+            if not is_last then
+                r.append ( ", " )
+            .
+        .
+
+        r.append ( "]" )
+
+        return r.to_string
+    .
+.

@@ -1,0 +1,23 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory day_of_week
+
+	%fa_positive_32_value_with_compare_to_commands
+	
+	function is_monday    = a_value =v 1
+	function is_tuesday   = a_value =v 2
+	function is_wednesday = a_value =v 3
+	function is_thursday  = a_value =v 4
+	function is_friday    = a_value =v 5
+	function is_saturday  = a_value =v 6
+	function is_sunday    = a_value =v 7
+	function is_weekend   = a_value >= 6
+	
+	%scalar_value_factory_creator
+
+.

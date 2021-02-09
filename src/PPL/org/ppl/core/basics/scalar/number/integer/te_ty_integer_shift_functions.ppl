@@ -1,0 +1,11 @@
+template ty_integer_shift_functions
+
+	param result
+
+	function shift_left  ( count positive_32 ) -> {result}
+	function shift_right ( count positive_32 ) -> {result}
+
+	function shift_left_once  -> {result}
+	function shift_right_once -> {result}
+
+.

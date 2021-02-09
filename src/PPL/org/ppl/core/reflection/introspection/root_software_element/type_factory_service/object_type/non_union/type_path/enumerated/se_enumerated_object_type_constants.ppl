@@ -1,0 +1,4 @@
+service enumerated_object_type_constants
+    
+    att to_string_prefix string = "!"
+.

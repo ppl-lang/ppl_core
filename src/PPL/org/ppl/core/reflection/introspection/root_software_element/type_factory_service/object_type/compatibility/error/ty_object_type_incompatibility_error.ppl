@@ -1,0 +1,7 @@
+type object_type_incompatibility_error
+
+    inherit anticipated_error
+    
+    att source object_type
+    att target object_type
+.

@@ -1,0 +1,169 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_mutable_list_commands
+
+    param list_type
+	param list_factory
+	param java_list_factory
+
+    function is_empty native:yes
+        java
+            return fa_yes_no.of ( a_java_list.isEmpty() );
+        end java
+    .
+
+    function append native:yes
+
+        java
+            try {
+                a_java_list.add ( i_element ) ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+            return this;
+        end java
+    .
+
+    function append_all
+    
+        repeat for each element in i_collection
+            append ( element )
+        .
+        return this
+    .
+
+    function prepend native:yes
+
+        java
+            try {
+                a_java_list.add ( 0, i_element ) ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+            return this;
+        end java
+    .
+
+    function remove_first
+
+        java
+            try {
+                a_java_list.remove ( 0 ) ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+        end java
+            
+        return this
+    .
+
+    function remove_last
+
+        java
+            try {
+                a_java_list.remove ( a_java_list.size() - 1 ) ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+        end java
+        
+        return this
+    .
+
+    function remove_all native:yes
+
+        java
+            try {
+                a_java_list.clear() ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+            return this;
+        end java
+    .
+
+    function replace_first
+
+        java
+            try {
+                a_java_list.set ( 0, i_new_element ) ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+        end java
+        
+        return this
+    .
+
+    function replace_last
+
+        java
+            try {
+                a_java_list.set ( a_java_list.size() - 1, i_new_element ) ;
+            } catch ( UnsupportedOperationException e ) {
+                se_immutable_Java_collection_checker.mutable_operation_violation();
+            }
+        end java
+        
+        return this
+    .
+
+    function sort native:yes
+        java
+            a_java_list.sort ( se_comparator_Java_bridge.<t_element>PPL_to_Java_comparator ( i_comparator ) );
+        end java
+    .
+
+    function sort_by_key
+    
+        const comparator = comparator_from_key_getter <t_element>.create ( i_key_getter, i_descending )
+        sort ( comparator )
+    .
+
+    function copy_to_immutable
+    
+        variable r {list_type}<t_element>
+        java
+            List<t_element> copy = new {java_list_factory}<t_element> ( a_java_list );
+            v_r = new fa_{list_factory}<t_element> ( Collections.unmodifiableList ( copy ), t_element );
+        end java
+        assert r is not null
+        
+        return r
+    .
+    
+    function copy_to_immutable_or_null
+        
+        if is_empty then
+            return null
+        else
+            return copy_to_immutable
+        .
+    .
+
+    function make_immutable
+
+        variable r {list_type}<t_element>
+        java
+            a_java_list = Collections.unmodifiableList ( a_java_list );
+            v_r = new fa_{list_factory}<t_element> ( a_java_list, t_element );
+        end java
+        assert r is not null
+        
+        return r
+    .
+
+    function make_immutable_or_null
+        
+        if is_empty then
+            return null
+        else
+            return make_immutable
+        .
+    .
+.

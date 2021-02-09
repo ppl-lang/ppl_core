@@ -1,0 +1,27 @@
+factory throwing_string_writer_wrapper
+
+	function write
+	    a_writer.try_write ( string ) on_error:throw_error
+        return this
+    .
+
+	function write_line
+	    a_writer.try_write_line ( string ) on_error:throw_error
+        return this
+    .
+
+	function write_new_line
+	    a_writer.try_write_new_line on_error:throw_error
+        return this
+    .
+	
+	function flush
+	    a_writer.try_flush on_error:throw_error
+        return this
+    .
+
+    function try_close = a_writer.try_close
+    
+    creator create kind:in_all
+
+.

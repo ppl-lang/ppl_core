@@ -1,0 +1,6 @@
+type Java_exception_runtime_error
+
+    inherit runtime_error
+    
+    att exception Java_exception_wrapper
+.

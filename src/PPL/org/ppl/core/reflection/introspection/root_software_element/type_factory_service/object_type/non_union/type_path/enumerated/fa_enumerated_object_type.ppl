@@ -1,0 +1,60 @@
+factory enumerated_object_type
+
+%fa_type_path_object_type_functions<enumerated_object_type>
+
+    function check_compatible_to_other
+    
+        case type of i_other
+            
+            when enumerated_object_type other_enum
+                if a_type_path =v other_enum.type_path then
+                    return null
+                else
+                    return object_type_incompatibility_error.create_with_reason (
+                        reason = "An enumerated type is only compatible to the same enumerated type."
+                        source = this
+                        target = i_other )
+                .
+            
+            when union_object_type union_object_type
+                return union_object_type.check_other_compatible_to_me ( other = this, config )
+                
+            when standard_object_type standard_object_type
+                const error = se_object_type_compatibility.check_type_paths_compatible (
+                    source = this
+                    target = standard_object_type
+                    i_config )
+                if error is null then
+                    return null
+                else
+                    return object_type_incompatibility_error.create_with_reason (
+                        reason = error.info
+                        source = this
+                        target = i_other )
+                .
+
+            otherwise
+                return object_type_incompatibility_error.create_with_reason (
+                    reason = "An enumerated type is never compatible to an non-enumerated type."
+                    source = this
+                    target = i_other )
+        .
+    .
+    
+    function is_nullable = no
+    
+    function to_nullable = union_object_type.create_nullable ( this )
+        
+    function to_non_nullable = this
+            
+    function uses_type_parameters = no
+
+    function type_selector = fa_enumerated_type_selector.create ( a_type_path )
+
+	function to_string = se_enumerated_object_type_constants.to_string_prefix & type_path.id.value
+
+	function to_long_string = se_enumerated_object_type_constants.to_string_prefix & type_path.value
+    
+
+    creator create kind:in_all
+.

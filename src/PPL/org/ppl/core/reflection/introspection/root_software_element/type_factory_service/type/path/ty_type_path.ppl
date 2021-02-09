@@ -1,0 +1,16 @@
+type type_path
+
+    inherit virtual_type_path
+        redefine
+            att value and_check: se_type_info.is_existing_type_path_string ( value ) \
+                message: """Type '{{value}}' doesn't exist."""
+        .
+    .
+    
+    /// TD
+    inherit type_path
+
+    check: se_type_info.is_existing_type_path ( i_object_ )
+    .///
+.
+ 

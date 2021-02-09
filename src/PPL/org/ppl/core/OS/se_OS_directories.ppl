@@ -1,0 +1,21 @@
+service OS_directories
+
+	functions
+	
+        current_working_directory -> directory = directory.create ( current_working_directory_path )
+        
+        user_home_directory -> directory = directory.create ( user_home_directory_path )
+        
+        temporary_files_directory -> directory = directory.create ( temporary_files_directory_path )
+        
+        
+        current_working_directory_path -> directory_path = \
+            directory_path.create ( se_java_config.get_non_null_system_property ( "user.dir" ) )
+        
+        user_home_directory_path -> directory_path = \
+            directory_path.create ( se_java_config.get_non_null_system_property ( "user.home" ) )
+        
+        temporary_files_directory_path -> directory_path = \
+            directory_path.create ( se_java_config.get_non_null_system_property ( "java.io.tmpdir" ) )
+    .
+.

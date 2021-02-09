@@ -1,0 +1,11 @@
+type none \
+    child_types: none \
+    factories: none
+
+    ///
+        This is a virtual type that implicitly inherits from all other types in the type system.
+        Thus it is compatible to every other type.
+        An object of his type cannot exist
+	.///
+
+.

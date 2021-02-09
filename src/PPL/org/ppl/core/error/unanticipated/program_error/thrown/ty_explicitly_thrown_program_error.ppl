@@ -1,0 +1,6 @@
+type explicitly_thrown_program_error
+
+    inherit program_error
+
+    att failure_info program_check_failure_info or null
+.

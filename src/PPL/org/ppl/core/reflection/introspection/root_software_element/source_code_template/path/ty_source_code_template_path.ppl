@@ -1,0 +1,11 @@
+type source_code_template_path
+
+    inherit RSE_path
+        redefine
+           	function id -> source_code_template_id
+        .
+    .
+
+    inherit has_equal_to<source_code_template_path>
+
+.

@@ -1,0 +1,7 @@
+type unanticipated_Java_throwable
+
+    inherit unanticipated_error
+
+    att Java_throwable Java_throwable
+
+.

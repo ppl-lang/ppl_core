@@ -1,0 +1,130 @@
+service Java_throwable_writer
+
+	java_header
+	    import java.io.IOException;
+	    import java.io.PrintWriter;
+	    import java.io.StringWriter;
+	    import java.io.Writer;
+
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		import org.ppl.core.basics.scalar.string.se_string_constants;
+		
+		import org.ppl.core.error.unanticipated.ty_unanticipated_error;
+	end java_header
+
+    java
+        private static String new_line = se_string_constants.getCurrent_OS_new_line().getJavaString();
+        
+        public static ty_string throwable_to_long_string ( Throwable throwable, Thread thread ) {
+        
+            try ( StringWriter writer = new StringWriter() ) {
+    			write_throwable ( throwable, thread, writer );
+    			return new fa_string ( writer.toString() );
+            } catch ( IOException e ) {
+                se_Java_throwable_handler.handle_throwable_during_error_handling ( thread, e );
+    			return new fa_string ( "ERROR" );
+            }
+
+        }
+
+        public static ty_string stack_trace_to_long_string ( StackTraceElement[] stack_trace ) {
+        
+            try ( StringWriter writer = new StringWriter() ) {
+                write_trace ( stack_trace, writer );
+    			return new fa_string ( writer.toString() );
+            } catch ( IOException e ) {
+                se_Java_throwable_handler.handle_throwable_during_error_handling ( e );
+    			return new fa_string ( "ERROR" );
+            }
+        }
+
+        public static void write_throwable ( Throwable throwable, Thread thread, Writer writer ) throws IOException {
+        
+			write_throwable_without_cause ( throwable, thread, writer );
+
+			Throwable cause = throwable.getCause();
+			if ( cause != null ) {
+                writer.write ( new_line );
+                writer.write ( "cause: " );
+                writer.write ( new_line );
+    			write_throwable ( cause, thread, writer );
+			}
+			
+			writer.flush();
+        }
+
+        private static void write_throwable_without_cause ( Throwable throwable, Thread thread, Writer w ) throws IOException {
+        
+            if ( throwable instanceof ty_unanticipated_error ) {
+    			w.write ( "PPL runtime error in thread " + thread.toString() + ":" );
+                w.write ( new_line );
+                w.write ( ((ty_unanticipated_error) throwable).to_long_string().getJavaString() );
+                w.write ( new_line );
+/*
+            } else {
+    			w.write ( "Java throwable in thread " + thread.toString() + ":" );
+                w.write ( new_line );
+                w.write ( throwable.toString() );
+                w.write ( new_line );
+                write_trace ( throwable.getStackTrace(), w );
+*/
+            }
+
+            w.write ( "Java throwable in thread " + thread.toString() + ":" );
+            w.write ( new_line );
+            w.write ( throwable.toString() );
+            w.write ( new_line );
+            write_trace ( throwable.getStackTrace(), w );
+
+			w.flush();
+        }
+
+		private static void write_trace ( StackTraceElement[] stack_trace, Writer w ) throws IOException {
+		
+            w.write ( "Stack trace:" );
+            w.write ( new_line );
+			for ( StackTraceElement e : stack_trace ) {
+				// r.append ( e.toString() );
+				w.write ( "> " );
+				w.write ( e.getClassName() );
+				w.write ( "." );
+				w.write ( e.getMethodName() );
+				w.write ( ", Java line " );
+				w.write ( String.valueOf ( e.getLineNumber() ) );
+				w.write ( new_line );
+			}
+			
+			w.flush();
+		}
+    end java
+
+///
+    command test
+        java
+            Throwable l3 = new RuntimeException ( "cause level 3" );
+            Throwable l2 = new RuntimeException ( "cause level 2", l3 );
+            Throwable l1 = new RuntimeException ( "main level", l2 );
+            write_throwable ( l1, Thread.currentThread(), new PrintWriter ( System.err, true ) );
+            
+            try {
+                test_2();
+            } catch ( Throwable t ) {
+                write_throwable ( t, Thread.currentThread(), new PrintWriter ( System.err, true ) );
+            }
+        end java
+    .
+
+    command test_2
+        test_3
+    .
+
+    command test_3
+        const c any_type = "qwe"
+        const c1 yes_no = c type_check:no // causes PPL error
+        %out<c1>
+    .
+. ///
+
+.
+    

@@ -1,0 +1,39 @@
+factory any_object_type type:standard_object_type
+
+%fa_type_path_object_type_functions<standard_object_type>
+
+    function check_compatible_to_other
+    
+        // TD? if this =r i_other then
+        if this =v i_other then
+            return null
+        else
+            return object_type_incompatibility_error.create_with_reason (
+                reason = """Type '{{a_type_path.id}}' is only compatible to itself (i.e. type '{{a_type_path.id}}')."""
+                source = this
+                target = i_other )
+        .
+    .
+
+    function is_nullable = yes
+    
+    function to_nullable = this
+        
+    function to_non_nullable = se_common_object_types.non_null
+            
+    function uses_type_parameters = no
+
+    function type_selector = fa_standard_type_selector.create ( a_type_path )
+
+	function to_string = a_type_path.id.value
+	
+	function to_long_string = a_type_path.value
+
+
+    creator create -> standard_object_type
+
+        this.type_path = se_common_type_paths.any
+        return this
+    .
+.
+

@@ -1,0 +1,59 @@
+type union_object_type \
+    child_types: none
+
+    inherit object_type
+
+    // TD att members set<non_union_object_type> check:members.size >= 2
+    // TD check no member is a child of another (e.g. 'number or pos_32' is illegal)
+    att members list<child_of:non_union_object_type> check:members.size >= 2
+    
+    att known_parent_object_type non_union_object_type or null
+
+    function define_parent_object_type ( config object_type_compatibility_config ) -> non_union_object_type
+
+    function check_other_compatible_to_me ( other non_union_object_type, config object_type_compatibility_config ) \
+        -> object_type_incompatibility_error or null
+       
+    function has_member -> yes_no
+        in member non_union_object_type
+        in config object_type_compatibility_config
+    .
+
+	function has_error_member_and_non_error_or_null_member ( config object_type_compatibility_config ) -> yes_no
+
+    function remove_members ( filter object_filter<non_union_object_type> ) \
+        -> ( result object_type or null, members_removed_count zero_pos_32 )
+
+    // t1, e1, t2, e2, null  ->  t1, t2, null
+    function remove_error_members ( config object_type_compatibility_config ) \
+        -> ( result object_type or null, members_removed_count zero_pos_32 )
+
+    // t1, e1, t2, e2, null  ->  e1, e2
+    function retain_error_members ( config object_type_compatibility_config ) \
+        -> ( result object_type or null, members_removed_count zero_pos_32 )
+
+/// not used
+
+	function has_error_member ( config object_type_compatibility_config ) -> yes_no
+
+	function has_non_error_member ( config object_type_compatibility_config ) -> yes_no
+
+    // t1, e1, t2, e2  ->  e1, e2
+    function remove_non_error_members ( config object_type_compatibility_config ) \
+        -> ( result object_type or null, members_removed_count zero_pos_32 )
+
+    ///
+    function add_member ( member non_union_object_type ) -> union_object_type
+        in_check: not i_object_.has_member ( member )
+    .
+    .///
+
+    function add_member_if_not_contained -> object_type
+        in new_member non_union_object_type
+        in config object_type_compatibility_config
+    .
+
+    function unique_non_error_member -> non_union_object_type or null
+.///
+    
+.

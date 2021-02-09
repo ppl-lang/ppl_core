@@ -1,0 +1,97 @@
+service immutable_Java_collection_checker
+
+	java_header
+		import java.util.ArrayList;
+		import java.util.Collections;
+		import java.util.HashMap;
+		import java.util.List;
+		import java.util.Map;
+		import java.util.Set;
+		
+		import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.basics.scalar.ty_scalar_or_scalar_value;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+	end java_header
+	
+	java
+		// see: http://stackoverflow.com/questions/8364856/how-to-test-if-a-list-extends-object-is-an-unmodifablelist
+
+        @SuppressWarnings("unchecked")
+		public static boolean is_immutable_list ( List<?> i_list ) {
+		
+			boolean is_immutable = false;
+			try {
+				i_list.addAll ( Collections.EMPTY_LIST );
+			} catch ( UnsupportedOperationException uoe ) {
+				is_immutable = true;
+			}
+			return is_immutable;
+		}
+
+        @SuppressWarnings("unchecked")
+		public static boolean is_immutable_set ( Set<?> i_set ) {
+		
+			boolean is_immutable = false;
+			try {
+				i_set.addAll ( Collections.EMPTY_SET );
+			} catch ( UnsupportedOperationException uoe ) {
+				is_immutable = true;
+			}
+			return is_immutable;
+		}
+
+        @SuppressWarnings("unchecked")
+		public static boolean is_immutable_map ( Map<?,?> i_map ) {
+		
+			boolean is_immutable = false;
+			try {
+				i_map.putAll ( Collections.EMPTY_MAP );
+			} catch ( UnsupportedOperationException uoe ) {
+				is_immutable = true;
+			}
+			return is_immutable;
+		}
+
+		public static void mutable_operation_violation() {
+			// mutable_operation_violation_ppl();
+			throw new RuntimeException ( "After making a mutable collection immutable (with command 'make_immutable') any command that modifies the collection can no more be executed." );
+		}
+	end java
+	
+
+	tests
+		// test is_immutable_list
+		
+		var is_immutable_list yes_no
+		java
+			List<ty_non_null> l = new ArrayList<ty_non_null>();
+			v_is_immutable_list = is_immutable_list ( l ) ? fa_yes_no.a_yes : fa_yes_no.a_no;
+		end java
+		assert is_immutable_list is not null
+		verify not is_immutable_list
+
+		java
+			l = Collections.unmodifiableList ( l );
+			v_is_immutable_list = is_immutable_list ( l ) ? fa_yes_no.a_yes : fa_yes_no.a_no;
+		end java
+		verify v_is_immutable_list
+		
+
+		// test is_immutable_map
+		
+		var is_immutable_map yes_no
+		java
+			Map<ty_scalar_or_scalar_value, ty_non_null> m = new HashMap<ty_scalar_or_scalar_value, ty_non_null>();
+			v_is_immutable_map = is_immutable_map ( m ) ? fa_yes_no.a_yes : fa_yes_no.a_no;
+		end java
+		assert is_immutable_map is not null
+		verify not is_immutable_map
+
+		java
+			m = Collections.unmodifiableMap ( m );
+			v_is_immutable_map = is_immutable_map ( m ) ? fa_yes_no.a_yes : fa_yes_no.a_no;
+		end java
+		verify v_is_immutable_map
+	.
+
+.

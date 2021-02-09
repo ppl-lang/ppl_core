@@ -1,0 +1,67 @@
+service generified_TFS_selector
+
+	function are_type_parameters_equal -> yes_no
+		in TFS_selector_1 generified_TFS_selector
+		in TFS_selector_2 generified_TFS_selector
+		
+		const selector_1_is_wildcard = i_TFS_selector_1.is_wildcard
+		const selector_2_is_wildcard = i_TFS_selector_2.is_wildcard
+        if selector_1_is_wildcard #v selector_2_is_wildcard then
+            return no
+        else if selector_1_is_wildcard and selector_2_is_wildcard
+            return yes
+        .
+ 		
+		const parameters_1 = i_TFS_selector_1.type_parameters
+		assert parameters_1 is not null
+		const parameters_2 = i_TFS_selector_2.type_parameters
+		assert parameters_2 is not null
+
+        if parameters_1.size #v parameters_2.size then
+            return no
+        .
+        
+        repeat for each assignment_1 in parameters_1
+            const assignment_2 = parameters_2.get_or_null ( assignment_1.id )
+            if assignment_2 is null then
+                return no
+            .
+            if assignment_2.kind #v assignment_1.kind then
+                return no
+            .
+            if assignment_2.kind #v type_parameter_assignment_kind.wildcard then
+                const object_type_1 = assignment_1.object_type
+                assert object_type_1 is not null
+                const object_type_2 = assignment_2.object_type
+                assert object_type_2 is not null
+                if object_type_2 #v object_type_1 then
+                    return no
+                .
+            .
+        .
+        return yes		
+	.
+
+    function type_parameters_to_string ( TFS_selector generified_TFS_selector ) -> string
+    
+		if i_TFS_selector.is_wildcard then
+			return "<*>"
+        .
+
+		const r = mutable_string.create
+		
+        r.append ( "<" )
+        const type_parameters = i_TFS_selector.type_parameters
+        assert type_parameters is not null
+        repeat for each assignment in type_parameters is_first:is_first
+            if not is_first then
+                r.append ( ", " )
+            .
+            r.append ( assignment.to_string )
+        .
+        r.append ( ">" )
+		
+		return r.to_string
+	.
+
+.

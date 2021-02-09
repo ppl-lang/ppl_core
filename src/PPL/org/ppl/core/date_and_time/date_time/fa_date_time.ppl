@@ -1,0 +1,201 @@
+factory date_time
+
+	java_header
+		import java.time.format.DateTimeFormatter;
+		import java.time.format.DateTimeParseException;
+		import java.time.format.FormatStyle;
+		// import java.time.Instant;
+		import java.time.ZonedDateTime;
+		import java.time.ZoneId;
+
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+
+		import org.ppl.core.date_and_time.date.fa_local_date;
+		import org.ppl.core.date_and_time.date_time.local.fa_local_date_time;
+		import org.ppl.core.date_and_time.date_time.time_zone.fa_time_zone_offset;
+		import org.ppl.core.date_and_time.time.fa_local_time;
+
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.error.java.fa_java_exception;
+	end java_header
+
+	java
+		private ZonedDateTime a_JavaZonedDateTime;
+
+		public ZonedDateTime getJavaZonedDateTime() { return a_JavaZonedDateTime; }
+
+		public fa_date_time ( ZonedDateTime dateTime ) {
+
+			if ( dateTime == null)
+			    throw new IllegalArgumentException ( "Input for fa_date_time constructor cannot be null." );
+
+			a_JavaZonedDateTime = dateTime;
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_date_time ) ) return false;
+		
+			return a_JavaZonedDateTime.equals ( ((ty_date_time) other).getJavaZonedDateTime() );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_JavaZonedDateTime.hashCode();
+		}
+
+		public int compareTo ( ty_date_time other ) {
+			if ( this == other ) return 0;
+			return a_JavaZonedDateTime.compareTo ( other.getJavaZonedDateTime() );
+		}
+	end java
+
+	functions
+
+        is_equal_to native:yes
+            java
+                return fa_yes_no.of ( equals ( i_other ) );
+            end java
+        .
+    
+        compare_to native:yes
+            java
+                return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+            end java
+        .
+    
+        hash_code native:yes
+            java
+                return new fa_signed_int_32 ( hashCode() );
+            end java
+        .
+    
+        date native:yes
+            java
+                return new fa_local_date ( a_JavaZonedDateTime.toLocalDate() );
+            end java
+        .
+    
+        time native:yes
+            java
+                return new fa_local_time ( a_JavaZonedDateTime.toLocalTime() );
+            end java
+        .
+    
+        time_zone_offset native:yes
+            java
+                return fa_time_zone_offset.createFromOffset ( a_JavaZonedDateTime.getOffset() );
+            end java
+        .
+        
+        plus native:yes
+            java
+                return new fa_date_time ( a_JavaZonedDateTime.plus ( i_duration.getJavaDuration() ) );
+            end java
+        .
+        
+        minus native:yes
+            java
+                return new fa_date_time ( a_JavaZonedDateTime.minus ( i_duration.getJavaDuration() ) );
+            end java
+        .
+        
+        to_local_date_time native:yes
+            java
+                return new fa_local_date_time ( a_JavaZonedDateTime.toLocalDateTime() );
+            end java
+        .
+    
+        function to_string native:yes
+            java
+                return new fa_string ( a_JavaZonedDateTime.format ( DateTimeFormatter.ISO_ZONED_DATE_TIME ) );
+            end java
+        .
+    
+        function format native:yes
+            java
+                return new fa_string ( a_JavaZonedDateTime.format ( DateTimeFormatter.ofPattern (
+                    i_pattern.getJavaString() ) ) );
+            end java
+        .
+        
+        function format_to_long_default_locale native:yes
+            java
+                return new fa_string ( a_JavaZonedDateTime.format ( DateTimeFormatter.ofLocalizedDateTime (
+                    FormatStyle.FULL ) ) );
+            end java
+        .
+    .
+    
+	creator create native:yes -> date_time
+        in date local_date
+        in time local_time
+        in time_zone_offset
+        
+        java
+            return new fa_date_time ( ZonedDateTime.of (
+                i_date.getJavaLocalDate(),
+                i_time.getJavaLocalTime(),
+                ZoneId.of ( i_time_zone_offset.getValue().getJavaString() ) ) );
+        end java
+    .
+    
+	creator now native:yes -> date_time
+        java
+            return new fa_date_time ( ZonedDateTime.now() );
+        end java
+    .
+	
+	creator try_parse ( string ) -> date_time or parse_object_error<date_time>
+        script
+            variable r date_time or null = null
+			var java_exception java_exception or null = null
+			java
+			    try {
+    			    v_r = new fa_date_time ( ZonedDateTime.parse ( i_string.getJavaString() ) );
+				} catch ( DateTimeParseException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			assert java_exception may be null
+
+			if java_exception is null then
+				assert r is not null
+				return r
+			else
+			    return parse_object_error<date_time>.create (
+                    info = """'{{i_string}}' is not a valid ISO zoned date-time."""
+                    java_exception,
+                    data = i_string )
+            .
+		.
+		tests
+		    case type of try_parse ( "2011-07-06T08:30:44+07:00" )
+		        when date_time dt
+                    verify dt.to_string =v "2011-07-06T08:30:44+07:00"
+                    verify dt.date.to_string =v "2011-07-06"
+                    verify dt.time.to_string =v "08:30:44"
+                    verify dt.time_zone_offset.value =v "+07:00"
+                    
+                    // OS.out.write_line ( dt.format )
+                    // OS.out.write_line ( dt.format_to_long_default_locale )
+		        when error
+                    verify no
+            .
+            
+		    case type of try_parse ( "2011/07-06T08:30:44" )
+		        when date_time
+		            verify no
+		        when error
+            .
+        .
+    .
+    
+%parse_or_throw_creator<date_time>
+
+.

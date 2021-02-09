@@ -1,0 +1,7 @@
+factory standard_service_selector
+
+%fa_TFS_selector_commands
+
+	creator create kind:in_all
+
+.

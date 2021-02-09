@@ -1,0 +1,5 @@
+type non_error \
+    factories: none
+
+    inherit non_null
+.

@@ -1,0 +1,56 @@
+service service_attributes
+
+	java_header
+		import java.lang.reflect.InvocationTargetException;
+
+        import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.info.se_TFS_attribute_info_java_helper;
+	end java_header
+
+	java
+		// Note: i_attribute_id must not start with suffix "a_"
+		private static ty_non_null _require_attribute_value ( String i_service_id_path, String i_attribute_id )
+			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+
+			Class<?> clazz = se_Java_reflection_class_loader.getClassOrThrow ( i_service_id_path );
+
+			return se_TFS_attribute_info_java_helper._require_class_attribute_value ( clazz, null, i_attribute_id );
+		}
+
+	end java
+
+    // TD see functions in se_object_attributes
+
+    // TD get_value_or_throw
+	function get_value_or_throw ( service_path, attribute_id PPL_attribute_id ) -> any
+
+		script
+		    variable r any
+			java
+				v_r = _require_attribute_value (
+				    i_service_path.getValue().getJavaString(), i_attribute_id.getValue().getJavaString() );
+			end java
+			assert r may be null
+			return r
+		.
+
+		test
+			test \
+				service_path = fa_service_path.create (
+				    "org.ppl.core.directories_and_files.directory.se_directory_constants" ) \
+				attribute_id = fa_PPL_attribute_id.create ( "Unix_directory_separator" )
+			case type of result
+			    when string t
+        			verify t =v "/"
+                otherwise
+                    verify no
+            .
+
+			test \
+				service_path = fa_service_path.create ( "foo.se_bar" ) \
+				attribute_id = fa_PPL_attribute_id.create ( "Unix_directory_separator" )
+			verify_error
+		.
+	.
+.

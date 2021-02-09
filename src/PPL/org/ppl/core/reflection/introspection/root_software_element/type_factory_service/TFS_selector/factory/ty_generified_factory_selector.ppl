@@ -1,0 +1,6 @@
+type generified_factory_selector
+
+	inherit factory_selector, generified_TFS_selector
+
+.
+

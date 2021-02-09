@@ -1,0 +1,16 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_or_immutable_list < element usage:in_out >
+
+	inherit mutable_or_immutable_collection <t_element>
+		
+	inherit has_to_long_string
+
+	function stream -> stream<t_element>
+
+.

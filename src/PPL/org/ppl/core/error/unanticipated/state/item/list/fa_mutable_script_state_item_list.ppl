@@ -1,0 +1,90 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory mutable_script_state_item_list type:mutable_script_state_item_list
+
+	java_header
+		import org.ppl.core.basics.base_types.ty_any;
+
+//        import org.ppl.core.reflection.introspection.identifier.fa_PPL_identifier;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.fa_PPL_attribute_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.input.fa_PPL_command_input_argument_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.output.fa_PPL_command_output_argument_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.id.fa_PPL_script_constant_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.id.fa_PPL_script_variable_id;
+	end java_header
+
+	java
+		public void _add_attribute ( String i_id, ty_object_type i_object_type, ty_any i_value ) {
+			add_attribute ( 
+				fa_PPL_attribute_id.create ( new fa_string ( i_id ) ), 
+				i_object_type,
+				i_value );
+		}
+
+		public void _add_input_argument ( String i_id, ty_object_type i_object_type, ty_any i_value ) {
+			add_input_argument ( 
+				fa_PPL_command_input_argument_id.create ( new fa_string ( i_id ) ),
+				i_object_type,
+				i_value );
+		}
+
+		public void _add_output_argument ( String i_id, ty_object_type i_object_type, ty_any i_value ) {
+			add_output_argument ( 
+				fa_PPL_command_output_argument_id.create ( new fa_string ( i_id ) ),
+				i_object_type,
+				i_value );
+		}
+
+		public void _add_variable ( String i_id, ty_object_type i_object_type, ty_any i_value ) {
+			add_variable ( 
+				fa_PPL_script_variable_id.create ( new fa_string ( i_id ) ), 
+				i_object_type,
+				i_value );
+		}
+
+		public void _add_constant ( String i_id, ty_object_type i_object_type, ty_any i_value ) {
+			add_constant ( 
+				fa_PPL_script_constant_id.create ( new fa_string ( i_id ) ), 
+				i_object_type,
+				i_value );
+		}
+	end java
+
+	att mutable_list mutable_list<script_state_item> default:mutable_list<script_state_item>.create private:yes
+
+	command add_attribute
+		a_mutable_list.append ( fa_attribute_script_state.create ( id, object_type, value ) )
+        return this
+	.
+	
+	command add_input_argument
+		a_mutable_list.append ( fa_input_argument_script_state.create ( id, object_type, value ) )
+        return this
+	.
+
+	command add_output_argument
+		a_mutable_list.append ( fa_output_argument_script_state.create ( id, object_type, value ) )
+        return this
+	.
+
+	command add_variable
+		a_mutable_list.append ( fa_variable_script_state.create ( id, object_type, value ) )
+        return this
+	.
+
+	command add_constant
+		a_mutable_list.append ( fa_constant_script_state.create ( id, object_type, value ) )
+        return this
+	.
+
+	command to_immutable = a_mutable_list.make_immutable
+	
+	creator create kind:in_all
+.
+	

@@ -1,0 +1,5 @@
+type type_id
+
+    inherit TFS_id
+
+.

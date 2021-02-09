@@ -1,0 +1,107 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_string
+
+	java
+		public StringBuffer getJavaStringBuffer();
+	end java
+
+	function is_empty -> yes_no
+
+	function size -> zero_positive_32
+	
+	// append
+
+	function append ( string ) -> mutable_string
+	
+	function append_if_not_null ( string string or null ) -> mutable_string
+	
+	function append_line ( string ) -> mutable_string
+	
+	function append_new_line -> mutable_string
+	
+	function append_character ( character ) -> mutable_string
+	
+	function append_mutable ( mutable_string ) -> mutable_string
+	
+	function append_scalar_or_scalar_value ( scalar_or_scalar_value ) -> mutable_string
+	
+	function append_scalar_or_scalar_value_if_not_null ( object null or scalar_or_scalar_value ) -> mutable_string
+	
+	// prepend
+	
+	function prepend ( string ) -> mutable_string
+	
+	// insert
+	
+	function insert_before ( %less_or_equal_size_input<index>, string ) -> mutable_string
+	
+	// remove
+	
+	function remove_from_to -> mutable_string
+        in %less_or_equal_size_input<from>
+        in %less_or_equal_size_input<to>
+		in_check: i_to >= i_from \
+			message: """i_from ({{i_from}}) must be less or equal than i_to ({{i_to}})""" \
+			id: bounds_invalid
+	.
+	
+	function remove_from -> mutable_string
+        in %less_or_equal_size_input<from>
+	.
+	
+	function remove_to -> mutable_string
+        in %less_or_equal_size_input<to>
+	.
+	
+	function remove_first -> mutable_string
+		%object_not_empty_in_check
+    .
+
+	function remove_first_n -> mutable_string
+        in %less_or_equal_size_input<n>
+    .
+
+	function remove_last -> mutable_string
+		%object_not_empty_in_check
+    .
+    
+	function remove_last_n -> mutable_string
+        in %less_or_equal_size_input<n>
+    .
+
+	function remove_last_new_line -> mutable_string
+    
+	function remove_last_new_lines -> mutable_string
+	
+	function ensure_ends_with_one_new_line -> mutable_string
+    
+	function remove_all -> mutable_string
+	
+    // replace
+
+	function replace_from_to
+		in %less_or_equal_size_input<from>
+		in %less_or_equal_size_input<to>
+		in replace_by string
+		in_check: to >= i_from \
+			message: """i_from ({{i_from}}) must be less or equal than i_to ({{i_to}})""" \
+			id: bounds_invalid
+
+		out result mutable_string
+	.
+
+	function replace_first ( to_replace string, replace_by string ) -> mutable_string
+	
+	// convert
+
+	function to_string_or_null -> null or string
+	
+	function to_emptyable_string -> emptyable_string
+	
+.

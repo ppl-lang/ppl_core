@@ -1,0 +1,395 @@
+factory stream
+
+    java_header
+        import java.util.List;
+        import java.util.Objects;
+        import java.util.Optional;
+        import java.util.stream.Collectors;
+        import java.util.stream.Stream;
+        import java.util.stream.StreamSupport;
+        import java.util.Spliterator;
+        
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+        import org.ppl.core.basics.scalar.number.integer.integer_64_bits.zero_positive_64.fa_zero_pos_64;
+        import org.ppl.core.collections.java.se_Java_collection_converter;
+        import org.ppl.core.collections.java.spliterator.se_Java_spliterator_converter;
+		import org.ppl.core.collections.lists.fa_mutable_list_with_nulls;
+		import org.ppl.core.collections.lists.indexed_list.fa_mutable_indexed_list_with_nulls;
+        import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+        import org.ppl.core.java.se_java_utilities;
+        // import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.java.se_PPLObjectType;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.java.se_type_parameter_Java_helper;
+    end java_header
+        
+	java
+		private Stream<t_element> a_JavaStream ;
+
+		public Stream<t_element> getJavaStream() { return a_JavaStream; }
+
+		public fa_stream ( Stream<t_element> i_JavaStream, ty_object_type i_element_type ) {
+		    Objects.requireNonNull ( i_JavaStream );
+		    Objects.requireNonNull ( i_element_type );
+
+			a_JavaStream = i_JavaStream;
+			t_element = i_element_type;
+		}
+		
+		public fa_stream ( Spliterator<t_element> i_JavaSpliterator, ty_object_type i_element_type ) {
+		    Objects.requireNonNull ( i_JavaSpliterator );
+		    Objects.requireNonNull ( i_element_type );
+
+			a_JavaStream = StreamSupport.stream ( i_JavaSpliterator, false );
+			t_element = i_element_type;
+		}
+	end java
+	
+	function element_type native:yes
+	    java
+	        return t_element;
+	    end java
+    .
+
+    function parallel native:yes
+    	java
+	        return new fa_stream<t_element> ( a_JavaStream.parallel(), t_element );
+    	end java
+    .
+
+    function sequential native:yes
+    	java
+	        return new fa_stream<t_element> ( a_JavaStream.sequential(), t_element );
+    	end java
+    .
+    
+	function is_parallel native:yes
+    	java
+	        return fa_yes_no.of ( a_JavaStream.isParallel() );
+    	end java
+    .
+
+    function iterator native:yes
+    	java
+	        return se_Java_spliterator_converter.Java_Spliterator_to_PPL_finite_iterator ( a_JavaStream.spliterator(), t_element );
+    	end java
+    .
+	
+	function for_each native:yes
+    	java
+    	    se_java_utilities.check_input_not_null ( i_consumer, "i_consumer", this.getClass(), "for_each" );
+    	    
+	        a_JavaStream.forEach ( element -> i_consumer.consume ( element ) );
+    	end java
+    .
+	
+	function for_each_with_counter
+		repeat for each element in iterator counter:counter
+			consumer.consume ( object_1 = element, object_2 = counter )
+		.
+	.
+
+	function try_for_each
+		repeat for each element in iterator
+			consumer.try_consume ( element ) on_error:return_error
+		.
+		return null
+	.
+
+	function try_for_each_with_counter
+		repeat for each element in iterator counter:counter
+			consumer.try_consume ( object_1 = element, object_2 = counter ) on_error:return_error
+		.
+		return null
+	.
+
+	function filter native:yes
+    	java
+    	    se_java_utilities.check_input_not_null ( i_predicate, "i_predicate", this.getClass(), "filter" );
+    	    
+	        return new fa_stream<t_element> (
+	            a_JavaStream.filter ( element -> i_predicate.is_accepted ( element ).getJavaBoolean() ), t_element );
+    	end java
+    .
+    
+	function map native:yes
+    	java
+    	    se_java_utilities.check_input_not_null ( i_converter, "i_converter", this.getClass(), "map" );
+    	    
+            ty_object_type type = t_result;
+		        
+	        return new fa_stream<t_result> ( a_JavaStream.map ( element -> i_converter.convert ( element ) ), type );
+    	end java
+    .
+
+	function reduce native:yes
+	    java
+            se_java_utilities.check_input_not_null ( i_accumulator, "i_accumulator", this.getClass(), "reduce" );
+	
+            return a_JavaStream.reduce ( i_identity, (i1, i2) -> i_accumulator.execute ( i1, i2 ) );
+	    end java
+    .
+
+	function reduce_to_1
+
+        variable r t_element or null = null
+		repeat for each element in iterator is_first:is_first
+		    if is_first then
+		        r = element
+            else
+    			r = accumulator.execute ( object_1 = r, object_2 = element )
+            .
+		.
+		return r
+    .
+
+    ///
+    // Cannot be used because Java doc says: Throws NullPointerException - if the result of the reduction is null
+    // -> a NullPointerException is thrown if the stream contains one element which is null
+	function reduce_to_1 native:yes
+	    java
+            se_java_utilities.check_input_not_null ( i_accumulator, "i_accumulator", this.getClass(), "reduce_to_1" );
+
+    		Optional<t_element> r = a_JavaStream.reduce ( (i1, i2) -> i_accumulator.execute ( i1, i2 ) );
+    		return r.orElse ( null );
+	    end java
+    .
+    .///
+
+///
+	function reduce_2
+
+		variable r = initial
+		repeat for each element in iterator
+			r = accumulator.execute ( in_1 = r, in_2 = element )
+		.
+		return r
+	.
+.///
+
+    function sort native:yes
+	    java
+            se_java_utilities.check_input_not_null ( i_comparator, "i_comparator" );
+
+	        return new fa_stream<t_element> (
+	            a_JavaStream.sorted ( se_comparator_Java_bridge.PPL_to_Java_comparator ( i_comparator ) ),
+	            t_element );
+	    end java
+    .
+
+    function sort_by_key
+        const comparator = comparator_from_key_getter <t_element>.create (
+            key_getter = i_key_getter
+            descending = i_descending )
+        return sort ( comparator )
+    .
+    
+    function skip native:yes
+    	java
+    	    se_java_utilities.check_input_not_null ( i_count, "i_count", this.getClass(), "skip" );
+    	    
+	        return new fa_stream<t_element> ( a_JavaStream.skip ( i_count.getJavaLong() ), t_element );
+    	end java
+    .
+
+    function maybe_skip
+
+        if i_count ># 0L then
+            return skip ( pos_64.create_from_int_64 ( count ) )
+        else
+            return this
+        .
+    .
+
+    function skip_nulls
+        return filter ( predicate = { object #r null } )
+    .
+
+    function take native:yes
+    	java
+    	    se_java_utilities.check_input_not_null ( i_count, "i_count", this.getClass(), "take" );
+    	    
+	        return new fa_stream<t_element> ( a_JavaStream.limit ( i_count.getJavaLong() ), t_element );
+    	end java
+    .
+
+    function count native:yes
+	    java
+    	    return new fa_zero_pos_64 ( a_JavaStream.count() );
+	    end java
+    .
+    
+    function to_non_null_list = to_mutable_list.make_immutable
+
+	function to_list_or_null = to_mutable_list.make_immutable_or_null
+	
+	function to_indexed_list_or_null = to_mutable_indexed_list.make_immutable_or_null
+	
+	function to_non_null_indexed_list = to_mutable_indexed_list.make_immutable
+
+	function to_mutable_list native:yes
+	    java
+	        // TD check _with_nulls
+    	    return new fa_mutable_list_with_nulls<t_element> ( a_JavaStream.collect(Collectors.toList()), t_element );
+	    end java
+    .
+
+	function to_mutable_indexed_list native:yes
+	    java
+	        // TD check _with_nulls
+    	    return new fa_mutable_indexed_list_with_nulls<t_element> ( a_JavaStream.collect(Collectors.toList()), t_element );
+	    end java
+    .
+
+	function to_string = "Stream"
+	
+	function close native:yes
+        // a_resource_closer.execute
+	    java
+	        a_JavaStream.close();
+	    end java
+    .
+
+	creator create_from_iterator_with_size native:yes ( iterator finite_iterator_with_size<t_element> ) -> stream<t_element>
+	    java
+            se_java_utilities.check_input_not_null ( i_iterator, "i_iterator" );
+
+	        @SuppressWarnings("unchecked")
+	        Spliterator<t_element> spliterator = 
+	            (Spliterator<t_element>) se_Java_spliterator_converter.PPL_finite_iterator_with_size_to_Java_Spliterator ( i_iterator );
+	           
+            ty_object_type type = se_type_parameter_Java_helper.try_get_type_parameter_of_finite_iterator_or_throw ( i_iterator );
+            // TD ty_object_type type = i_iterator.t_element();
+	        
+	        return new fa_stream<t_element> ( spliterator, type );
+        end java
+	.
+
+	creator create_from_iterator native:yes ( iterator finite_iterator<t_element> ) -> stream<t_element>
+	    java
+            se_java_utilities.check_input_not_null ( i_iterator, "i_iterator" );
+
+	        @SuppressWarnings("unchecked")
+	        Spliterator<t_element> spliterator = 
+	            (Spliterator<t_element>) se_Java_spliterator_converter.PPL_finite_iterator_to_Java_Spliterator ( i_iterator );
+	        
+            ty_object_type type = se_type_parameter_Java_helper.try_get_type_parameter_of_finite_iterator_or_throw ( i_iterator );
+            // TD ty_object_type type = i_iterator.t_element();
+	        
+	        return new fa_stream<t_element> ( spliterator, type );
+        end java
+	.
+
+	creator create_empty native:yes -> stream<t_element>
+	    java
+	        return new fa_stream<t_element> ( Stream.empty(), se_common_object_types.getAny() );
+        end java
+	.
+
+    creator create_singleton native:yes ( element t_element ) -> stream<element>
+	    java
+	        return new fa_stream<t_element> ( Stream.of ( i_element ), t_element );
+        end java
+	.
+
+///
+	tests
+		// for_each
+		var stream = ["a", "bb", "ccc"].stream
+		const ms = mutable_string.create
+		stream.for_each ( { -> ms.append ( object ) } )
+		verify ms.to_string =v "abbccc"
+
+		// filter
+		ms.remove_all
+		["a", "bb", "ccc"].stream \
+		    .filter ( { object.size >= 2 } ) \
+		    .for_each ( { -> ms.append ( object ) } )
+		verify ms.to_string =v "bbccc"
+
+		// map
+
+		ms.remove_all
+		["a", "bb", "ccc"].stream \
+		    .map<positive_32> ( { in.size } ) \
+		    .for_each ( { -> ms.append ( object.to_string ) } )
+		verify ms.to_string =v "123"
+
+		ms.remove_all
+		["a", "bb", "ccc"].stream \
+		    .map<positive_32 or error> ( {
+                if i_in =v "bb" then
+                    return file_error.create (
+                        info = "qwe",
+                        resource = file.parse_or_throw ( '''C:\file.txt''' ) )
+                 else
+                    return i_in.size
+                 .
+            } ) \
+		    .for_each ( {
+		        case type of i_object
+		            when positive_32 p
+        		        ms.append ( p.to_string )
+                    when error
+        		        ms.append ( " error " )
+                .
+            } )
+		verify ms.to_string =v "1 error 3"
+
+        // reduce_to_1
+
+		const max = ["a", "bb", "ccc"].stream \
+		    .reduce_to_1 ( { if object_1 ># object_2 then object_1 else object_2 } )
+		verify max =v "ccc"
+		const max_2 = ["a"].stream \
+		    .reduce_to_1 ( { object_1.max ( object_2 ) } )
+		verify max_2 =v "a"
+		const max_3 = mutable_list<string>.create.stream \
+		    .reduce_to_1 ( { if object_1 ># object_2 then object_1 else object_2 } )
+		verify max_3 is null
+		const max_4 = mutable_list_with_nulls<string or null>.create_singleton ( null ).stream \
+		    .reduce_to_1 ( { ->
+		        if object_1 =r null or object_2 =r null then
+		            return object_1
+                else
+                    return if object_1 ># object_2 then object_1 else object_2
+                . 
+		     } )
+		verify max_4 is null
+
+        // reduce
+
+        const sum = [1, 2, 3, 0].stream \
+            .reduce (
+                identity = 0
+                accumulator = { object_1 + object_2 } )
+		verify sum =v 6
+///
+        const sum = ["a", "bb", "ccc"].stream \
+            .reduce_2!<zero_positive_32> (
+                initial = 0
+                accumulator = { in_1 + in_2.size } )
+		verify sum =v 6
+.///
+		
+		// sort
+        stream = ["3", "1", "5", "4"].stream
+        verify stream.sort ( { object_1.compare_to(object_2) } ).to_mutable_list.to_long_string =v "[1, 3, 4, 5]"
+
+        stream = ["3", "1", "5", "4"].stream
+        verify stream.sort_by_key ( key_getter = { in }, descending = yes ).to_mutable_list.to_long_string =v "[5, 4, 3, 1]"
+
+        // to_list_or_null
+        const l = ["a", "bb", "ccc"].stream.to_list_or_null
+        verify l is not null
+        verify l.to_long_string =v "[a, bb, ccc]"
+
+        // create_empty
+        verify fa_stream<string>.create_empty.to_list_or_null is null
+
+        // create_singleton
+        const l2 = fa_stream<string>.create_singleton("foo").to_list_or_null
+        verify l2 is not null
+        verify l2.to_long_string =v "[foo]"
+	.
+.///
+.

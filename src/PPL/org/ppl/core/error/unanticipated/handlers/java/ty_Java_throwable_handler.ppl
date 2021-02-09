@@ -1,0 +1,5 @@
+type Java_throwable_handler
+
+    function handle_throwable ( throwable Java_throwable )
+    
+.

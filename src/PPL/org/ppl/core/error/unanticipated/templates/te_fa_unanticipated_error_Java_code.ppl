@@ -1,0 +1,8 @@
+template fa_unanticipated_error_Java_code
+
+    java
+        public String getMessage() {
+            return a_info.getJavaString();
+        }
+    end java
+.

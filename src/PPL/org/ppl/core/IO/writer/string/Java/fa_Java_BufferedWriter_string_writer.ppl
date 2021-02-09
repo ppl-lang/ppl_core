@@ -1,0 +1,137 @@
+factory Java_BufferedWriter_string_writer type:string_writer
+
+	java_header
+        import java.io.BufferedWriter;
+		import java.io.IOException;
+		import java.io.OutputStream;
+		import java.io.OutputStreamWriter;
+		import java.io.UnsupportedEncodingException;
+		import java.io.Writer;
+
+		import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.IO.character_set.ty_supported_character_set;
+	end java_header
+
+	java
+        BufferedWriter a_writer;
+        boolean a_autoFlush;
+        
+        public fa_Java_BufferedWriter_string_writer ( Writer writer, boolean autoFlush ) {
+            
+            this ( new BufferedWriter ( writer ), autoFlush );
+        }
+
+        public fa_Java_BufferedWriter_string_writer ( OutputStream output_stream, boolean autoFlush ) {
+            
+            this ( new OutputStreamWriter ( output_stream ), autoFlush );
+        }
+
+        public fa_Java_BufferedWriter_string_writer (
+            OutputStream output_stream, ty_supported_character_set character_set, boolean autoFlush ) {
+            
+            this ( get_output_stream_writer ( output_stream, character_set ), autoFlush );
+        }
+
+        public fa_Java_BufferedWriter_string_writer ( OutputStreamWriter output_stream_writer, boolean autoFlush ) {
+
+            this ( new BufferedWriter ( output_stream_writer ), autoFlush );
+        }
+
+        public fa_Java_BufferedWriter_string_writer ( BufferedWriter bufferedWriter, boolean autoFlush ) {
+            se_java_utilities.checkInputNotNull ( bufferedWriter, "bufferedWriter" );
+        
+        	a_writer = bufferedWriter;
+        	a_autoFlush = autoFlush;
+        }
+        
+        private static OutputStreamWriter get_output_stream_writer (
+            OutputStream output_stream, ty_supported_character_set character_set ) {
+
+            try {
+                return  new OutputStreamWriter ( output_stream, character_set.to_string().getJavaString() );
+            } catch ( UnsupportedEncodingException e ) {
+                throw new RuntimeException ( e );
+            }
+        }
+	end java
+	
+	function try_write          = write ( string, new_line = no )
+
+	function try_write_line     = write ( string, new_line = yes )
+
+	function try_write_new_line = write ( string = null, new_line = yes )
+	
+	function write private:yes ( string string or null, new_line yes_no ) -> IO_resource_error or null
+
+        variable java_exception java_exception or null = null
+	    java
+            try {
+                if ( i_string != null ) {
+        	        a_writer.write ( i_string.getJavaString() );
+                }
+                if ( i_new_line.getJavaBoolean() ) {
+                    a_writer.newLine();
+                }
+                if ( a_autoFlush ) {
+                    a_writer.flush();
+                }
+            } catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+	    end java
+	    assert java_exception may be null
+
+        if java_exception is null then
+            return null
+        else
+            return IO_resource_error.create (
+                info = """Error writing to writer. Cause: {{java_exception.to_string}}."""
+                java_exception,
+                resource = this )
+        .
+    .
+
+	function try_flush
+
+        variable java_exception java_exception or null = null
+	    java
+            try {
+                a_writer.flush();
+            } catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+	    end java
+	    assert java_exception may be null
+
+        if java_exception is null then
+            return null
+        else
+            return IO_resource_error.create (
+                info = """Error flushing writer. Cause: {{java_exception.to_string}}."""
+                java_exception,
+                resource = this )
+        .
+    .
+
+	function try_close
+
+        variable java_exception java_exception or null = null
+	    java
+            try {
+                a_writer.close();
+            } catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+	    end java
+	    assert java_exception may be null
+
+        if java_exception is null then
+            return null
+        else
+            return IO_resource_close_error.create (
+                info = """Error closing writer. Cause: {{java_exception.to_string}}."""
+                java_exception,
+                resource = this )
+        .
+    .
+.

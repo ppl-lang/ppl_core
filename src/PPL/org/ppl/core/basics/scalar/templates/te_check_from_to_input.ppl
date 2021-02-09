@@ -1,0 +1,14 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template check_from_to_input
+
+	in_check: i_to >= i_from \
+		message: """i_from ({{i_from.to_string}}) must be less or equal than i_to ({{i_to.to_string}})""" \
+		id: from_greater_than_to_error
+		
+.

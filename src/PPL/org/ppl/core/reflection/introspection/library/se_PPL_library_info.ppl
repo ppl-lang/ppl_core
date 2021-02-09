@@ -1,0 +1,26 @@
+service PPL_library_info
+
+    function for_each_library ( consumer object_consumer<library_path> )
+
+        repeat for each module_id in se_PPL_module_info.non_Java_JDK_module_ids
+            for_each_library_in_module ( module_id, consumer )
+        .
+    .
+
+    function for_each_library_in_module ( module_id, consumer object_consumer<library_path> )
+
+        se_PPL_module_info.for_each_library_in_module ( module_id, consumer )
+    .
+
+    tests
+        ///
+        for_each_library_in_module ( module_id = se_ppl_core_constants.module_id, consumer = { library_path ->
+            OS.out.write_line ( library_path.to_string )
+        } )
+
+        for_each_library ( consumer = { library_path ->
+            OS.out.write_line ( library_path.to_string )
+        } )
+        .///
+    .
+.

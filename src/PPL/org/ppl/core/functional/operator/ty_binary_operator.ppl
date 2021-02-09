@@ -1,0 +1,5 @@
+type binary_operator<object usage:in_out>
+
+	function execute ( object_1 object, object_2 object ) -> object
+
+.

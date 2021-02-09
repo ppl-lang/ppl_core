@@ -1,0 +1,6 @@
+factory key_value_pair
+	
+	function to_string = """{{key.to_string}}: {{se_object.to_string_or_null_string ( value )}}"""
+
+	creator create kind:in_all
+.

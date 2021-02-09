@@ -1,0 +1,32 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory simple_timer
+
+	java_header
+		import org.ppl.core.basics.scalar.number.integer.integer_64_bits.zero_positive_64.fa_zero_pos_64;
+	end java_header
+
+	java
+		long a_start;
+	end java
+
+	function start native:yes
+        java
+            a_start = System.currentTimeMillis();
+        end java
+	.
+	
+	function stop_milliseconds native:yes
+        java
+            return new fa_zero_pos_64 ( System.currentTimeMillis() - a_start );
+        end java
+	.
+	
+	creator create kind:in_all
+	
+.

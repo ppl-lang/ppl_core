@@ -1,0 +1,8 @@
+type PPL_command_argument
+
+	att id PPL_command_argument_id
+	att type object_type
+
+	att check_code string or null
+
+.

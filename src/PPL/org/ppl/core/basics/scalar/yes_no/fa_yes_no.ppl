@@ -1,0 +1,180 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory yes_no type:yes_no
+
+	java_header
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+	end java_header
+
+	java
+		private boolean javaBoolean;
+
+		public boolean getJavaBoolean() { return javaBoolean; }
+
+		public static final fa_yes_no a_yes = new fa_yes_no ( true );
+
+		public static final fa_yes_no a_no = new fa_yes_no ( false );
+
+		private fa_yes_no ( boolean i_javaBoolean ) {
+			this.javaBoolean = i_javaBoolean;
+		}
+
+		public static fa_yes_no of ( boolean i_javaBoolean ) {
+			return i_javaBoolean ? a_yes : a_no;
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_yes_no ) ) return false;
+			
+			boolean other_boolean = ((ty_yes_no) other).getJavaBoolean();
+			return javaBoolean == other_boolean;
+		}
+		
+		@Override
+		public int hashCode() {
+			return javaBoolean ? 1231 : 1237 ; // hash values copied from Java source code
+		}
+
+		public int compareTo ( ty_yes_no other ) {
+			if ( this == other ) return 0;
+			return Boolean.compare ( javaBoolean, other.getJavaBoolean() );
+		}
+	end java
+
+	functions native:yes
+
+        function is_equal_to
+            java
+                // return this == i_other ? a_yes : a_no; // doesn't work with serialized objects
+                
+                if ( this == i_other ) return a_yes;
+                return ( javaBoolean == i_other.getJavaBoolean() ) ? a_yes : a_no;
+            end java
+        .
+    
+        function compare_to
+            java
+                return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+            end java
+        .
+    
+        function hash_code
+            java
+                return new fa_signed_int_32 ( hashCode() );
+            end java
+        .
+    
+        function and
+            java
+                return ( javaBoolean && i_other.getJavaBoolean() ) ? a_yes : a_no;
+            end java
+        .
+    
+        function or
+            java
+                return ( javaBoolean || i_other.getJavaBoolean() ) ? a_yes : a_no;
+            end java
+        .
+        
+        function xor
+            java
+                return ( javaBoolean ^ i_other.getJavaBoolean() ) ? a_yes : a_no;
+            end java
+        .
+        
+        function not
+            java
+                return javaBoolean ? a_no : a_yes;
+            end java
+        .
+    .
+
+	function to_true_false = if this then "true" else "false"
+
+	function to_string = if this then "yes" else "no"
+	
+	
+    creator try_parse ( string ) -> yes_no or parse_object_error<yes_no>
+        
+        case value of i_string.to_lower_case
+            when "yes", "y", "true"
+                return yes
+            
+            when "no", "n", "false"
+                return no
+                
+            otherwise
+                return fa_parse_object_error<yes_no>.create (
+                    info = """"{{i_string}}" cannot be converted to a yes_no value. Valid values are 'yes', 'no', 'y', 'n', 'true' and 'false'."""
+                    data = i_string )
+        .
+    .
+
+
+    tests
+        // equals
+        verify no.is_equal_to(no)
+        verify not (no.is_equal_to(yes))
+        verify not (yes.is_equal_to(no))
+        verify yes.is_equal_to(yes)
+        verify no =v no
+        verify not (no =v yes)
+        verify not (yes =v no)
+        verify yes =v yes
+        verify not (no #v no)
+        verify no #v yes
+        verify yes #v no
+        verify not (yes #v yes)
+
+        // and
+        verify no.and(no) =v no
+        verify no.and(yes) =v no
+        verify yes.and(no) =v no
+        verify yes.and(yes) =v yes
+        verify (no and no) =v no
+        verify (no and yes) =v no
+        verify (yes and no) =v no
+        verify (yes and yes) =v yes
+        
+        // or
+        verify no.or(no) =v no
+        verify no.or(yes) =v yes
+        verify yes.or(no) =v yes
+        verify yes.or(yes) =v yes
+        verify (no or no) =v no
+        verify (no or yes) =v yes
+        verify (yes or no) =v yes
+        verify (yes or yes) =v yes
+
+        // xor
+        verify (no.xor(no)) =v no
+        verify (no.xor(yes)) =v yes
+        verify (yes.xor(no)) =v yes
+        verify (yes.xor(yes)) =v no
+
+        // not
+        verify no.not =v yes
+        verify yes.not =v no
+        verify (not no) =v yes
+        verify (not yes) =v no
+        
+        // to_string
+        verify no.to_string =v "no"
+        verify yes.to_string =v "yes"
+
+        // to_true_false
+        verify no.to_true_false =v "false"
+        verify yes.to_true_false =v "true"
+    .
+
+.

@@ -1,0 +1,8 @@
+record type object_type_compatibility_config
+
+    attributes
+        type_paths_compatible_tester type_paths_compatible_tester
+        type_parameters_of_type_path_getter type_parameters_of_type_path_getter
+        generified_parameters_of_child_type_getter generified_parameters_of_child_type_getter
+    .
+.

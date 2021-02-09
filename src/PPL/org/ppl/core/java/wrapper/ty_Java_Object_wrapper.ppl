@@ -1,0 +1,6 @@
+type Java_Object_wrapper
+
+	java
+		public Object getJavaObject();
+	end java
+.

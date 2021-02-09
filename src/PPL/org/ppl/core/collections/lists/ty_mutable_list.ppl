@@ -1,0 +1,77 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_list < element usage:in_out >
+
+	inherit \
+		mutable_collection<t_element>,
+		mutable_or_immutable_list<t_element>
+
+	function first -> t_element
+		%object_not_empty_in_check
+	.
+
+	function last -> t_element
+		%object_not_empty_in_check
+	.
+
+	function append ( element t_element ) -> mutable_list<t_element>
+
+	function append_all ( collection collection<t_element> ) -> mutable_list<t_element>
+
+	function prepend ( element t_element ) -> mutable_list<t_element>
+	
+	
+	// remove
+
+	function remove_first -> mutable_list<t_element>
+		%object_not_empty_in_check
+	.
+
+	function remove_last -> mutable_list<t_element>
+		%object_not_empty_in_check
+	.
+
+	function remove_all -> mutable_list<t_element>
+	
+	
+	// replace
+
+	function replace_first ( new_element t_element ) -> mutable_list<t_element>
+		%object_not_empty_in_check
+	.
+
+	function replace_last ( new_element t_element ) -> mutable_list<t_element> 
+		%object_not_empty_in_check
+	.
+	
+	
+	// sort
+	
+	function sort ( comparator object_comparator<t_element> )
+
+	function sort_by_key
+		in key_getter object_converter < in:t_element out:has_compare_to<*> >
+		in descending yes_no default:no
+	.
+
+
+    // to_immutable
+    
+	function copy_to_immutable -> list<t_element>
+		%object_not_empty_in_check
+	.
+
+	function copy_to_immutable_or_null -> list<t_element> or null
+
+	function make_immutable -> list<t_element>
+		%object_not_empty_in_check
+	.
+
+	function make_immutable_or_null -> list<t_element> or null
+
+.

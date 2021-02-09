@@ -1,0 +1,18 @@
+template fa_type_path_object_type_functions
+
+    param type_id
+	
+	function is_equal_to
+
+		if this =r i_other then
+			return yes
+		.
+		
+		case type of i_other
+			when {type_id} o
+				return a_type_path =v o.type_path
+			otherwise
+				return no
+		.
+	.
+.

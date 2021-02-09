@@ -1,0 +1,5 @@
+type source_code_template_id
+
+    inherit RSE_id
+
+.

@@ -1,0 +1,70 @@
+factory type_parameter
+
+    function is_equal_to
+    
+        if this =r i_other then
+            return yes
+        .
+    
+        return a_id.value =v i_other.id.value and \
+            are_object_types_equal ( i1 = a_child_of_type, i2 = i_other.child_of_type ) and \
+            are_object_types_equal ( i1 = a_parent_of_type, i2 = i_other.parent_of_type ) and \
+            a_used_for_input =v i_other.used_for_input and \
+            a_used_for_output =v i_other.used_for_output
+    .
+    
+    functions private:yes
+    
+        function are_object_types_equal ( i1 object_type or null, i2 object_type or null ) -> yes_no
+    
+            if i1 is not null then
+                if i2 is not null then
+                    return i1 =v i2
+                else
+                    return no
+                .
+            else
+                if i2 is null then
+                    return yes
+                else
+                    return no
+                .
+            .
+        .
+    .
+
+    function min_object_type = child_of_type if_null:se_common_object_types.any
+    
+    function max_object_type = parent_of_type if_null:se_common_object_types.none
+    
+    function change_child_of_type = create (
+        id, i_child_of_type, parent_of_type, used_for_input, used_for_output )
+    
+    function to_string
+        
+        const r = mutable_string.create
+        
+        r.append ( a_id.value )
+        
+        if a_child_of_type is not null then
+            r.append ( """ child_of: {{a_child_of_type.to_string}}""" )
+        . 
+        
+        if a_parent_of_type is not null then
+            r.append ( """ parent_of: {{a_parent_of_type.to_string}}""" )
+        .
+        
+        if used_for_output and not used_for_input then
+            r.append ( " usage: out" )
+        else if used_for_input and not used_for_output then
+            r.append ( " usage: in" )
+        else if used_for_input and used_for_output then
+            r.append ( " usage: in_out" )
+        .
+        
+        return r.to_string
+    .
+    
+    
+    creator create kind:in_all
+.

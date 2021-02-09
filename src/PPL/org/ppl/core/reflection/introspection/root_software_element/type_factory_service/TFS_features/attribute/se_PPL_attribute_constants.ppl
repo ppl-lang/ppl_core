@@ -1,0 +1,4 @@
+service PPL_attribute_constants
+
+    att id_prefix string = "a_"
+.

@@ -1,0 +1,59 @@
+service RSE_id
+
+    function id_to_capitalized_kind_string ( RSE_id ) -> string
+    
+        return id_to_kind_string ( RSE_id ).to_first_upper_case
+    .
+    
+    function id_to_kind_string ( RSE_id ) -> string
+    
+        case type of i_RSE_id
+            when TFS_id TFS_id
+                return se_TFS_id.id_to_kind_string ( TFS_id )
+            when source_code_template_id
+                return "source code template"
+        .
+    .
+
+    function try_parse_with_prefix ( string ) -> RSE_id or parse_object_error<RSE_id>
+    
+        if i_string.size <= 3 then
+            return parse_object_error<RSE_id>.create (
+                info = """'{{i_string}}' is an invalid prefixed RSE id, because it's length is less than 4."""
+                data = i_string )
+        .
+        
+        const prefix = string.substring_to ( 3 )
+        const id = string.substring_from ( 4 )
+        
+        case value of prefix
+            when se_type_constants.id_prefix
+                return type_id.try_parse_with_optional_prefix ( id )
+                
+            when se_factory_constants.id_prefix
+                return factory_id.try_parse_with_optional_prefix ( id )
+            
+            when se_service_constants.id_prefix
+                return service_id.try_parse_with_optional_prefix ( id )
+            
+            when se_source_code_template_constants.id_prefix
+                return source_code_template_id.try_parse_with_optional_prefix ( id )
+            
+            otherwise
+                return parse_object_error<RSE_id>.create (
+                    info = """'{{i_string}}' is an invalid prefixed RSE id, because it's prefix '{{prefix}}' is invalid."""
+                    data = i_string )
+        .
+    .
+    
+    function parse_with_prefix_or_throw ( string ) -> RSE_id
+
+        case type of try_parse_with_prefix ( i_string )
+            when RSE_id r
+                return r
+            when parse_object_error<*> e
+                throw e.info
+        .
+    .
+
+.

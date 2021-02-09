@@ -1,0 +1,56 @@
+factory positive_32_range type:finite_iterator<pos_32>
+
+	attributes type:pos_32 access:private
+		from
+		to
+		step
+	.
+	
+	variable att current pos_32 or null access:private
+	
+	function next
+	
+	    if a_current is null
+			return null
+        .
+	
+        const r = object_reference<pos_32>.create ( a_current )
+
+        const next pos_32 = a_current + a_step
+        a_current = next
+        if a_current ># a_to then
+            a_current = null
+        .
+        
+        return r
+	.
+	
+	creator create -> finite_iterator<pos_32>
+		in from pos_32 default:1
+		in to pos_32
+		in step pos_32 default:1
+		in_check: to >= from
+		
+        this.from = i_from
+        this.to = i_to
+        this.step = i_step
+        this.current = i_from
+        
+        return this
+	.
+	
+	test
+		const ms = mutable_string.create
+		repeat for each p in create ( to = 5 )
+			ms.append ( p.to_string )
+		.
+		verify ms.to_string =v "12345"
+
+		ms.remove_all
+		repeat for each p in create ( from = 2, to = 10, step = 3 )
+			ms.append ( p.to_string )
+		.
+		verify ms.to_string =v "258"
+	.
+.
+			

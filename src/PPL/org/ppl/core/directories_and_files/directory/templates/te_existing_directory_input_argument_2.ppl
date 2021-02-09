@@ -1,0 +1,17 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template existing_directory_input_argument_2
+
+	param input_argument_id end
+
+	in i_{input_argument_id} type:directory check: i_{input_argument_id}.exists &
+		message: """Directory '{{i_{input_argument_id}.path.to_current_OS_path}}' doesn't exist""" &
+		id: directory_not_found &
+		data: i_{input_argument_id} end
+	
+end

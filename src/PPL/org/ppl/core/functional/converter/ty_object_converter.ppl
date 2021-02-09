@@ -1,0 +1,5 @@
+type object_converter < in usage:in, out usage:out >
+
+	function convert ( in t_in ) -> out
+	
+.

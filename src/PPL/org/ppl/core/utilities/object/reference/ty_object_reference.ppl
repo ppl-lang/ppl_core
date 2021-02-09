@@ -1,0 +1,5 @@
+type object_reference <element>
+
+	att object t_element
+	
+.

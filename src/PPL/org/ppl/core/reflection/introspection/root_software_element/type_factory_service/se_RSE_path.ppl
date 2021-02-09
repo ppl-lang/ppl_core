@@ -1,0 +1,27 @@
+service RSE_path
+
+    function path_to_relative_file_path -> relative_file_path
+        in RSE_path RSE_path
+        in file_name_extension file_name_extension or null default:fa_file_name_extension.create ( "ppl" )
+        
+        script
+            const r = mutable_string.create
+            r.append ( i_RSE_path.value.replace_all (
+                to_replace = "."
+                replace_by = se_directory_constants.current_OS_directory_separator ) )
+                
+            if i_file_name_extension is not null then
+                r.append ( "." )
+                r.append ( i_file_name_extension.value )
+            .
+                
+            return relative_file_path.create ( r.to_string )
+        .
+        tests
+            test RSE_path = virtual_factory_path.create ( "l1.l2.l3.fa_foo" )
+            verify result.value =v '''l1/l2/l3/fa_foo.ppl'''.replace_all (
+                to_replace = "/"
+                replace_by = se_directory_constants.current_OS_directory_separator )
+        .
+    .
+.

@@ -1,0 +1,14 @@
+type PPL_attribute
+
+    attributes
+        TFS_id_path TFS_path
+        id PPL_attribute_id
+        type object_type
+        is_variable yes_no
+        is_obsolete yes_no
+        order_in_source_code zero_pos_32
+    
+        check_code string or null
+        default_value_code string or null
+    .
+.

@@ -1,0 +1,5 @@
+type two_objects_consumer < object_1 usage:in, object_2 usage:in >
+
+	function consume ( object_1 object_1, object_2 object_2 )
+	
+.

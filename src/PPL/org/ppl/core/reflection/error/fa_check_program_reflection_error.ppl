@@ -1,0 +1,13 @@
+factory check_program_reflection_error
+
+    function to_string = a_info
+    
+    creator create kind:in_all
+
+    creator create_for_check_program_error ( check_program_error ) -> check_program_reflection_error
+    
+        return create (
+            info = i_check_program_error.info
+            check_program_error )
+    .
+.

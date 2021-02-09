@@ -1,0 +1,138 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service test_error
+
+	java_header
+	    import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.error.unanticipated.java.se_NAREC;
+		import org.ppl.core.testing.ty_test_context;
+	end java_header
+
+	java
+		public static void _handle_test_verify_fail (
+		    Class<?> clazz,
+		    String script_id,
+		    int script_line_number,
+		    ty_test_context context,
+		    String error_id,
+		    String info,
+		    ty_non_null data,
+		    ty_non_null left_value,
+		    ty_non_null right_value ) {
+		 
+		    ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location (
+		        clazz, script_id, script_line_number );
+		 
+			handle_test_verify_fail (
+			    location,
+				context,
+				info == null ? null : new fa_string ( info ),
+				data,
+				left_value,
+				right_value );
+		}
+
+		public static void _handle_test_verify_error_fail (
+		    Class<?> clazz,
+		    String script_id,
+		    int script_line_number,
+		    ty_test_context context,
+		    String error_id,
+		    String info,
+		    ty_non_null data ) {
+		 
+		    ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location (
+		        clazz, script_id, script_line_number );
+		 
+			handle_test_verify_error_fail (
+			    location,
+				context,
+				info == null ? null : new fa_string ( info ),
+				data );
+		}
+
+		public static void _handle_test_program_error (
+		    Class<?> clazz,
+		    String script_id,
+		    int script_line_number,
+		    ty_test_context context,
+		    Throwable throwable,
+		    boolean caught_in_test_instruction ) {
+		
+			ty_unanticipated_error NAR_error;
+			if ( throwable instanceof ty_unanticipated_error ) {
+				NAR_error = (ty_unanticipated_error) throwable;
+			} else {
+                NAR_error = se_NAREC.T_to_NARE ( throwable, clazz, script_id, script_line_number, null );
+			}
+			
+			handle_test_NAR_error ( NAR_error, caught_in_test_instruction ? fa_yes_no.a_yes : fa_yes_no.a_no, context );
+		}
+	end java
+	
+	functions private:yes
+	
+        function handle_test_verify_fail
+            in source_code_location bug_source_code_location
+            in test_context test_context
+            in error_description string or null
+            in data any
+            in left_value any
+            in right_value any
+            
+            const test_verify_fail = fa_test_verify_fail.create (
+                info = i_error_description if_null: ty_test_verify_fail.info.default,
+                date_time = fa_date_time.now
+                source_code_location,
+                data,
+                left_value,
+                right_value )
+
+            i_test_context.handle_test_error ( test_verify_fail )
+        .
+    
+        function handle_test_verify_error_fail
+            in source_code_location bug_source_code_location
+            in test_context test_context
+            in error_description string or null
+            in data any
+            
+            const test_verify_error_fail = fa_test_verify_error_fail.create (
+                info = i_error_description if_null: ty_test_verify_error_fail.info.default,
+                date_time = fa_date_time.now
+                source_code_location,
+                data )
+
+            i_test_context.handle_test_error ( test_verify_error_fail )
+        .
+
+        function handle_test_NAR_error
+            in NAR_error unanticipated_error
+            in caught_in_test_instruction yes_no
+            in test_context test_context
+            
+            var test_program_error test_program_error
+            if i_caught_in_test_instruction then
+                test_program_error = fa_test_instruction_program_error.create (
+                    date_time = NAR_error.date_time
+                    source_code_location = NAR_error.source_code_location
+                    program_error = NAR_error )
+            else
+                test_program_error = fa_test_script_program_error.create (
+                    date_time = NAR_error.date_time
+                    source_code_location = NAR_error.source_code_location
+                    program_error = NAR_error )
+            .
+
+            i_test_context.handle_test_error ( test_program_error )
+        .
+    .
+
+.

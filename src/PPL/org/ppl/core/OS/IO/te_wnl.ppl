@@ -1,0 +1,5 @@
+template wnl // Write New Line
+
+	OS.out.write_new_line
+	
+.

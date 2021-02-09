@@ -1,0 +1,6 @@
+type standard_service_selector
+
+	inherit service_selector
+
+.
+

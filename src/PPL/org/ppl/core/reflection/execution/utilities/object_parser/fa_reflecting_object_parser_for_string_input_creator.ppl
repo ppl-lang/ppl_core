@@ -1,0 +1,66 @@
+factory reflecting_object_parser_for_string_input_creator type:object_parser<non_error>
+
+    attributes access:private
+        factory_path factory_path
+        creator_id PPL_command_id
+    .
+    
+    function try_parse
+
+        case type of se_factory_creator_executor.execute (
+            factory_path, creator_id, input_arguments = [ i_string ] ) as r
+            
+            when non_error o
+                return o
+            
+            when runtime_error e
+///
+                return parse_object_error<non_error>.create (
+                    info = """String "{{i_string}}" could not be parsed with creator '{{creator_id}}' of factory '{{factory_path}}'"""
+                    data = i_string
+                    cause = e )
+.///
+                return parse_object_error<non_error>.create (
+                    info = """Invalid value (parsing error)."""
+                    data = i_string
+                    cause = e )
+                    
+            otherwise
+                throw """Unexpected object '{{r.to_string}}' returned by {{a_factory_path}}.{{a_creator_id}}."""
+        .
+    .
+
+    ///
+        it is assumed that
+            - factory_path exists
+            - creator_id exists
+            - the creator has a single input argument of type string
+            - the creator either returns a non_null or a parsing error
+    .///
+    creator create ( factory_path, creator_id PPL_command_id ) -> object_parser<non_error>
+
+        this.factory_path = i_factory_path
+        this.creator_id = i_creator_id
+        return this
+    .
+
+	tests
+        const parser = create (
+            factory_path = fa_factory_path.create ( "org.ppl.core.date_and_time.date.fa_local_date" )
+            creator_id = PPL_command_id.create ( "try_parse" ) )
+            
+        case type of parser.try_parse ( "2019-05-29" )
+            // when local_date ld
+            when non_error ld
+                verify ld.to_string =v "2019-05-29"
+            otherwise
+                verify no
+        .
+
+        case type of parser.try_parse ( "invalid" )
+            when error
+            otherwise
+                verify no
+        .
+    .
+.  

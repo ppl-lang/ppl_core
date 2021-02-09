@@ -1,0 +1,34 @@
+type type_parameter
+
+    inherit has_equal_to < type_parameter >
+
+	att id type_parameter_id
+
+	attributes type: object_type or null
+		child_of_type
+		    check
+		        if child_of_type is not null then
+		            check not child_of_type.uses_type_parameters
+                .
+            .
+        .
+		parent_of_type
+		    check
+		        if parent_of_type is not null then
+		            check not parent_of_type.uses_type_parameters
+                .
+            .
+        .
+	.
+	
+	attributes kind:variable type:yes_no
+    	used_for_input
+    	used_for_output
+    .
+    
+    function min_object_type -> object_type
+    function max_object_type -> object_type
+    
+    function change_child_of_type ( child_of_type object_type ) -> type_parameter
+	
+.

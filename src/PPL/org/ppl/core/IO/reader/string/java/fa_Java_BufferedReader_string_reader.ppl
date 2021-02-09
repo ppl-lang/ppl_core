@@ -1,0 +1,167 @@
+factory Java_BufferedReader_string_reader type:string_reader
+
+	java_header
+		import java.io.BufferedReader;
+		import java.io.InputStream;
+		import java.io.InputStreamReader;
+		import java.io.IOException;
+		import java.io.Reader;
+		import java.io.UnsupportedEncodingException;
+
+		import org.ppl.core.basics.scalar.character.fa_character;
+		import org.ppl.core.basics.scalar.string.emptyable_string.fa_emptyable_string;
+		import org.ppl.core.java.se_java_IO;
+		import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.IO.character_set.ty_supported_character_set;
+	end java_header
+	
+	java
+		BufferedReader a_reader;
+		
+		public fa_Java_BufferedReader_string_reader ( Reader reader ) {
+		    this ( new BufferedReader ( reader ) );
+		}
+		
+		public fa_Java_BufferedReader_string_reader ( InputStream input_stream ) {
+		    this ( new InputStreamReader ( input_stream ) );
+		}
+		
+        public fa_Java_BufferedReader_string_reader (
+            InputStream input_stream, ty_supported_character_set character_set ) {
+            
+            this ( get_input_stream_reader ( input_stream, character_set ) );
+        }
+
+		public fa_Java_BufferedReader_string_reader ( InputStreamReader input_stream_reader ) {
+		    this ( new BufferedReader ( input_stream_reader ) );
+		}
+		
+		public fa_Java_BufferedReader_string_reader ( BufferedReader reader ) {
+            se_java_utilities.checkInputNotNull ( reader, "reader" );
+
+		    a_reader = reader;
+		}
+        
+        private static InputStreamReader get_input_stream_reader (
+            InputStream input_stream, ty_supported_character_set character_set ) {
+
+            try {
+                return  new InputStreamReader ( input_stream, character_set.to_string().getJavaString() );
+            } catch ( UnsupportedEncodingException e ) {
+                throw new RuntimeException ( e );
+            }
+        }
+	end java
+
+	function try_read_character
+
+        variable java_exception java_exception or null = null
+        variable r character or null = null
+        java
+            try {
+                int input = a_reader.read() ;
+                if ( input != -1 ) {
+                    v_r = new fa_character ( (char) input );
+                } else {
+                    v_r = null;
+                }
+            }
+            catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+        
+        if java_exception is null then
+            return r
+        else
+            return IO_resource_error.create (
+                info = """Error reading character. Cause: {{java_exception.to_string}}"""
+                java_exception,
+                resource = this )
+        .
+    .
+
+	function try_read_line
+
+        variable java_exception java_exception or null = null
+        variable r emptyable_string or null = null
+        java
+            try {
+                String input = a_reader.readLine() ;
+                if ( input != null ) {
+                    v_r = fa_emptyable_string.create ( input );
+                } else {
+                    v_r = null;
+                }
+            }
+            catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+
+        if java_exception is null then
+            return r
+        else
+            return IO_resource_error.create (
+                info = """Error reading line. Cause: {{java_exception.to_string}}"""
+                java_exception,
+                resource = this )
+        .
+    .
+
+	function try_read_all
+
+        variable java_exception java_exception or null = null
+        variable r string or null = null
+        java
+            try {
+                char[] buffer = new char[se_java_IO.default_IO_buffer_size] ;
+                StringBuilder sb = new StringBuilder ( se_java_IO.default_IO_buffer_size ) ;
+                int length ;
+                while ( ( length = a_reader.read ( buffer ) ) != -1 ) {
+                    sb.append ( buffer, 0, length ) ;
+                }
+                if ( sb.length() > 0 ) {
+                    v_r = new fa_string ( sb.toString() );
+                } else {
+                    v_r = null;
+                }
+            }
+
+            catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+        
+        if java_exception is null then
+            return r
+        else
+            return IO_resource_error.create (
+                info = """Error reading content. Cause: {{java_exception.to_string}}"""
+                java_exception,
+                resource = this )
+        .
+    .
+
+	function try_close
+
+        variable java_exception java_exception or null = null
+        java
+            try {
+                a_reader.close();
+            }
+            catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+
+        if java_exception is null then
+            return null
+        else
+            return IO_resource_close_error.create (
+                info = """Error closing reader. Cause: {{java_exception.to_string}}"""
+                java_exception,
+                resource = this )
+        .
+	.
+.

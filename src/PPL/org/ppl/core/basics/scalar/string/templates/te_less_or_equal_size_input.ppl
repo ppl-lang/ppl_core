@@ -1,0 +1,9 @@
+template less_or_equal_size_input
+
+	param input_argument_id
+
+    {input_argument_id} positive_32 \
+        check: {input_argument_id} <= i_object_.size \
+            message: """Value must be less or equal to size ({{i_object_.size}}). Object:{{i_object_.to_string.truncate(100)}}""" \
+            id: value_exceeds_size
+.

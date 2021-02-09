@@ -1,0 +1,31 @@
+factory none_object_type type:standard_object_type
+
+%fa_type_path_object_type_functions<standard_object_type>
+
+    function check_compatible_to_other = null
+
+    function is_nullable = yes
+    
+    function to_nullable = this
+        
+    function to_non_nullable
+    
+        throw """Type '{{type_path}}' cannot be converted to a non-nullable."""
+    .
+            
+    function uses_type_parameters = no
+
+    function type_selector = fa_standard_type_selector.create ( a_type_path )
+
+	function to_string = a_type_path.id.value
+	
+	function to_long_string = a_type_path.value
+
+
+    creator create -> standard_object_type
+
+        this.type_path = se_common_type_paths.none
+        return this
+    .
+.
+

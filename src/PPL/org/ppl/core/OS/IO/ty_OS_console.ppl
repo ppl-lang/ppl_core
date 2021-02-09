@@ -1,0 +1,110 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type OS_console
+
+	function write ( string )
+
+	function write_line ( string )
+
+	function write_new_line
+	
+	function ask_press_key ( message string default: "Please press any key to continue: " )
+	
+	function ask_press_Enter
+
+    // EOF can be entered to return null (CTRL-Z on Windows)
+	function ask_string_or_null -> string or null
+		in message string
+		in default_value string or null default:null
+    .
+	
+	function ask_string -> string or user_input_error<string>
+		in message string
+		in default_value string or null default:null
+		in max_retry_count positive_32 default: 3
+    .
+	
+    // EOF can be entered to return null (CTRL-Z on Windows)
+	function ask_string_and_validate -> string or user_input_error<string>
+		in message string
+		in default_value string or null default:null
+		in validator object_validator<object:string error:*>
+		in max_retry_count positive_32 default: 3
+    .
+	
+	function ask_password ( message string default: "Please enter password, then press <Enter>: " ) -> string or null
+	
+	function ask_yes_no -> yes_no or user_input_error<string>
+		in message string
+		in default_value yes_no or null default:null
+		in max_retry_count positive_32 default: 3 end
+		// in string_to_yes_no_converter string_to_yes_no_converter default: se_yes_no_parser.default_parser
+    .
+
+	function ask_yes_no_or_null -> yes_no or null
+		in message string
+		in default_value yes_no or null default:null
+		in max_retry_count positive_32 default: 3 end
+		// in string_to_yes_no_converter string_to_yes_no_converter default: se_yes_no_parser.default_parser
+    .
+
+///	
+	function ask_zero_positive_32_and_validate
+		in message type:string default: "Please enter an integer number (greater or equal to zero), then press <Enter>: " end
+		in converter type:string_to_zero_positive_32_converter default: se_zero_pos_32_parser.default_parser end
+		// TD2 in void_allowed
+		in validator type:zero_positive_32_validator voidable:yes end
+		// %system_error_handler_input_argument
+		in max_retry_count type: positive_32 default: 3 end
+
+		%result_xor_error_output < &
+			result_type: zero_positive_32 &
+			error_type: user_input_error >
+	end
+
+	function ask_positive_32
+		in message type:string default: "Please enter an integer number greater than zero, then press <Enter>: " end
+		in converter type:string_to_positive_32_converter default: se_positive_32_converter.default_string_to_positive_32_converter end
+		in null_allowed type:yes_no default:no end
+		in validator type:positive_32_validator voidable:yes default:void end
+		in max_retry_count type: positive_32 default: 3 end
+
+		%result_or_error_void_output < &
+			result_type: positive_32 &
+			error_type: user_input_error >
+	end
+.///
+
+/// TD
+	function ask_zero_positive_32
+
+	function ask_character
+		in message type:string default: "Please enter a character, then press <Enter>: " end
+		
+		out result type:character end
+	end
+
+	function ask_character_and_validate
+
+	function ask_enumerated
+
+	function ask_date
+	function ask_date_and_validate
+	function ask_time
+	function ask_time_and_validate
+	function ask_date_time
+	function ask_date_time_and_validate
+
+	function ask_directory
+	function ask_directory_and_validate
+	function ask_file
+	function ask_file_and_validate
+
+end ///
+
+.

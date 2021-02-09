@@ -1,0 +1,26 @@
+factory generified_type_selector
+
+%fa_generified_TFS_selector_commands
+
+	function is_equal_to
+
+		if this =r i_other then
+			return yes
+		.
+		
+		case type of i_other
+			when generified_type_selector other_selector
+				if a_path.value #v other_selector.path.value then
+				    return no
+                .
+                return se_generified_TFS_selector.are_type_parameters_equal (
+                    TFS_selector_1 = this
+                    TFS_selector_2 = other_selector )
+            otherwise
+                return no
+		.
+	.
+
+	creator create kind:in_all
+
+.

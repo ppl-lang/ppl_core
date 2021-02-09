@@ -1,0 +1,138 @@
+service current_application_directories
+
+	java_header
+	    import java.io.File;
+	    import java.net.URL;
+	    import java.security.CodeSource;
+	    
+		import org.ppl.core.java.se_java_config;
+	end java_header
+	
+	attributes access:private
+    	variable att cached_home_directory_path directory_path or null default:null
+    .
+    
+    
+    // home
+
+	function home_directory -> directory = directory.create ( home_directory_path )
+
+	function home_directory_path -> directory_path
+	
+	    if a_cached_home_directory_path is null then
+	        a_cached_home_directory_path = define_home_directory_path
+        .
+        
+        assert a_cached_home_directory_path is not null
+        return a_cached_home_directory_path
+    .
+    
+    
+    // resource
+    
+    function resource_directory ( relative_path relative_directory_path ) -> directory
+    
+        return directory.create ( resource_directory_path ( relative_path ) )
+    .
+
+    function resource_directory_path ( relative_path relative_directory_path ) -> directory_path
+    
+        return home_directory_path.append_path ( i_relative_path )
+    .
+
+    function resource_file ( relative_path relative_file_path ) -> file
+    
+        return file.create_for_relative_path (
+            path = i_relative_path
+            root_directory = home_directory_path )
+    .
+
+    
+    // Java_lib
+
+	function Java_lib_directory -> directory = directory.create ( Java_lib_directory_path )
+
+	function Java_lib_directory_path -> directory_path
+
+	    return home_directory_path.append_name (
+	        se_reflection_directory_constants.Java_lib_directory_name )
+    .
+
+    
+    // PPL_lib
+
+	function PPL_lib_directory -> directory = directory.create ( PPL_lib_directory_path )
+
+	function PPL_lib_directory_path -> directory_path
+
+	    return home_directory_path.append_name (
+	        se_reflection_directory_constants.PPL_lib_directory_name )
+    .
+
+
+	functions access:private
+	
+	    function define_home_directory_path -> directory_path
+	    
+	        variable path string
+	        
+	        java
+	            Class<?> clazz = se_current_application_directories.class;
+
+	            CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+	            if ( codeSource == null ) {
+	                throw new RuntimeException (
+	                    "Application home directory cannot be defined (codeSource == null)." );
+                }
+                
+                URL URL = codeSource.getLocation();
+                
+                String protocol = URL.getProtocol();
+                
+                if ( protocol.equals ( "file" ) ) {
+                
+                    File file = new File ( URL.toURI() ).getCanonicalFile();
+                    String fileName = file.getName();
+                    
+                    if ( fileName.endsWith ( ".jar" ) ) {
+                        v_path = new fa_string ( file.getParentFile().getParent() );
+                    
+                    } else if ( fileName.endsWith ( ".class" ) ) {
+                        // C:/ppl/classes/org/ppl/core/basics/scalar/string/fa_string.class
+                        String filePath = file.getCanonicalPath();
+                            
+                        // org.ppl.core.basics.scalar.string.fa_string
+                        String classPath = clazz.getCanonicalName();
+                        
+                        // C:/ppl/classes
+                        String classesDirectory = filePath.substring (
+                            0, filePath.length() - classPath.length() - ".class".length() );
+                        v_path = new fa_string ( classesDirectory );
+                    
+                    } else {
+    	                throw new RuntimeException (
+    	                    "Application home directory cannot be defined (fileName = " + fileName + ")." );
+                    }
+                    
+                
+                } else if ( protocol.equals ( "jrt" ) ) {
+                    // It is an app build with jlink
+                    v_path = se_java_config.java_root_directory().to_string();
+                
+                } else {
+	                throw new RuntimeException (
+	                    "Application home directory cannot be defined (protocol = " + protocol + ")." );
+                }
+	        end java
+	        
+	        assert path is not null
+	        return directory_path.create ( path )
+	    .
+    .
+	
+    tests
+	    %we<home_directory>
+	    %we<Java_lib_directory>
+	    %we<PPL_lib_directory>
+    .
+.

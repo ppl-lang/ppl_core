@@ -1,0 +1,10 @@
+template ty_integer_boolean_functions
+
+	param type
+
+	function and ( operand {type} ) -> {type}
+	function or  ( operand {type} ) -> {type}
+	function xor ( operand {type} ) -> {type}
+	function not -> {type}
+
+.

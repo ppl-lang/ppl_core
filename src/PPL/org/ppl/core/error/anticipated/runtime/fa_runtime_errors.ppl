@@ -1,0 +1,20 @@
+factory runtime_errors
+
+    function to_string
+    
+        const r = mutable_string.create
+        
+        if a_list.size ># 1 then
+            r.append_line ( """{{a_list.size}} errors:""" )
+        .
+        
+        repeat for each error in a_list
+            r.append_line ( error.to_string )
+        .
+        
+        return r.to_string
+    .
+
+    creator create kind:in_all
+    
+.

@@ -1,0 +1,70 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_mutable_list_creators
+
+    creator create -> mutable_list<t_element>
+
+        java
+            c_this.a_java_list = new LinkedList<t_element>();
+        end java
+
+        return this
+    .
+
+    creator create_singleton ( element t_element ) -> mutable_list<t_element>
+
+        java
+            LinkedList<t_element> list = new LinkedList<>();
+            list.add ( i_element );
+            c_this.a_java_list = list;
+        end java
+
+        return this
+    .
+
+    creator create_duo ( element_1 t_element, element_2 t_element ) -> mutable_list<t_element>
+
+        java
+            LinkedList<t_element> list = new LinkedList<>();
+            list.add ( i_element_1 );
+            list.add ( i_element_2 );
+            c_this.a_java_list = list;
+        end java
+
+        return this
+    .
+
+    creator create_trio ( element_1 t_element, element_2 t_element, element_3 t_element ) -> mutable_list<t_element>
+
+        java
+            LinkedList<t_element> list = new LinkedList<>();
+            list.add ( i_element_1 );
+            list.add ( i_element_2 );
+            list.add ( i_element_3 );
+            c_this.a_java_list = list;
+        end java
+
+        return this
+    .
+
+    creator create_copy_from_immutable_list ( immutable_list list<t_element> ) -> mutable_list<t_element>
+
+        java
+            LinkedList<t_element> list = new LinkedList<>();
+            c_this.a_java_list = list;
+        end java
+
+        repeat for each element in i_immutable_list
+            java
+                list.add ( c_element );
+            end java
+        .
+
+        return this
+    .
+.

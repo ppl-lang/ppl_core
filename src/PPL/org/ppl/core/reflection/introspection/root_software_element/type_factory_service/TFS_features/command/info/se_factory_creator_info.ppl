@@ -1,0 +1,83 @@
+service factory_creator_info
+
+	java_header
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.info.se_TFS_function_info_Java_helper;
+	end java_header
+
+	function for_each_creator_in_factory ( factory_path, consumer object_consumer<PPL_command> )
+
+        java
+            se_TFS_function_info_Java_helper.forEachCreatorInFactoryPath (
+                i_factory_path,
+                command -> { i_consumer.consume ( command ); } );
+        end java
+    .
+    
+    function creators_in_factory ( factory_path ) -> list<PPL_command> or null
+
+        const r = mutable_list<PPL_command>.create
+        for_each_creator_in_factory ( factory_path, consumer = { creator -> r.append ( creator ) } )
+        return r.make_immutable_or_null
+    .
+    
+    function sorted_creators_in_factory ( factory_path ) -> list<PPL_command> or null
+
+        const r = mutable_list<PPL_command>.create
+        for_each_creator_in_factory ( factory_path, consumer = { creator -> r.append ( creator ) } )
+
+        r.sort ( { object_1.id.value.compare_to_ignore_case ( object_2.id.value ) } )
+
+        return r.make_immutable_or_null
+    .
+
+	function sorted_creator_ids_in_factory ( factory_path ) -> indexed_list<string> or null
+	
+	    const creators = sorted_creators_in_factory ( factory_path ) on_null: return null
+	    return creators.stream.map<string> ( { c => c.id.value } ).to_non_null_indexed_list
+	.
+	
+    function creators_for_type ( type_path ) -> list<PPL_command> or null
+    
+        const factories = se_factory_info.factories_implementing_type ( type_path ) on_null: return null
+
+        const r = mutable_list<PPL_command>.create
+        repeat for each factory_path in factories
+            for_each_creator_in_factory ( factory_path, consumer = { creator -> r.append ( creator ) } )
+        .
+        
+        return r.make_immutable_or_null
+    .
+
+	function has_creator ( factory_path, creator_id PPL_command_id ) -> yes_no
+	
+	    case type of try_get_creator ( factory_path, creator_id )
+	        when PPL_command
+	            return yes
+            when reflection_error
+	            return no
+        .
+    .
+	    
+	function try_get_creator ( factory_path, creator_id PPL_command_id ) -> PPL_command or reflection_error
+	    
+	    return se_TFS_function_info.try_get_command (
+	        TFS_path = i_factory_path
+		    command_id = i_creator_id )
+    .
+
+	tests
+        const timer = simple_timer.create
+        timer.start
+	    const creators = creators_for_type ( se_common_type_paths.indexed_list ) on_null: throw "impossible"
+        const creators_for_type_time = timer.stop_milliseconds
+        %we<creators_for_type_time>
+
+	    repeat for each creator in creators
+	        OS.out.write_line ( creator.to_string )
+	    .
+	    ///
+        .///
+	.
+.

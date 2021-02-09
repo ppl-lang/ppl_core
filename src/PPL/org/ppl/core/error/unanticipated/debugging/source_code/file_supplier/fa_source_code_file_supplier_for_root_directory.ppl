@@ -1,0 +1,19 @@
+factory source_code_file_supplier_for_root_directory
+
+    function get
+
+        const file = file.create ( file_path.create_for_relative_path (
+            path = se_TFS_path.path_to_relative_file_path ( i_TFS_path ) 
+            root_directory = a_root_directory.path ) )
+        if file.exists then
+            return file
+        else
+//            OS.err.write_line ( """The source code file '{{file.to_string}}' doesn't exist.""" )
+            return null
+        .
+    .
+    
+    creator create kind:in_all
+    
+.
+

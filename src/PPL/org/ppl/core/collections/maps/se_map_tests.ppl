@@ -1,0 +1,101 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service map_tests
+
+	tests
+		var mutable_map = mutable_map_with_nulls<key:string; value: string or null>.create
+		
+		mutable_map.add (
+			key = "1"
+			value = "string 1" )
+		mutable_map.add (
+			key = "2"
+			value = null )
+			
+		var map = mutable_map.make_immutable
+		verify map.size =v 2
+			
+		repeat for each item in map is_first:is_first
+			if is_first then
+				verify item is not null
+				verify item =v "string 1"
+			else
+				verify item is null
+			.
+		.
+
+		repeat for each key key in map is_first:is_first
+			if is_first then
+				verify key =v "1"
+			else
+				verify key =v "2"
+			.
+		.
+
+		repeat for each key_value kv in map is_first:is_first
+			if is_first then
+				verify kv.key =v "1"
+				const value = kv.value
+				verify value is not null
+				verify value =v "string 1"
+			else
+				verify kv.key =v "2"
+				verify kv.value is null
+			.
+		.
+
+		var mutable_map_2 = mutable_map<key:string; value: string>.create
+		
+		mutable_map_2.add (
+			key = "1"
+			value = "string 1" )
+		/// compiler error
+		mutable_map_2.add (
+			key = "2"
+			value = null )
+		. ///
+			
+		// mutable_map = mutable_map_2 // compiler error
+		// mutable_map_2 = mutable_map // compiler error
+
+		var map_2 = mutable_map_2.make_immutable
+		verify map_2.size =v 1
+		// map = map_2 // compiler error
+		// map_2 = map // compiler error
+
+		// test key sorting
+		const m = mutable_map<key:scalar, value:non_null>.create
+		m.add ( key = "qwe", value = "qwe" )
+		m.add ( key = 123, value = yes )
+		m.add ( key = yes, value = 123 )
+		m.add ( key = 'A', value = 123 )
+		m.add ( key = 2, value = 2 )
+		verify m.copy_to_immutable.sorted_key_stream.to_mutable_list.to_long_string =v "[123, 2, A, qwe, yes]"
+
+        // add_if_not_contained
+		m.add_if_not_contained ( key = "qwe", value = "123" )
+		verify m.get ( "qwe" ).to_string =v "qwe"
+		m.add_if_not_contained ( key = "qwe2", value = "123" )
+		verify m.get ( "qwe2" ).to_string =v "123"
+		
+		// remove_if_contained
+		verify m.contains_key ( "qwe2" )
+		m.remove_if_contained ( "qwe2" )
+		verify not m.contains_key ( "qwe2" )
+
+		verify not m.contains_key ( "qwe3" )
+		m.remove_if_contained ( "qwe3" )
+		
+		// types
+		const literal_map = [ "a": yes, "b": no ]
+		verify literal_map.key_type.to_string =v "string"
+		verify literal_map.value_type.to_string =v "yes_no"
+		verify literal_map.element_type.to_string =v "yes_no"
+	.
+	
+.

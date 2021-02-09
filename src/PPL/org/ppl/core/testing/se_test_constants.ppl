@@ -1,0 +1,5 @@
+service test_constants
+
+    att TFS_test_command_id PPL_command_id = PPL_command_id.create ( "test_" )
+
+.

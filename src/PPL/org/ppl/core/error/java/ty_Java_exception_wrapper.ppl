@@ -1,0 +1,10 @@
+type Java_exception_wrapper
+
+	java
+		public Exception getJavaException();
+	end java
+	
+	function message -> string
+	
+	function cause -> Java_exception_wrapper or null
+.

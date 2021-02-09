@@ -1,0 +1,35 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory test_instruction_program_error type:test_instruction_program_error
+
+	command to_long_string
+		script
+			%fa_test_error_to_long_string_start
+
+			///
+			se_program_error_writer.append_label_value_line ( &
+				string = temp_result &
+				i_label = "Program error" &
+				i_value = se_object.force_to_string ( a_program_error ) )
+			end ///
+			
+			temp_result.append_new_line
+			se_program_error_writer.append_label_value_line (
+				string = temp_result
+				label = "Program error"
+				value = " " )
+			// temp_result.append_line ( se_object.force_to_string ( a_program_error ) )
+			temp_result.append_line ( a_program_error.to_long_string )
+
+			return temp_result.to_string
+		end
+	end
+
+	creator create kind:in_all end
+
+end

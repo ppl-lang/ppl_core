@@ -1,0 +1,7 @@
+type source_code_file_supplier_for_root_directory
+
+    inherit source_code_file_supplier
+    
+    att root_directory directory
+    
+.

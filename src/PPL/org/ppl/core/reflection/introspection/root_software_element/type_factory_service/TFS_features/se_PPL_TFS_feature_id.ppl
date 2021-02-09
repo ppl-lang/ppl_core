@@ -1,0 +1,52 @@
+service PPL_TFS_feature_id
+
+    /// TD error
+    function try_create_from_prefixed_id_string private:yes ( string ) -> PPL_TFS_feature_id
+    
+        if i_string.starts_with ( "co_" ) then
+            return PPL_command_id.create ( i_string.substring_from ( 4 ) )
+        else
+            
+            const prefix = string.substring_to ( 2 )
+            const suffix = string.substring_from ( 3 )
+            
+            case value of prefix
+                when "a_"
+                    return PPL_attribute_id.create ( suffix )
+                when "i_"
+                    return PPL_command_input_argument_id.create ( suffix )
+                when "o_"
+                    return PPL_command_output_argument_id.create ( suffix )
+                otherwise
+                    error "case error"
+            .
+        .
+    .
+    
+    function create_from_prefixed_id_string_or_throw ( string ) -> PPL_TFS_feature_id
+        return try_create_from_prefixed_id_string ( string )
+    .
+    .///
+    
+    function id_to_kind_string ( PPL_TFS_feature_id ) -> string
+    
+        case type of i_PPL_TFS_feature_id
+            when PPL_command_id
+                return "function"
+            when PPL_attribute_id
+                return "attribute"
+            when PPL_command_input_argument_id
+                return "input argument"
+            when PPL_command_output_argument_id
+                return "output argument"
+            when PPL_script_constant_id
+                return "constant"
+            when PPL_script_variable_id
+                return "variable"
+            // when PPL_event_id
+            //    return "event"
+        .
+    .
+    
+.
+                

@@ -1,0 +1,21 @@
+type PPL_command
+
+	att TFS_id_path TFS_path
+	att id PPL_command_id
+
+	att input_argument_list list<PPL_command_input_argument> or null
+	att output_argument_list list<PPL_command_output_argument> or null
+
+	att in_check_code string or null
+	att out_check_code string or null
+
+	att is_obsolete yes_no
+	
+	function signature -> string
+
+	function arguments_to_string -> string or null
+
+	function input_arguments_to_string -> string or null
+
+	function output_arguments_to_string -> string or null
+.

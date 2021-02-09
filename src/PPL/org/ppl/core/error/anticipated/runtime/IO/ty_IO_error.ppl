@@ -1,0 +1,5 @@
+type IO_error
+
+    inherit runtime_error
+
+.

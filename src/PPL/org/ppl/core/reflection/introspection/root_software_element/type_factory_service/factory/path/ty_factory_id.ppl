@@ -1,0 +1,5 @@
+type factory_id
+
+    inherit TFS_id
+
+.

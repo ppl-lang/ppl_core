@@ -1,0 +1,133 @@
+service Java_throwable_handler
+
+	java_header
+	    import java.io.IOException;
+	    import java.io.PrintStream;
+	    import java.io.PrintWriter;
+
+        import org.ppl.core.error.java.fa_Java_throwable;
+		import org.ppl.core.error.unanticipated.debugging.se_runtime_debug_config;
+		import org.ppl.core.error.unanticipated.ty_unanticipated_error;
+	end java_header
+
+	java
+	    public static void set_default_handler() {
+	    
+	        Thread.setDefaultUncaughtExceptionHandler ( (thread, throwable) -> {
+	            handle_throwable ( thread, throwable );
+            } );
+	    }
+	    
+
+		// level 1
+
+		public static void handle_throwable ( Thread thread, Throwable throwable ) {
+		
+            // throwable.printStackTrace();
+
+            try {
+                if ( throwable instanceof ty_unanticipated_error ) {
+                    se_runtime_debug_config.getConfig().getUnanticipated_error_handler()
+                        .handle_error ( (ty_unanticipated_error) throwable );
+                } else {
+                    se_runtime_debug_config.getConfig().getJava_throwable_handler()
+                        .handle_throwable ( new fa_Java_throwable ( throwable ) );
+                }
+		    
+		    } catch ( Throwable handler_throwable ) {
+			    level_2_handle ( thread, throwable, handler_throwable );
+            }
+		}
+		
+		// To be called whenever a totally unexpected throwable occurs during error handling
+		public static void handle_throwable_during_error_handling ( Thread thread, Throwable throwable ) {
+		
+		    level_3_handle ( throwable );
+        }
+
+		public static void handle_throwable_during_error_handling ( Throwable throwable ) {
+		
+		    level_3_handle ( throwable );
+        }
+		
+        // level 2
+
+		private static void level_2_handle ( Thread thread, Throwable application_throwable, Throwable handler_throwable ) {
+		
+		    PrintWriter writer = new PrintWriter ( System.err, true );
+
+		    level_2_handle_1 ( "The following application error occurred:", application_throwable, thread, writer );
+		    writer.println();
+
+		    level_2_handle_1 ( "The following error occurred in the default error handler:", handler_throwable, thread, writer );
+
+            writer.close();
+		}
+        
+		private static void level_2_handle_1 ( String title, Throwable throwable, Thread thread, PrintWriter writer ) {
+		
+		    try {
+    		    writer.println ( title );
+                se_Java_throwable_writer.write_throwable ( throwable, thread, writer );
+                writer.flush();
+                
+		    } catch ( Throwable t ) {
+    		    System.err.println ( title );
+			    level_3_handle ( throwable );
+            }
+		}
+
+        
+        // level 3
+        
+        private static void level_3_handle ( Throwable throwable ) {
+            
+            System.err.println ( "THE FOLLOWING TOTALLY UNEXPECTED ERROR OCCURRED DURING ERROR HANDLING:" );
+            throwable.printStackTrace();
+            
+            Throwable cause = throwable.getCause();
+            if ( cause != null ) {
+                System.err.println ( " " );
+                System.err.println ( "cause:" );
+                System.err.flush();
+                level_3_handle ( cause );
+            }
+        }
+	end java
+	
+///
+	command test
+	    java
+            Throwable l3 = new RuntimeException ( "cause level 3" );
+            Throwable l2 = new RuntimeException ( "cause level 2", l3 );
+            Throwable l1 = new RuntimeException ( "main level", l2 );
+            // level_3_handle ( l1 );
+            
+            Thread thread = Thread.currentThread();
+            
+            // level_2_handle ( thread, new Exception ( "Test application error", l1 ), new Exception ( "Test handler error" ) );
+            
+            handle_throwable ( thread, new Exception ( "Test application error", l1 ) );
+
+            /*
+            try {
+                test_2();
+            } catch ( Throwable t ) {
+                handle_throwable ( thread, t );
+            }
+            */
+	    end java
+    .
+    
+    command test_2
+        test_3
+    .
+
+    command test_3
+        const c any_type = "qwe"
+        const c1 yes_no = c type_check:no // causes PPL error
+        %out<c1>
+    .
+.///
+
+.

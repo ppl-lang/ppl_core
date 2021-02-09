@@ -1,0 +1,4 @@
+service PPL_library_constants
+
+    att id_prefix string = "li_"
+.

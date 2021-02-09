@@ -1,0 +1,77 @@
+service OS_clipboard
+
+	java_header
+		import java.awt.datatransfer.Clipboard;
+		import java.awt.datatransfer.DataFlavor;
+		import java.awt.datatransfer.StringSelection;
+		// import java.awt.datatransfer.Transferable;
+		// import java.awt.datatransfer.UnsupportedFlavorException;
+		import java.awt.Toolkit;
+
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.java.se_java_utilities;
+	end java_header
+
+	java
+		public static void copyStringToClipboard ( String string ) {
+		
+		    se_java_utilities.checkInputNotNull ( string, "string" );
+
+			// TD this works on Windows
+			// but on Unix:
+			// the string seams to be written into a clipboard of the current process
+			// subsequent retrieval of the clipboard in the same process works,
+			// but the string is not available in the
+			// X systems clipboard - hence cannot be retrieved by typing Ctrl-V
+
+			StringSelection string_selection = new StringSelection ( string );
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard() ;
+			clipboard.setContents ( string_selection, null ) ;
+		}
+
+		// If a string is on the system clipboard, this method returns it;
+		// otherwise it returns null.
+		public static String getStringFromClipboard() {
+
+			/*
+			Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+			if ( transferable != null && transferable.isDataFlavorSupported ( DataFlavor.stringFlavor) ) {
+				try {
+					String text = (String) transferable.getTransferData ( DataFlavor.stringFlavor );
+					return text;
+				} catch ( UnsupportedFlavorException e ) {
+				} catch ( IOException e ) {
+				}
+				return null;
+			} else {
+				return null;
+			} */
+
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			try {
+				return (String) clipboard.getData ( DataFlavor.stringFlavor );
+			} catch ( Exception e ) {
+				return null;
+			}
+		}
+	end java
+
+	function copy_string_to_clipboard ( string )
+
+        java
+            copyStringToClipboard ( i_string.getJavaString() );
+        end java
+	.
+
+	function get_string_from_clipboard -> string or null
+
+        variable r string or null = null
+        java
+            String string = getStringFromClipboard();
+            if ( string != null && ! string.isEmpty() ) {
+                v_r = new fa_string ( string );
+            }
+        end java
+        return r
+	.
+.

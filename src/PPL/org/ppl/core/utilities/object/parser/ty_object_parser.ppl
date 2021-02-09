@@ -1,0 +1,17 @@
+type object_parser<object> 
+	
+	function try_parse ( string ) -> t_object or parse_object_error<t_object>
+.
+
+/// TD?
+type object_parser<object> 
+	
+	function try_parse ( string ) -> ( result t_object, error parse_object_error<t_object> )
+	    out_check: result =r null xor error =r null
+.
+
+type non_error_object_parser<object child_of:non_error> 
+	
+	function try_parse ( string ) -> t_object or parse_object_error<t_object>
+.
+.///

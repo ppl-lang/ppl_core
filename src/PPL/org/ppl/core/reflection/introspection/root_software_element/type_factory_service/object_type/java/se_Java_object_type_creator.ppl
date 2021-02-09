@@ -1,0 +1,54 @@
+service Java_object_type_creator
+
+    java_header
+        import org.ppl.core.basics.scalar.string.fa_string;
+        import org.ppl.core.collections.lists.ty_list;
+        import org.ppl.core.collections.maps.ty_map;
+        
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.non_union.ty_non_union_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.non_union.type_path.enumerated.fa_enumerated_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.non_union.type_path.enumerated.ty_enumerated_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.non_union.type_path.generified.fa_generified_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.non_union.type_path.generified.ty_generified_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.non_union.type_path.standard.fa_standard_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.non_union.type_path.standard.ty_standard_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.union.fa_union_object_type;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.union.ty_union_object_type;
+
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.ty_type_parameter_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.ty_type_parameter_assignment;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type.path.fa_type_path;
+    end java_header
+
+    java
+        public static ty_standard_object_type create_standard_object_type ( String type_path ) {
+        
+            return fa_standard_object_type.create ( fa_type_path.create ( new fa_string ( type_path ) ) );
+        }
+
+        public static ty_enumerated_object_type create_enumerated_object_type ( String type_path ) {
+        
+            return fa_enumerated_object_type.create ( fa_type_path.create ( new fa_string ( type_path ) ) );
+        }
+        
+        public static ty_generified_object_type create_generified_object_type (
+            String type_path,
+            ty_map<ty_type_parameter_id, ty_type_parameter_assignment> type_parameters ) {
+        
+            return fa_generified_object_type.create (
+                fa_type_path.create ( new fa_string ( type_path ) ),
+                type_parameters );
+        }
+        
+        public static ty_union_object_type create_union_object_type (
+            ty_list<ty_non_union_object_type> members ) {
+        
+            return fa_union_object_type.create ( members, null );
+        }
+    end java
+    
+    function create_empty_members -> ty_mutable_list<ty_non_union_object_type>
+        
+        return fa_mutable_list<ty_non_union_object_type>.create
+    .
+.

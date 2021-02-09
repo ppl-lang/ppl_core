@@ -1,0 +1,8 @@
+type has_finite_iterator_with_size < element >
+
+	inherit has_finite_iterator <t_element>
+		redefine
+			function iterator -> finite_iterator_with_size <t_element>
+		.
+	.
+.

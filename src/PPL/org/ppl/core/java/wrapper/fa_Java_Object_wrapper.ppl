@@ -1,0 +1,12 @@
+factory Java_Object_wrapper
+
+	java
+		private Object a_JavaObject;
+		
+		public Object getJavaObject() { return a_JavaObject; }
+		
+		public fa_Java_Object_wrapper ( Object object ) {
+			a_JavaObject = object;
+		}
+	end java
+.

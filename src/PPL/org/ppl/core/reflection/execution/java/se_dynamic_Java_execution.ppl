@@ -1,0 +1,62 @@
+service dynamic_Java_execution
+
+	java_header
+		import java.lang.reflect.InvocationTargetException;
+		import java.lang.reflect.Method;
+
+		import java.lang.invoke.MethodHandle;
+		import java.lang.invoke.MethodHandles;
+		import java.lang.invoke.MethodType;
+		
+		import org.ppl.core.reflection.introspection.java.se_Java_method_introspection;
+		import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+	end java_header
+	
+	java
+		private static MethodHandles.Lookup getLookup() {
+			return MethodHandles.lookup();
+		}
+		
+		public static Object invokeObjectMethod ( Object object, String methodName, Object[] inputArguments )
+		    throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+		
+		    Class<?> clazz = object.getClass();
+			Method method = se_Java_method_introspection.getPublicMethodByName ( clazz, methodName );
+			return method.invoke ( object, inputArguments );
+		}
+		
+		public static Object invokeObjectMethod_i0_o1 ( Object object, String methodName, Class resultClass ) throws Throwable {
+		
+			MethodHandles.Lookup lookup = getLookup();
+
+			MethodHandle handle = lookup.findVirtual ( 
+				object.getClass(), 
+				methodName,
+				MethodType.methodType ( resultClass ) );
+
+			return handle.invoke ( object );
+		}
+		
+		public static Object invokePrivateObjectMethod_i0_o1 ( Object object, String methodName ) throws Throwable {
+
+            Method method = object.getClass().getDeclaredMethod ( methodName );
+            method.setAccessible ( true );
+            return method.invoke ( object );
+		}
+		
+		// inputArguments can be null if method has no input arguments
+		// returns null if method has no output 
+		public static Object invokeStaticClassMethod ( 
+		    String fullClassName,
+		    String methodName,
+		    Object[] inputArguments )
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+		    
+		    Class<?> clazz = se_Java_reflection_class_loader.getClassOrThrow ( fullClassName );
+			Method method = se_Java_method_introspection.getPublicMethodByName ( clazz, methodName );
+			return method.invoke ( null, inputArguments );
+        }
+		    
+	end java
+	
+.

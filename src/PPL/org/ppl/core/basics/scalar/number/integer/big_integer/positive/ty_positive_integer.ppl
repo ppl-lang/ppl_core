@@ -1,0 +1,10 @@
+type positive_integer
+
+    inherit zero_positive_integer
+		redefine
+		    // TD function unary_minus -> negative_integer
+			function abs -> positive_integer
+		.
+	.
+
+.

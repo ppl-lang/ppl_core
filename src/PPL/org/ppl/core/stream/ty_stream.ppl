@@ -1,0 +1,87 @@
+type stream<element usage:in_out>
+
+    // att resource_closer executor or null
+    
+    function element_type -> object_type
+
+    function parallel -> stream<t_element>
+    
+    function sequential -> stream<t_element>
+    
+    function is_parallel -> yes_no
+
+	function iterator -> finite_iterator<t_element>
+	
+	function for_each ( consumer object_consumer<t_element> )
+	
+	function for_each_with_counter ( consumer two_objects_consumer<object_1:t_element, object_2:pos_64> )
+	
+///
+    function try_for_each<consumer_error child_of:null or anticipated_error> -> null or consumer_error
+        in consumer trying_object_consumer<in:t_element, out:null or consumer_error>
+    .
+.///
+    function try_for_each<consumer_error child_of:anticipated_error> -> null or consumer_error
+        in consumer trying_object_consumer<object:t_element, error:consumer_error>
+    .
+
+///	
+    function try_for_each_with_counter<consumer_error child_of:null or anticipated_error> -> null or consumer_error
+        in consumer trying_two_objects_consumer<object_1:t_element, object_2:pos_64, error:null or consumer_error>
+    .
+.///
+    function try_for_each_with_counter<consumer_error child_of:anticipated_error> -> null or consumer_error
+        in consumer trying_two_objects_consumer<object_1:t_element, object_2:pos_64, error:consumer_error>
+    .
+	
+	function filter ( predicate object_filter<t_element> ) -> stream<t_element>
+	
+	function map<result usage:in_out> ( converter object_converter<in:t_element, out:t_result> ) -> stream<result>
+
+	function reduce ( identity t_element, accumulator binary_operator<t_element> ) -> t_element
+
+    function reduce_to_1 ( accumulator binary_operator<t_element> ) -> t_element or null
+
+    // function reduce_2<result usage:in_out> ( initial t_result, accumulator binary_function<in_1:t_result, in_2:t_element, result:t_result> ) -> t_result
+
+	function sort ( comparator object_comparator<t_element> ) -> stream<t_element>
+
+	function sort_by_key (
+	    key_getter object_converter < in:t_element out:has_compare_to<*> >, 
+	    descending yes_no default:no ) \
+	    -> stream<t_element>
+
+	function skip ( count pos_64 ) -> stream<t_element>
+	
+	function maybe_skip ( count zero_pos_64 ) -> stream<t_element>
+	
+	function skip_nulls -> stream<t_element> // TD type is now not null
+	
+	function take ( count pos_64 ) -> stream<t_element>
+	    
+    function count -> zero_pos_64
+
+	function to_list_or_null -> list<t_element> or null
+
+	function to_non_null_list -> list<t_element>
+
+	function to_indexed_list_or_null -> indexed_list<t_element> or null
+
+	function to_non_null_indexed_list -> indexed_list<t_element>
+
+	function to_mutable_list -> mutable_list<t_element>
+
+	function to_mutable_indexed_list -> mutable_indexed_list<t_element>
+
+	function close
+    //    in_check: object_.resource_closer #r null
+
+	/// TD?
+		function map_to_zero_pos_64 ( mapper object_mapper<in:t_element, out:zero_pos_64> ) -> zero_pos_64_stream
+		function reduce_initial_to_1 ( initial t_element, combiner binary_operator<t_element> ) -> t_element
+        
+        function get_size_if_known -> zero_pos_64 or null
+    	function get_iterator_with_size_if_size_is_known -> finite_iterator_with_size<t_element> or null
+	.///
+
+.

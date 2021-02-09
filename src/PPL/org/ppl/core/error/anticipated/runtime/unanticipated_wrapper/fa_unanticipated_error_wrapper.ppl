@@ -1,0 +1,14 @@
+factory unanticipated_error_wrapper
+
+    function to_string = a_info
+
+    creator create kind:in_all
+
+    creator create_for_unanticipated ( unanticipated_error ) -> unanticipated_error_wrapper
+    
+        return create (
+            info = """The following unexpected program error occurred:
+{{se_unanticipated_error.get_source_error_info ( i_unanticipated_error )}}"""
+            unanticipated_error )
+    .
+.

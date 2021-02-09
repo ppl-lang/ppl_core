@@ -1,0 +1,15 @@
+type service_path
+
+    inherit virtual_service_path
+        redefine
+            att value and_check: se_service_info.is_existing_service_path_string ( value ) \
+                message: """Service '{{value}}' doesn't exist."""
+        .
+    .
+    
+    /// TD
+    inherit service_path
+
+    check: se_service_info.is_existing_service_path ( i_object_ )
+    .///
+.

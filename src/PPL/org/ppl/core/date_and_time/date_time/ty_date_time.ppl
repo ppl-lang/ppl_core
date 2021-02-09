@@ -1,0 +1,32 @@
+type date_time
+
+	java_header
+		import java.time.ZonedDateTime;
+	end java_header
+	
+	java
+		public ZonedDateTime getJavaZonedDateTime();
+	end java
+
+	inherit has_hash_code, has_compare_to<date_time>
+	
+	functions
+    
+        date -> local_date
+    
+        time -> local_time
+    
+        time_zone_offset -> time_zone_offset
+        
+        plus ( duration ) -> date_time
+        
+        minus ( duration ) -> date_time
+        
+        to_local_date_time -> local_date_time
+    
+        // see java.time.format.DateTimeFormatter for available options
+        format ( pattern string default: "YYYY-MM-dd HH:mm:ss Z" ) -> string
+    
+        format_to_long_default_locale -> string
+    .
+.

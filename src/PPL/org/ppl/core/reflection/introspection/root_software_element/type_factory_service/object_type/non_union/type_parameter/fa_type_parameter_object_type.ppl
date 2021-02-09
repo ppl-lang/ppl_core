@@ -1,0 +1,100 @@
+factory type_parameter_object_type
+
+    function check_compatible_to_other
+    
+        case type of i_other
+        
+            when type_parameter_object_type t
+                // if t.type_parameter =v i_source.type_parameter then
+                // if t.type_parameter =r i_source.type_parameter then
+                if t.type_parameter.id.value =v a_type_parameter.id.value then
+                    return null
+                .
+            
+            when union_object_type union_object_type
+                repeat for each member in union_object_type.members
+                    case type of member
+                        when type_parameter_object_type t
+                            if t.type_parameter.id.value =v a_type_parameter.id.value then
+                                return null
+                            .
+                        otherwise
+                            do nothing
+                    .
+                .
+            otherwise
+                do nothing
+        .
+
+        const min_object_type = a_type_parameter.min_object_type
+        const error = min_object_type.check_compatible_to_other ( i_other, i_config )
+        if error is null then
+            return null
+        else
+            return object_type_incompatibility_error.create_with_reason (
+                reason = """Type parameter '{{a_type_parameter.id}}' is defined as follows: {{a_type_parameter.to_string}}
+The real type of '{{a_type_parameter.id}}' could be '{{min_object_type.to_string}}' (highest type in the type hierarchy).
+{{error.to_string}}"""
+                source = this
+                target = i_other )
+        .
+    .
+    
+    function check_other_compatible_to_me
+
+        const max_object_type = a_type_parameter.max_object_type
+        const error = i_other.check_compatible_to_other ( other = max_object_type, i_config )
+        if error is null then
+            return null
+        else
+            return object_type_incompatibility_error.create_with_reason (
+                reason = """Type parameter '{{a_type_parameter.id}}' is defined as follows: {{a_type_parameter.to_string}}
+The real type of '{{a_type_parameter.id}}' could be '{{max_object_type.to_string}}' (lowest type in the type hierarchy).
+{{error.to_string}}"""
+                source = i_other
+                target = this )
+        .
+    .
+    
+    function is_nullable = a_type_parameter.min_object_type.is_nullable
+    
+    function to_nullable
+        
+        if is_nullable then
+            return this
+        else
+            return union_object_type.create_nullable ( this )
+        .
+    .
+        
+    function to_non_nullable
+
+        if not is_nullable then
+            return this
+        else
+            return create ( a_type_parameter.change_child_of_type ( a_type_parameter.min_object_type.to_non_nullable ) )
+        .
+    .
+        
+    function uses_type_parameters = yes
+
+	function to_string = se_type_parameter_object_type_constants.to_string_prefix & a_type_parameter.id.value
+
+	function to_long_string = to_string
+
+	function is_equal_to
+
+		if this =r i_other then
+			return yes
+		.
+		
+		case type of i_other
+			when type_parameter_object_type o then
+			    return a_type_parameter =v o.type_parameter
+			otherwise
+				return no
+		.
+	.
+
+    creator create kind:in_all
+.

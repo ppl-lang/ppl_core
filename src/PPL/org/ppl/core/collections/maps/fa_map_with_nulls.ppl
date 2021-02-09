@@ -1,0 +1,59 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory map_with_nulls type:map
+	
+    java_header
+        import java.util.ArrayList;
+        import java.util.Collection;
+        import java.util.Collections;
+        import java.util.HashMap;
+        import java.util.LinkedHashMap;
+        import java.util.List;
+        import java.util.Map;
+        import java.util.Map.Entry;
+        import java.util.Objects;
+        import java.util.stream.Stream;
+
+        import org.ppl.core.basics.scalar.number.integer.integer_32_bits.positive_32.fa_pos_32;
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+        import org.ppl.core.collections.iterators.finite_iterator.implementations.fa_Java_Spliterator_wrapper_iterator_with_size;
+        import org.ppl.core.collections.java.se_immutable_Java_collection_checker;
+        import org.ppl.core.collections.maps.key_value.fa_key_value_pair;
+        import org.ppl.core.stream.fa_stream;
+    end java_header
+
+    java
+        private Map < t_key, t_value > a_java_map ;
+
+        public Map < t_key, t_value > getJavaMap() {
+            return Collections.unmodifiableMap ( a_java_map );
+        }
+
+        public fa_map_with_nulls ( Map<t_key, t_value> i_java_map, ty_object_type i_key_type, ty_object_type i_value_type ) {
+            Objects.requireNonNull ( i_java_map );
+            Objects.requireNonNull ( i_key_type );
+            Objects.requireNonNull ( i_value_type );
+            
+            if ( ! se_immutable_Java_collection_checker.is_immutable_map ( i_java_map ) ) throw new RuntimeException ( "The input for an immutable map constructor cannot be a mutable map." );
+            
+            if ( i_java_map.isEmpty() ) throw new RuntimeException ( "The input for an immutable map constructor cannot be an empty map." );
+            
+            a_java_map = i_java_map;
+            t_key = i_key_type;
+            t_value = i_value_type;
+        }
+    end java
+
+%fa_mutable_or_immutable_map_commands < pos_32 >
+
+// %fa_immutable_map_commands < list_with_nulls >
+    
+%fa_map_with_nulls_commands
+
+%fa_map_creators
+.

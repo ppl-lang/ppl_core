@@ -1,0 +1,47 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory script_state
+
+	function to_long_string
+	
+        const r = fa_mutable_string.create
+        
+        repeat for each item in a_items
+            r.append_line ( item.to_string )
+        .
+
+        return r.to_string
+    .
+	
+	creator create kind:in_all
+	
+	creator create_for_single_attribute (
+	    id PPL_attribute_id,
+	    object_type object_type or null,
+	    value any ) -> script_state
+	    
+	    return create ( mutable_script_state_item_list.create.add_attribute ( id, object_type, value ).to_immutable )
+    .
+
+	creator create_for_single_input_argument (
+	    id PPL_command_input_argument_id,
+	    object_type object_type or null,
+	    value any ) -> script_state
+	    
+	    return create ( mutable_script_state_item_list.create.add_input_argument ( id, object_type, value ).to_immutable )
+    .
+
+	creator create_for_single_output_argument (
+	    id PPL_command_output_argument_id,
+	    object_type object_type or null,
+	    value any ) -> script_state
+	    
+	    return create ( mutable_script_state_item_list.create.add_output_argument ( id, object_type, value ).to_immutable )
+    .
+
+.

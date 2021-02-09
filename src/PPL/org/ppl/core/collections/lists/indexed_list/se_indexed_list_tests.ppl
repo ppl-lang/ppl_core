@@ -1,0 +1,108 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service indexed_list_tests
+
+	tests
+        var list mutable_indexed_list<string>
+        var element string
+        var iterator finite_iterator<string> 
+
+        v_list = mutable_indexed_list<string>.create
+        verify v_list.is_empty
+        verify v_list.size =v 0
+        v_iterator = v_list.iterator
+        verify v_iterator.next is null
+        try
+            v_list.get ( 1 )
+            verify no
+        catch_any
+            verify yes
+        .
+
+        var mozart string = "Mozart"
+        v_list.append ( v_mozart )
+        verify not v_list.is_empty
+        verify v_list.size =v 1
+        v_iterator = v_list.iterator
+        verify v_iterator.next is not null
+        verify v_iterator.next is null
+        v_element = v_list.get ( 1 )
+        verify v_element =r v_mozart
+
+        v_list.remove_at_index ( 1 )
+        verify v_list.is_empty
+///
+        v_list.co_append ( v_mozart )
+        var v_vivaldi ty_string = "Vivaldi"
+        v_list.co_insert_before_index ( i_index = 1 i_element = v_vivaldi )
+        v_list.co_append ( void )
+        verify v_list.size =v 3
+        verify v_list.co_get ( 1 ) =r v_vivaldi
+        verify v_list.co_get ( 2 ) =r v_mozart
+        verify v_list.co_get ( 3 ) =r void
+
+        v_iterator = v_list.co_element_iterator
+        verify v_iterator.co_next =r v_vivaldi
+        verify v_iterator.co_next =r v_mozart
+        verify v_iterator.co_next =r void
+        verify not v_iterator.has_next
+
+        v_list.co_replace_at_index ( i_index = 3 i_new_element = v_vivaldi )
+        verify v_list.co_get ( 3 ) =r v_vivaldi
+
+        var v_immutable_list ty_indexed_list = v_list.co_copy_to_immutable
+        verify v_immutable_list.size =v 3
+        verify v_immutable_list.co_get ( 1 ) =r v_vivaldi
+        verify v_immutable_list.co_get ( 2 ) =r v_mozart
+        verify v_immutable_list.co_get ( 3 ) =r v_vivaldi
+
+        v_list.co_remove_all
+        verify v_list.is_empty
+        verify v_list.size =v 0
+end ///
+        // copy_to_immutable, make_immutable
+        
+        v_list = mutable_indexed_list<string>.create
+        v_list.append ( "foo" )
+        v_list.append ( "bar" )
+
+        var ilist indexed_list<string> = v_list.copy_to_immutable
+        verify ilist.size =v 2
+
+        v_list.append ( "zar" )
+        verify v_list.size =v 3
+        verify ilist.size =v 2
+
+        var ilist2 indexed_list<string> = v_list.make_immutable
+        verify ilist2.size =v 3
+        try
+            v_list.append ( "yar" )
+            verify no
+        catch_any
+            verify yes
+        .
+
+///
+        // sorting
+        const ml = mutable_indexed_list<non_null>.create
+        ml.append ( "qwe" )
+        ml.append ( 123 )
+        ml.append ( yes )
+        ml.append ( 'A' )
+        const il = ml.make_immutable
+
+        const expected = "[123, A, qwe, yes]"
+        ml.sort ( { return i1.to_string.compare_to(i2.to_string) } )
+        verify ml.to_long_string =v expected
+
+        const sorted_il = il.sort ( { return i1.to_string.compare_to(i2.to_string) } )
+        verify sorted_il.to_long_string =v expected
+.///
+	.
+	
+.

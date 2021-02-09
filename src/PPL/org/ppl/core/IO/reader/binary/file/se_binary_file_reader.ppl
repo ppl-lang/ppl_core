@@ -1,0 +1,108 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service binary_file_reader
+
+	java_header
+		import java.io.BufferedInputStream;
+		import java.io.FileInputStream;
+		import java.io.ObjectInputStream;
+
+		import java.util.zip.ZipInputStream;
+		import java.util.zip.ZipEntry;
+
+        import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.error.java.fa_java_exception;
+        import org.ppl.core.java.se_java_IO;
+	end java_header
+
+/// TD	
+	function try_read_all_bytes -> byte_array or null or file_read_error
+		%existing_file_input_argument
+		
+        var r byte_array or null = null
+        var java_exception java_exception or null = null
+        java
+            try {
+                Byte[] b = Files.readAllBytes ( i_file.getJavaFile().toPath() );
+                if ( b.length > 0 ) v_r = new fa_byte_array ( b ) 
+            } catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+
+        if java_exception is null then
+            return r
+        else
+            return fa_file_read_error.create (
+                info = """Error reading content of file '{{i_file.to_string}}'."""
+                java_exception,
+                resource = i_file )
+        .
+	.
+.///
+	
+// TD IO_error -> file_read_error
+
+	function restore_object_from_file
+		in file_is_zip_format yes_no
+		%existing_file_input_argument
+		
+		out result any
+		out error IO_error or null
+		out_check: result =r null xor error =r null
+		
+        variable r any = null
+        var java_exception java_exception or null = null
+        java
+            if ( i_file_is_zip_format.getJavaBoolean() ) {
+                ObjectInputStream object_input_stream = null;
+                try	(
+                    FileInputStream file_input_stream = new FileInputStream ( i_file.getJavaFile() );
+                    ZipInputStream zip_input_stream = new ZipInputStream ( file_input_stream ); ) {
+                    // zip_input_stream.getNextEntry();
+                    // BufferedInputStream buffered_input_stream = new BufferedInputStream ( zip_input_stream );
+                    // ObjectInputStream object_input_stream = new ObjectInputStream ( buffered_input_stream ); ) {
+                    
+                    zip_input_stream.getNextEntry();
+                    BufferedInputStream buffered_input_stream = new BufferedInputStream ( zip_input_stream );
+                    object_input_stream = new ObjectInputStream ( buffered_input_stream );
+
+                    v_r = (ty_non_null) object_input_stream.readObject();
+
+                } catch ( Exception e ) {
+                    v_java_exception = new fa_java_exception ( e );
+				} finally {
+					se_java_IO.close_input_stream ( object_input_stream );
+				}
+				
+            } else {
+                try	(
+                    FileInputStream file_input_stream = new FileInputStream ( i_file.getJavaFile() );
+                    BufferedInputStream buffered_input_stream = new BufferedInputStream ( file_input_stream );
+                    ObjectInputStream object_input_stream = new ObjectInputStream ( buffered_input_stream ); ) {
+    
+                    v_r = (ty_non_null) object_input_stream.readObject();
+
+                } catch ( Exception e ) {
+                    v_java_exception = new fa_java_exception ( e );
+                }
+            }
+        end java
+
+        if java_exception is null then
+            assert r is not null
+            return result = r, error = null
+        else
+            return result = null, error = IO_resource_error.create (
+                info = """Object could not be restored from file '{{i_file.to_string}}'. The following error occurred:
+{{java_exception.to_string}}"""
+                java_exception,
+                resource = i_file )
+        .
+    .
+.

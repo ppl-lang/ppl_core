@@ -1,0 +1,11 @@
+type library_path
+
+   inherit PPL_identifier_path
+        redefine
+           	function id -> library_id
+        .
+    .
+
+	function parent_path -> library_path or null
+
+.

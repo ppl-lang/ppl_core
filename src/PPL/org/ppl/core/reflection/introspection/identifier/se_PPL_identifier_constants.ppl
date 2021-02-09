@@ -1,0 +1,9 @@
+service PPL_identifier_constants
+
+	att id_regex regex default: regex.create ( "[a-zA-Z][a-zA-Z0-9_]*" )
+
+	att id_separator string default: "."
+
+	att id_path_regex regex default: regex.create ( """{{a_id_regex}}(\.{{a_id_regex}})*""" )
+
+.

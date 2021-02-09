@@ -1,0 +1,3 @@
+%ty_zero_pos_32_value_type_with_maximum_check_and_compare_to < \
+	type_id: nano_seconds_of_second \
+	max_value: "se_time_constants.nano_seconds_in_second - 1" >

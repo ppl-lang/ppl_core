@@ -1,0 +1,17 @@
+type program_check_failure_info
+
+    inherit has_to_long_string
+
+    // check a_name.size > 5 message: "qwe" id: e123 data: 2+2
+
+	att source_code string or null // a_name.size > 5
+
+	att message string or null // "qwe"
+
+	att id string or null // e123
+
+	att data any // 4
+	
+	att check_comparison_values program_check_comparison_values or null // 3, 5
+
+.

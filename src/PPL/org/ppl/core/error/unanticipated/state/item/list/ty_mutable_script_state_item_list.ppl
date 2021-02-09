@@ -1,0 +1,58 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_script_state_item_list
+
+	java_header
+		import org.ppl.core.basics.base_types.ty_any;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+	end java_header
+
+	java
+		public void _add_attribute ( String i_id, ty_object_type i_object_type, ty_any i_value ) ;
+		public void _add_input_argument ( String i_id, ty_object_type i_object_type, ty_any i_value ) ;
+		public void _add_output_argument ( String i_id, ty_object_type i_object_type, ty_any i_value ) ;
+		public void _add_variable ( String i_id, ty_object_type i_object_type, ty_any i_value ) ;
+		public void _add_constant ( String i_id, ty_object_type i_object_type, ty_any i_value ) ;
+	end java
+
+	command add_attribute -> mutable_script_state_item_list
+		in id PPL_attribute_id
+		in object_type object_type or null
+		in value any
+	.
+	
+	command add_input_argument -> mutable_script_state_item_list
+		in id PPL_command_input_argument_id
+		in object_type object_type or null
+		in value any
+	.
+
+	command add_output_argument -> mutable_script_state_item_list
+		in id PPL_command_output_argument_id
+		in object_type object_type or null
+		in value any
+	.
+
+	command add_variable -> mutable_script_state_item_list
+		in id PPL_script_variable_id
+		in object_type object_type or null
+		in value any
+	.
+
+	command add_constant -> mutable_script_state_item_list
+		in id PPL_script_constant_id
+		in object_type object_type or null
+		in value any
+	.
+
+	command to_immutable
+		out result list<script_state_item>
+	.
+	
+.
+	

@@ -1,0 +1,20 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type bug_source_code_location
+
+    inherit has_to_long_string
+
+	attributes
+	    TFS_id_path TFS_path
+	    
+	    script_id string
+	    script_line_number positive_32 or null
+	    script_instruction string or null
+    .
+
+.

@@ -1,0 +1,31 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template ty_pos_32_value_min_max_check
+
+	param min_value end
+	param max_value end
+	
+	attribute value
+		and_check
+			script
+				const min_value positive_32 = {min_value}
+				check i_value >= c_min_value &
+					message: """The value {{i_value.to_string}} is invalid. It must be greater than or equal to {{c_min_value.to_string}}.""" &
+					id: value_less_than_minimum &
+					data: i_value
+
+				const max_value positive_32 = {max_value}
+				check i_value <= c_max_value &
+					message: """The value {{i_value.to_string}} is invalid. It must be less than or equal to {{c_max_value.to_string}}.""" &
+					id: value_exceeds_maximum &
+					data: i_value
+			end
+		end
+	end
+
+end

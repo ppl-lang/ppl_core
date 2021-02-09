@@ -1,0 +1,17 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory file_name_extension
+
+	%string_value_factory_with_comparable_commands
+
+	creator create kind:in_all
+	
+%string_value_factory_try_parse_creator<file_name_extension>
+
+.
+

@@ -1,0 +1,46 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_map_creators
+
+    creator create_singleton ( key t_key, value t_value ) -> map<key:t_key, value:t_value>
+
+        java
+            HashMap<t_key, t_value> map = new HashMap<>();
+            map.put ( i_key, i_value );
+            c_this.a_java_map = map;
+        end java
+        
+        return this
+    .
+    
+    creator create_duo ( key_1 t_key, value_1 t_value, key_2 t_key, value_2 t_value ) -> map<key:t_key, value:t_value>
+
+        java
+            LinkedHashMap<t_key, t_value> map = new LinkedHashMap<>();
+            map.put ( i_key_1, i_value_1 );
+            map.put ( i_key_2, i_value_2 );
+            c_this.a_java_map = map;
+        end java
+        
+        return this
+    .
+    
+    creator create_trio ( key_1 t_key, value_1 t_value, key_2 t_key, value_2 t_value, key_3 t_key, value_3 t_value ) \
+        -> map<key:t_key, value:t_value>
+
+        java
+            LinkedHashMap<t_key, t_value> map = new LinkedHashMap<>();
+            map.put ( i_key_1, i_value_1 );
+            map.put ( i_key_2, i_value_2 );
+            map.put ( i_key_3, i_value_3 );
+            c_this.a_java_map = map;
+        end java
+        
+        return this
+    .
+.

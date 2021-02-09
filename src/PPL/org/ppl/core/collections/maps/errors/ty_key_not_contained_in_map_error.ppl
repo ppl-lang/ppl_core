@@ -1,0 +1,5 @@
+record type key_not_contained_in_map_error
+
+    inherit invalid_data_error<scalar_or_scalar_value>
+    
+.

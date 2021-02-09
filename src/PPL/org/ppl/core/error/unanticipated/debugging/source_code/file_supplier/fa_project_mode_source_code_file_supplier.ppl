@@ -1,0 +1,43 @@
+// TD should use fa_root_directory_source_code_file_supplier
+
+factory project_mode_source_code_file_supplier type:source_code_file_supplier
+
+    function get
+
+        const root_directory = get_source_code_root_directory
+        if root_directory is null then
+            return null
+        .
+        
+        const file = file.create ( file_path.create_for_relative_path (
+            path = se_TFS_path.path_to_relative_file_path ( i_TFS_path )
+            root_directory = root_directory.path ) )
+        if file.exists then
+            return file
+        else
+//            OS.err.write_line ( """The source code file '{{file.to_string}}' doesn't exist.""" )
+            return null
+        .
+    .
+    
+    functions private:yes
+    
+        function get_source_code_root_directory -> directory or null
+            
+            const project_root_path = se_current_application_directories.home_directory_path.parent?.parent
+            assert project_root_path is not null
+            
+            const source_code_root = directory.create ( project_root_path.append_path ( relative_directory_path.create ( '''work/ppl/source_code/''' ) ) )
+            if source_code_root.exists then
+                return source_code_root
+            else
+//                OS.err.write_line ( """The source code file cannot be accessed because the source code root directory '{{source_code_root.to_string}}' doesn't exist.""" )
+                return null
+            .
+        .
+    .
+
+    creator create kind:in_all
+    
+.
+

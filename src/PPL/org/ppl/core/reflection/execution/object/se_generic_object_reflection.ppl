@@ -1,0 +1,310 @@
+service generic_object_reflection
+
+	java_header
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.java.se_type_parameter_Java_helper;
+	end java_header
+	
+	java
+        /*
+	    public static ty_type_path typePathOfGenericParameter ( ty_non_null object, String typeParameterId ) {
+	        
+	        ty_object_type objectType = require_type_of_generic_parameter ( object,
+	            fa_type_parameter_id.create ( new fa_string ( typeParameterId ) ) );
+            return se_object_type.type_path_or_null ( objectType );
+	    }
+        */
+	end java
+	
+	
+	function get_generic_parameter_map_or_throw ( object non_null ) \
+	    -> map<key:type_parameter_id, value:type_parameter_assignment>
+
+        const r = get_generic_parameter_map_or_null ( i_object )
+        assert r is not null
+        return r
+	.
+
+	function get_generic_parameter_map_or_null ( object non_null ) \
+	    -> map<key:type_parameter_id, value:type_parameter_assignment> or null
+
+		script
+			const generic_parameter_id_list = try_get_generic_parameter_id_list ( i_object )
+			if generic_parameter_id_list is null then
+				return null
+			.
+
+			const r = mutable_map<key:type_parameter_id, value:type_parameter_assignment>.create
+			repeat for each generic_parameter_id in generic_parameter_id_list
+				r.add (
+					key = generic_parameter_id
+					value = type_parameter_assignment.create (
+					    id = generic_parameter_id
+					    object_type = require_type_of_generic_parameter (
+                            object = i_object
+                            generic_parameter_id = generic_parameter_id )
+                        kind = type_parameter_assignment_kind.only ) )
+			.
+
+			return r.make_immutable
+		.
+		test
+			test mutable_map<key:string, value:non_error>.create
+			verify result is not null
+			verify result.size =v 2
+            const t1 standard_object_type = result.get(type_parameter_id.create("key")).object_type type_check:no 
+			verify t1.type_path.value =v se_common_type_paths.string.value
+            const t2 standard_object_type = result.get(type_parameter_id.create("value")).object_type type_check:no 
+			verify t2.type_path.value =v se_common_type_paths.non_error.value
+
+			test object = "qwe"
+			verify result is null
+		.
+	.
+
+
+	function try_get_generic_parameter_id_list ( object non_null ) -> indexed_list<type_parameter_id> or null
+
+		script
+		    variable r indexed_list<type_parameter_id> or null
+			java
+                v_r = se_type_parameter_Java_helper.type_parameter_ids_of_class ( i_object.getClass() );
+            end java
+            assert r may be null
+            return r
+		.
+		test
+			test mutable_map<key:string, value:string>.create
+			verify result is not null
+			verify result.size =v 2
+			verify result.get(1).value =v "key"
+			verify result.get(2).value =v "value"
+
+			test object = "qwe"
+			verify result is null
+		.
+	.
+
+	
+/// not used
+	function get_type_of_generic_parameter
+		in object any_type
+		in generic_parameter_id type_parameter_id
+		%system_error_handler_input_argument
+		
+		%result_xor_system_error_output<object_type>
+		
+		script
+			var java_exception java_exception
+
+			java
+				try {
+					o_result = require_type_of_generic_parameter ( i_object, i_generic_parameter_id );
+				} catch ( Throwable t ) {
+					v_java_exception = new fa_java_exception ( new Exception(t) );
+				}
+			end java
+			
+			assert java_exception may be null
+			
+			if java_exception is not null then
+				result = null
+				error = fa_reflection_execution_error.create (
+					info = """Couldn't retrieve the type of generic parameter '{{i_generic_parameter_id}}' in object '{{i_object.to_string}}'. Reason:
+{{java_exception.to_string}}""" )
+				i_error_handler.handle_system_error ( o_error )
+			else
+				assert result is not null
+			.
+		.
+		
+		test
+			test \
+				object = list<string>.create_singleton ( "qwe" ) \ 
+				generic_parameter_id = se_type_parameter_id_constants.iterator_element
+            const r standard_object_type = result type_check:no 
+			verify r.type_id_path.value =v se_common_type_paths.string.value
+		.
+	.
+.///
+
+	function require_type_of_generic_parameter -> object_type
+		in object non_null
+		in generic_parameter_id type_parameter_id
+		
+		script
+		    variable r object_type
+			java
+				v_r = se_type_parameter_Java_helper.try_get_type_parameter_of_object_or_throw (
+				    i_object, i_generic_parameter_id.getValue().getJavaString() );
+			end java
+			assert r is not null
+			return r
+		.
+		
+		test
+			test \
+				object = list<string>.create_singleton ( "qwe" ) \ 
+				generic_parameter_id = se_type_parameter_id_constants.iterator_element
+            const r standard_object_type = result type_check:no 
+			verify r.type_path.value =v se_common_type_paths.string.value
+		.
+	.
+	
+	function is_type_parameter_nullable ( object non_null, type_parameter_id ) -> yes_no
+		script
+		    variable object_type object_type
+			java
+				v_object_type = se_type_parameter_Java_helper.try_get_type_parameter_of_object_or_throw (
+				    i_object, i_type_parameter_id.getValue().getJavaString() );
+				// o_result = fa_yes_no.of ( object_type.getIs_nullable().getJavaBoolean() );
+			end java
+			assert object_type is not null
+			return object_type.is_nullable
+		.
+		test
+			test \
+				object = list<string>.create_singleton ( "qwe" ) \ 
+				type_parameter_id = se_type_parameter_id_constants.iterator_element
+			verify not result
+
+			test \
+				object = list_with_nulls<string or null>.create_singleton ( "qwe" ) \
+				type_parameter_id = se_type_parameter_id_constants.iterator_element
+			verify result
+		.
+	.
+	
+
+	function is_object_of_generic_type ( object non_null ) -> yes_no
+		
+		script
+		    variable r yes_no
+			java
+				v_r = fa_yes_no.of ( se_type_parameter_Java_helper.object_has_type_parameters ( i_object ) );
+			end java
+			assert r is not null
+			return r
+		.
+		test
+			test "a"
+			verify not result
+
+			test [ "a" ]
+			verify result
+		.
+	.
+
+	function get_element_type_of_finite_iterator ( iterator finite_iterator<*> ) -> object_type
+		
+		script
+			return require_type_of_generic_parameter (
+				object = i_iterator
+				generic_parameter_id = se_type_parameter_id_constants.iterator_element )
+		.
+		test
+			test empty_iterator<string or null>.create
+			verify result.is_nullable
+            // const r union_object_type = result type_check:no 
+			// verify r.type_path.value =v se_common_type_paths.string.value
+
+			test "qwe".iterator
+			verify not result.is_nullable
+            const r2 standard_object_type = result type_check:no 
+			verify r2.type_path.value =v se_common_type_paths.character.value
+
+			const string_list = list<string>.create_singleton ( "qwe" )
+			test string_list.iterator
+			verify not result.is_nullable
+            const r3 standard_object_type = result type_check:no 
+			verify r3.type_path.value =v se_common_type_paths.string.value
+		.
+	.
+
+	function get_element_type_of_infinite_iterator ( iterator infinite_iterator<*> ) -> object_type
+		
+        return require_type_of_generic_parameter (
+            object = i_iterator
+            generic_parameter_id = se_type_parameter_id_constants.iterator_element )
+	.
+
+	function get_element_type_of_collection ( collection mutable_or_immutable_collection<*> ) -> object_type
+		
+		script
+			case type of i_collection
+
+				when mutable_or_immutable_map<*> map
+					return get_value_type_of_map ( map )
+
+				// when mutable_or_immutable_list<*>
+				otherwise
+					return require_type_of_generic_parameter (
+						object = i_collection
+						generic_parameter_id = se_type_parameter_id_constants.iterator_element )
+			.
+		.
+		test
+			const string_list = list<string>.create_singleton ( "qwe" )
+			test string_list
+			verify not result.is_nullable
+            const r standard_object_type = result type_check:no 
+			verify r.type_path.value =v se_common_type_paths.string.value
+
+			test list<list<string>>.create_singleton ( string_list )
+            const r2 generified_object_type = result type_check:no 
+			verify r2.type_path.value =v "org.ppl.core.collections.lists.ty_list"
+			verify r2.type_parameters is not null
+			verify r2.to_string =v "list<element:string>"
+
+			const string_number_map = map<key:string, value:number>.create_singleton ( key = "qwe", value = 123 )
+			test string_number_map
+            const r3 standard_object_type = result type_check:no 
+			verify r3.type_path.value =v "org.ppl.core.basics.scalar.number.ty_number"
+			
+			test list<map<key:string, value:number>>.create_singleton ( string_number_map )
+            const r4 generified_object_type = result type_check:no 
+			verify r4.type_path.value =v "org.ppl.core.collections.maps.ty_map"
+			verify r4.type_parameters is not null
+			verify r4.to_string =v "map<key:string, value:number>"
+            
+            const wildcard_list list<list<*>> = list<list<*>>.create_singleton ( string_list )
+			test wildcard_list
+			verify not result.is_nullable
+            const r5 generified_object_type = result type_check:no 
+			verify r5.type_path.value =v "org.ppl.core.collections.lists.ty_list"
+			verify r5.type_parameters is null
+			verify r5.is_wildcard
+			verify r5.to_string =v "list<*>"
+		.
+	.
+
+	function get_key_type_of_map ( map mutable_or_immutable_map<*> ) -> object_type
+		
+		script
+			return require_type_of_generic_parameter (
+				object = i_map
+				generic_parameter_id = se_type_parameter_id_constants.map_key )
+		.
+		test
+			test map<key:string, value:number>.create_singleton ( key = "qwe", value = 123 )
+			verify not result.is_nullable
+            const r standard_object_type = result type_check:no 
+			verify r.type_path.value =v se_common_type_paths.string.value
+		.
+	.
+
+	function get_value_type_of_map ( map mutable_or_immutable_map<*> ) -> object_type
+		
+		script
+			return require_type_of_generic_parameter (
+				object = i_map
+				generic_parameter_id = se_type_parameter_id_constants.map_value )
+		.
+		test
+			test map_with_nulls<key:character, value:string or null>.create_singleton ( key = 'c', value = null )
+			verify result.is_nullable
+            // const r union_object_type = result type_check:no 
+			// verify r.type_path.value =v se_common_type_paths.string.value
+		.
+	.
+.

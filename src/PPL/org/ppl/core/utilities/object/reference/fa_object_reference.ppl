@@ -1,0 +1,5 @@
+factory object_reference type:object_reference
+
+    creator create kind:in_all
+
+.

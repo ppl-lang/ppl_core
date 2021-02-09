@@ -1,0 +1,64 @@
+type PPL_identifier
+
+	inherit string_value
+		redefine
+			att value
+				and_check
+					script
+						check i_value.matches_regex ( se_PPL_identifier_constants.id_regex ) \
+							message: """'{{i_value}}' is an invalid PPL identifier. A PPL identifier must start with a letter [a-zA-Z], followed by any number of letters, digits [0-9] and underlines [_].""" \
+							id: invalid_PPL_identifier \
+							data: i_value
+					.
+					test
+                        // valid values
+
+                        test "a"
+                        verify v_error =r null
+
+                        test "Z"
+                        verify v_error =r null
+
+                        test "a1"
+                        verify v_error =r null
+
+                        test "a_"
+                        verify v_error =r null
+
+                        test "a_1"
+                        verify v_error =r null
+
+                        test "aAzZ_123_456_7890"
+                        verify v_error =r null
+
+                        test "co_delete_first_row"
+                        verify v_error =r null
+
+                        // invalid values
+
+                        test "_"
+                        verify v_error #r null
+
+                        test ":"
+                        verify v_error #r null
+
+                        test "1a"
+                        verify v_error #r null
+
+                        test "a*"
+                        verify v_error #r null
+
+                        test "ty_person:"
+                        verify v_error #r null
+
+                        test "ty:person"
+                        verify v_error #r null
+					.
+				.
+			.
+		.
+	.
+
+    function to_prefixed_string -> string
+
+.

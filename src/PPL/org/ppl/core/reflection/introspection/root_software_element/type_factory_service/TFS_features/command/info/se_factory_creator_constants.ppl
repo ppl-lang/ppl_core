@@ -1,0 +1,6 @@
+service factory_creator_constants
+    
+    attributes
+        try_parse_creator_id PPL_command_id = PPL_command_id.create ( "try_parse" )
+    .
+.

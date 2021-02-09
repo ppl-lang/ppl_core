@@ -1,0 +1,5 @@
+type type_parameter_id
+
+	inherit PPL_identifier
+
+.

@@ -1,0 +1,18 @@
+template regex_checked_string_value
+
+    param regex_string
+    
+    inherit string_value
+        redefine
+            att value
+                and_check
+                    const regex = regex.create ( "{regex_string}" )
+                    check i_value.matches_regex ( regex ) \
+                        message: """The value '{{i_value}}' is invalid because it doesn't match the regular expression '{{regex}}'.""" \
+                        data: i_value
+                .
+            .
+        .
+    .
+.
+    

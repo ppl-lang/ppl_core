@@ -1,0 +1,131 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service program_error_writer
+
+	function to_long_string ( program_error ) -> string
+	
+        const r = fa_mutable_string.create
+        
+        append_label_value_line (
+            string = r
+            label = "Error"
+            value = i_program_error.to_string )
+        
+        append_label_value_line (
+            string = r
+            label = "Location"
+            value = i_program_error.source_code_location.to_long_string )
+        
+        if i_program_error.date_time as date_time is not null then
+            append_label_value_line (
+                string = r
+                label = "Time"
+                value = date_time.to_local_date_time.format )
+        .
+        
+        append_label_value_line (
+            string = r &
+            label = "Info"
+            value = i_program_error.info )
+
+        if i_program_error.script_state as state is not null then
+            append_label_value_line (
+                string = r &
+                label = "State"
+                value = state.to_long_string )
+        .
+        
+        return r.to_string
+    .
+	            
+	function error_with_check_to_long_string ( program_error, failure_info program_check_failure_info or null ) -> string
+
+        const r = fa_mutable_string.create
+        
+        append_label_value_line (
+            string = r
+            label = "Error"
+            value = i_program_error.to_string )
+        
+        append_label_value_line (
+            string = r
+            label = "Location"
+            value = i_program_error.source_code_location.to_long_string )
+        
+        if i_program_error.date_time as date_time is not null then
+            append_label_value_line (
+                string = r
+                label = "Time"
+                value = date_time.to_local_date_time.format )
+        .
+            
+        append_label_value_line (
+            string = r &
+            label = "Info"
+            value = i_program_error.info )
+
+        if i_failure_info?.id as check_id is not null then
+            append_label_value_line (
+                string = r &
+                label = "Id"
+                value = check_id )
+        .
+
+        if i_failure_info?.source_code as source_code is not null then
+            append_label_value_line (
+                string = r &
+                label = "Check"
+                value = source_code )
+        .
+        
+        if i_failure_info?.check_comparison_values as comparison_values is not null then
+            append_label_value_line (
+                string = r &
+                label = "Left value"
+                value = se_object.to_string_or_null ( comparison_values.left_value ) )
+            append_label_value_line (
+                string = r &
+                label = "Right value"
+                value = se_object.to_string_or_null ( comparison_values.right_value ) )
+        .
+
+        if i_failure_info?.data as check_data is not null then
+            append_label_value_line (
+                string = r &
+                label = "Check data"
+                value = check_data.to_string )
+        .
+        
+        if i_program_error.script_state as state is not null then
+            append_label_value_line (
+                string = r &
+                label = "State"
+                value = state.to_long_string )
+        .
+        
+        return r.to_string
+    .
+
+	function to_log_string ( program_error ) -> string
+
+        return """PROGRAM ERROR
+{{program_error.to_long_string}}"""
+    .
+
+	function append_label_value_line ( string mutable_string, label string, value string or null )
+        se_string_form_utility.append_label_value (
+            mutable_string = i_string,
+            label,
+            value,
+            label_width = 14,
+            value_width = 104,
+            right_align_label = no )
+        i_string.append_new_line
+    .
+	
+.

@@ -1,0 +1,7 @@
+type IO_resource_error
+
+    inherit IO_error
+    
+    att resource IO_resource
+    
+.

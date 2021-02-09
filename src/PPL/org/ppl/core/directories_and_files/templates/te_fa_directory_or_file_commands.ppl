@@ -1,0 +1,156 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_directory_or_file_commands
+
+    param directory_or_file
+
+	function to_string = a_path.to_string
+	
+	function is_equal_to native:yes
+        java
+            return fa_yes_no.of ( equals ( i_other ) );
+        end java
+    .
+
+	function compare_to native:yes
+        java
+            return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+        end java
+    .
+
+	function hash_code native:yes
+        java
+            return new fa_signed_int_32 ( hashCode() );
+        end java
+    .
+
+	function name = a_path.name
+
+	function to_current_OS_path = a_path.to_current_OS_path
+
+	function exists native:yes
+        java
+            return fa_yes_no.of ( a_java_value.exists() );
+        end java
+    .
+	
+    function is_hidden native:yes
+        java
+            return fa_yes_no.of ( a_java_value.isHidden() );
+        end java
+    .
+    
+	function time_created
+
+	    variable r local_date_time or null = null
+        java
+            BasicFileAttributes attr = Files.readAttributes ( a_java_value.toPath(), BasicFileAttributes.class );
+            v_r = new fa_local_date_time ( attr.creationTime().toInstant() );
+        end java
+        assert r is not null
+        
+        return r
+	.
+
+	function time_last_modified
+
+	    variable r local_date_time or null = null
+        java
+            BasicFileAttributes attr = Files.readAttributes ( a_java_value.toPath(), BasicFileAttributes.class );
+            v_r = new fa_local_date_time ( attr.lastModifiedTime().toInstant() );
+        end java
+        assert r is not null
+        
+        return r
+	.
+
+	function time_last_accessed
+
+	    variable r local_date_time or null = null
+        java
+            BasicFileAttributes attr = Files.readAttributes ( a_java_value.toPath(), BasicFileAttributes.class );
+            v_r = new fa_local_date_time ( attr.lastAccessTime().toInstant() );
+        end java
+        assert r is not null
+        
+        return r
+	.
+
+    function is_readable native:yes
+        java
+            return fa_yes_no.of ( a_java_value.canRead() );
+        end java
+    .
+    
+    function is_writable native:yes
+        java
+            return fa_yes_no.of ( a_java_value.canWrite() );
+        end java
+    .
+    
+    function is_executable native:yes
+        java
+            return fa_yes_no.of ( a_java_value.canExecute() );
+        end java
+    .
+
+	function try_set_readable_permission
+
+        var success yes_no = no
+        java
+            v_success = fa_yes_no.of ( 
+                a_java_value.setReadable ( i_permission.getJavaBoolean(), i_only_for_owner.getJavaBoolean() ) );
+        end java
+
+        if not success then
+            return fa_{directory_or_file}_error.create (
+                info = """The readable permission could not be set for {directory_or_file} '{{a_path.to_current_OS_path}}'."""
+                java_exception = null
+                resource = this )
+        else
+            return null
+        .
+    .
+
+	function try_set_writable_permission
+
+        var success yes_no = no
+        java
+            v_success = fa_yes_no.of ( 
+                a_java_value.setWritable ( i_permission.getJavaBoolean(), i_only_for_owner.getJavaBoolean() ) );
+        end java
+
+        if not success then
+            return fa_{directory_or_file}_error.create (
+                info = """The writable permission could not be set for {directory_or_file} '{{a_path.to_current_OS_path}}'."""
+                java_exception = null
+                resource = this )
+        else
+            return null
+        .
+    .
+
+	function try_set_executable_permission
+
+        var success yes_no = no
+        java
+            v_success = fa_yes_no.of ( 
+                a_java_value.setExecutable ( i_permission.getJavaBoolean(), i_only_for_owner.getJavaBoolean() ) );
+        end java
+
+        if not success then
+            return fa_{directory_or_file}_error.create (
+                info = """The executable permission could not be set for {directory_or_file} '{{a_path.to_current_OS_path}}'."""
+                java_exception = null
+                resource = this )
+        else
+            return null
+        .
+    .
+
+.

@@ -1,0 +1,6 @@
+type string_or_binary_writer
+
+	inherit closable_IO_resource
+
+	function try_flush -> IO_error or null
+.

@@ -1,0 +1,62 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_mutable_or_immutable_list_commands
+
+	param size_factory
+
+    functions native:yes
+
+        function element_type
+            java
+                return t_element;
+            end java
+        .
+        
+        function size
+            java
+                return new fa_{size_factory} ( a_java_list.size() );
+            end java
+        .
+
+        function iterator
+            java
+                return new fa_Java_Spliterator_wrapper_iterator_with_size<t_element> (
+                    a_java_list.spliterator(), a_java_list.size(), t_element );
+            end java
+        .
+    
+        function stream
+            java
+                return new fa_stream<t_element> ( a_java_list.stream(), t_element );
+            end java
+        .
+    .    
+
+    function to_string = """List with {{size}} {{if size #v 1 then "elements" else "element" end if}}"""
+    
+    function to_long_string
+
+        const r = mutable_string.create
+        
+        r.append ( "[" )
+
+        repeat for each item in iterator is_last:is_last
+
+            // r.append ( se_object.to_long_string_or_null_string ( item ) )
+            r.append ( se_object.to_string_or_null_string ( item ) )
+
+            if not is_last then
+                r.append ( ", " )
+            .
+        .
+
+        r.append ( "]" )
+
+        return r.to_string
+    .
+.

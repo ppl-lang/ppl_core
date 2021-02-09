@@ -1,0 +1,310 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service Java_application_launcher
+
+    function try_start_jar_file_in_new_process_and_continue -> OS_process_error or null
+        in jar_file_path absolute_or_relative_file_path
+        in working_directory directory or null default:null
+	    in command_line_arguments list<string or null> or null default:null
+		in java_exe_path string or null default:null
+		in java_exe_options list<string or null> or null default:null
+		in open_java_console yes_no default:yes
+		
+		const command_tokens = command_tokens_for_jar_file_execution (
+		    jar_file_path, command_line_arguments, java_exe_path, java_exe_options, open_java_console )
+		
+        return se_OS_command_executor.try_start_process_and_continue ( OS_command_config.create (
+		    command_tokens,
+		    working_directory ) )
+    .
+    
+    function try_run_jar_file_in_new_process_and_wait -> signed_integer_32 or OS_process_error
+        in jar_file_path absolute_or_relative_file_path
+        in working_directory directory or null default:null
+	    in command_line_arguments list<string or null> or null default:null
+		in java_exe_path string or null default:null
+		in java_exe_options list<string or null> or null default:null
+		in open_java_console yes_no default:yes
+		
+		const command_tokens = command_tokens_for_jar_file_execution (
+		    jar_file_path, command_line_arguments, java_exe_path, java_exe_options, open_java_console )
+		
+        return se_OS_command_executor.try_run_process_and_wait ( OS_command_config.create (
+		    command_tokens,
+		    working_directory ) )
+    .
+    
+    function command_tokens_for_jar_file_execution -> list<string or null>
+        in jar_file_path absolute_or_relative_file_path
+	    in command_line_arguments list<string or null> or null default:null
+		in java_exe_path string or null default:null
+		in java_exe_options list<string or null> or null default:null
+		in open_java_console yes_no default:yes
+		
+		const r = mutable_list_with_nulls<string or null>.create
+
+		// java exe
+		if i_java_exe_path is not null then
+		    r.append ( i_java_exe_path )
+        else
+            const java_exe_file = se_java_config.get_java_exe_file ( use_javaw = not i_open_java_console ) \
+                on_error:throw_error
+            r.append ( java_exe_file.to_string )
+        .
+        
+        // options
+        if i_java_exe_options is not null then
+            r.append_all ( i_java_exe_options ) 
+        .
+
+        // jar file        
+        r.append ( "-jar" )
+        r.append ( i_jar_file_path.to_string )
+        
+        // command_line_arguments
+        if i_command_line_arguments is not null then
+            r.append_all ( i_command_line_arguments ) 
+        .
+        
+        return r.make_immutable
+    .
+    
+    function try_run_module_in_new_process_and_wait -> signed_integer_32 or OS_process_error
+        in module_name string
+        in start_class_path string
+        in module_path string or null
+        in working_directory directory or null default:null
+	    in command_line_arguments list<string or null> or null default:null
+		in java_exe_path string or null default:null
+		in java_exe_options list<string or null> or null default:null
+		in open_java_console yes_no default:yes
+
+		const command_tokens = command_tokens_for_module_execution (
+		    module_name, start_class_path, module_path,
+		    command_line_arguments, java_exe_path, java_exe_options, open_java_console )
+		
+        return se_OS_command_executor.try_run_process_and_wait ( OS_command_config.create (
+		    command_tokens,
+		    working_directory ) )
+    .
+
+    function command_tokens_for_module_execution -> list<string or null>
+        in module_name string
+        in start_class_path string
+        in module_path string or null
+	    in command_line_arguments list<string or null> or null default:null
+		in java_exe_path string or null default:null
+		in java_exe_options list<string or null> or null default:null
+		in open_java_console yes_no default:yes
+
+        // example:
+        // java.exe -option foo --module-path libs --module org.qwe/org.qwe.Start arg1 arg2
+
+		const r = mutable_list_with_nulls<string or null>.create
+
+		// java exe
+		if i_java_exe_path is not null then
+		    r.append ( i_java_exe_path )
+        else
+            const java_exe_file = se_java_config.get_java_exe_file ( use_javaw = not i_open_java_console ) \
+                on_error:throw_error
+            r.append ( java_exe_file.to_string )
+        .
+        
+        // options
+        if i_java_exe_options is not null then
+            r.append_all ( i_java_exe_options ) 
+        .
+        
+        if i_module_path is not null then
+            r.append ( "--module-path" )
+            r.append ( i_module_path )
+        .
+
+        r.append ( "--module" )
+        r.append ( """{{i_module_name}}/{{i_start_class_path}}""" )
+
+        // command_line_arguments
+        if i_command_line_arguments is not null then
+            r.append_all ( i_command_line_arguments ) 
+        .
+        
+        return r.make_immutable
+    .
+    
+///
+	function append_command_tokens_for_class_execution -> file_inexistent_error or null
+	    in command_tokens mutable_list<string or null>
+		in java_exe_path string or null default:null
+		in java_exe_options list<string> or null default:null
+		in classpath string or null
+		in main_class string
+		in open_java_console yes_no default:yes
+		
+		// java exe
+		if i_java_exe_path is not null then
+		    i_command_tokens.append ( i_java_exe_path )
+        else
+            const java_exe_file = se_java_config.get_java_exe_file ( use_javaw = not i_open_java_console ) \
+                on_error:return_error
+            i_command_tokens.append ( java_exe_file.to_string )
+        .
+        
+        // options
+        if i_java_exe_options is not null then
+            repeat for each option in i_java_exe_options
+                i_command_tokens.append ( option ) 
+            .
+        .
+        
+        // classpath
+        if i_classpath is not null then
+            const OS_classpath = if se_OS_config.OS_is_Windows \
+                then i_classpath.replace_all (
+                    to_replace = se_java_config.Unix_classpath_separator
+                    replace_by = se_java_config.Windows_classpath_separator ) \
+                else i_classpath.replace_all (
+                    to_replace = se_java_config.Windows_classpath_separator
+                    replace_by = se_java_config.Unix_classpath_separator )
+            i_command_tokens.append ( "-classpath" )
+            i_command_tokens.append ( OS_classpath )
+        .
+
+        i_command_tokens.append ( i_main_class )
+        
+        return null
+    .
+
+	command start_java_application_class_in_new_terminal_and_continue -> anticipated_error or null
+		in java_exe_path type:string voidable:yes default:void end
+		in java_exe_options type:string voidable:yes default:void end
+		in classpath type:string voidable:yes end
+		in main_class type:string end
+		in command_line_arguments type:string voidable:yes default:void end
+		in working_directory type:directory voidable:yes default:void end
+		in open_java_console type:yes_no default:yes end
+		in window_title type:string voidable:yes default:void end
+		
+		script
+			case type of get_OS_command_for_class_execution ( &
+				java_exe_path = i_java_exe_path &
+				java_exe_options = i_java_exe_options &
+				classpath = i_classpath &
+				main_class = i_main_class &
+				command_line_arguments = i_command_line_arguments &
+				open_java_console = i_open_java_console )
+				
+				when string OS_command
+                    return se_OS_commands.start_OS_command_in_new_terminal_and_continue ( OS_command, working_directory, window_title )
+				when IO_resource_error e
+                    return e
+            .
+		end
+	end
+
+	command start_java_application_class_in_new_terminal_and_wait
+		in java_exe_path type:string voidable:yes default:void end
+		in java_exe_options type:string voidable:yes default:void end
+		in classpath type:string voidable:yes end
+		in main_class type:string end
+		in command_line_arguments type:string voidable:yes default:void end
+		in working_directory type:directory voidable:yes default:void end
+		in open_java_console type:yes_no default:yes end
+		in window_title type:string voidable:yes default:void end
+		
+		%result_xor_system_error_output < signed_integer_32 >
+		
+		script
+			var command string
+			co_get_OS_command_for_class_execution ( &
+				java_exe_path = i_java_exe_path &
+				java_exe_options = i_java_exe_options &
+				classpath = i_classpath &
+				main_class = i_main_class &
+				command_line_arguments = i_command_line_arguments &
+				open_java_console = i_open_java_console ) &
+				( v_command = result &
+				o_error = error )
+			if o_error #r void then
+				exit script
+			end if
+
+			se_OS_commands.start_OS_command_in_new_terminal_and_wait ( &
+				OS_command = v_command &
+				working_directory = i_working_directory &
+				window_title = i_window_title ) &
+				( o_result = result &
+				o_error = error )
+		end
+	end
+
+	command get_OS_command_for_class_execution -> string or IO_resource_error
+		in java_exe_path type:string voidable:yes default:void end
+		in java_exe_options type:string voidable:yes default:void end
+		in classpath type:string voidable:yes end
+		in main_class type:string end
+		// TD should be in unescaped_command_line_argument_list type:string_list voidable:yes end
+		in command_line_arguments type:string voidable:yes default:void end
+		in open_java_console type:yes_no default:yes end
+		
+		script
+			var java_exe string
+			if i_java_exe_path is not null then
+				java_exe = i_java_exe_path.to_string
+			else
+				case type of se_java_config.get_java_exe_file ( use_javaw = not i_open_java_console )
+                    when file file
+                        java_exe = file.path.value
+                    when IO_resource_error e
+                        return e
+                .
+			.
+			
+			const OS_is_Windows yes_no = se_OS_config.OS_is_Windows
+			
+			// using quotes causes error in Ubuntu ?
+			const command_line_quote string = se_OS_command_constants.current_OS_command_line_quote
+			
+			const command mutable_string = fa_mutable_string.create
+
+			if v_java_exe.to_string.contains ( se_string_constants.space ) then
+				c_command.append ( c_command_line_quote )
+				c_command.append ( v_java_exe )
+				c_command.append ( c_command_line_quote )
+			else
+				c_command.append ( v_java_exe )
+			end if
+			
+			if i_java_exe_options #r void then
+				c_command.append ( " " )
+				c_command.append ( i_java_exe_options )
+			end if
+			
+			if i_classpath #r void then
+				const OS_classpath string = &
+					if c_OS_is_Windows &
+					then i_classpath.to_string.replace_all ( to_replace = se_java_config.Unix_classpath_separator; replace_by = se_java_config.Windows_classpath_separator ) &
+					else i_classpath.to_string.replace_all ( to_replace = se_java_config.Windows_classpath_separator; replace_by = se_java_config.Unix_classpath_separator )  end if
+				c_command.append ( " -classpath " )
+				c_command.append ( c_OS_classpath )
+			end if
+
+			c_command.append ( " " )
+			c_command.append ( i_main_class )
+			
+			if i_command_line_arguments #r void then
+				c_command.append ( " " )
+				c_command.append ( i_command_line_arguments )
+			end if
+			
+			return c_command.to_string
+		end
+	end
+.///
+
+.

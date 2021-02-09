@@ -1,0 +1,4 @@
+type if_error_expression_program_error
+
+    inherit program_error
+.

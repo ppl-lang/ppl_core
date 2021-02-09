@@ -1,0 +1,56 @@
+service TFS_id
+
+    function id_to_capitalized_kind_string ( TFS_id ) -> string
+    
+        return id_to_kind_string ( TFS_id ).to_first_upper_case
+    .
+    
+    function id_to_kind_string ( TFS_id ) -> string
+    
+        case type of i_TFS_id
+            when type_id
+                return "type"
+            when factory_id
+                return "factory"
+            when service_id
+                return "service"
+        .
+    .
+    
+/// currently not used (see RSE_id for better code)
+    function try_create_from_prefixed_id_string private:yes ( string ) -> TFS_id
+        
+        const prefix = string.substring_to ( 3 )
+        const id = string.substring_from ( 4 )
+        
+        case value of prefix
+            when "ty_"
+                return type_id.create ( id )
+            when "fa_"
+                return factory_id.create ( id )
+            when "se_"
+                return service_id.create ( id )
+            otherwise
+                error "case error"
+        .
+    .
+    
+    function create_from_prefixed_id_string_or_throw ( string ) -> TFS_id
+        return try_create_from_prefixed_id_string ( string )
+    .
+
+    function get_prefix ( TFS_id ) -> string
+    
+        case type of i_TFS_id
+            when type_id
+                return "ty_"
+            when factory_id
+                return "fa_"
+            when service_id
+                return "se_"
+        .
+    .
+.///
+    
+.
+                

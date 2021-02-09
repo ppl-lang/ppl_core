@@ -1,0 +1,37 @@
+service time_zone_constants
+
+	java_header
+		import java.time.ZoneOffset;
+		import java.time.OffsetDateTime;
+
+		import org.ppl.core.basics.scalar.string.fa_string;
+	end java_header
+
+	att ISO_time_zone_offset_regex regex = fa_regex.create ( '''[+-]\d\d:\d\d''' )
+
+	att system_default time_zone_offset
+	    default
+    	    variable r time_zone_offset
+	        java
+	            v_r = fa_time_zone_offset.createFromOffset ( OffsetDateTime.now().getOffset() );
+	        end java
+	        assert r is not null
+	        return r
+        .
+    .
+
+    tests
+        const r = a_ISO_time_zone_offset_regex
+        
+        // valid
+        verify "+00:00".matches_regex(r)
+        verify "+07:00".matches_regex(r)
+        verify "-09:30".matches_regex(r)
+
+        // invalid
+        verify not "07:00".matches_regex(r)
+        verify not "+0700".matches_regex(r)
+        verify not "+07".matches_regex(r)
+    .
+.
+    

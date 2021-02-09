@@ -1,0 +1,23 @@
+factory invalid_output_arguments_program_error java: "extends RuntimeException"
+
+%fa_unanticipated_error_Java_code
+
+	function to_string = """Invalid output argument values (out_check violation). Reason: {{a_info}}"""
+	
+	function to_long_string = se_program_error_writer.error_with_check_to_long_string (
+	    program_error = this, failure_info )
+    
+
+	creator create access:private kind:in_all
+
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+        failure_info program_check_failure_info or null ) -> invalid_output_arguments_program_error
+	    
+        const info = se_check_program_error.define_description (
+            failure_info, default = "Invalid output argument values (out_check violation)." )
+        
+        return create ( info, source_code_location, script_state, failure_info )
+    .
+.

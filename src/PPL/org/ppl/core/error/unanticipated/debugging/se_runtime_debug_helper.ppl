@@ -1,0 +1,48 @@
+service runtime_debug_helper
+
+    function get_source_code_instruction ( TFS_id_path TFS_path, line_number positive_32 ) -> string or null
+        
+        const config = se_runtime_debug_config.config
+        
+        const file_supplier = config.source_code_file_supplier
+        if file_supplier is null then
+            return null
+        .
+        
+        const instruction_supplier = config.source_code_instruction_supplier
+        if instruction_supplier is null then
+            return null
+        .
+        
+        const source_code_file = file_supplier.get ( TFS_id_path )
+        if source_code_file is null then
+            return null
+        .
+        
+        return instruction_supplier.get ( source_code_file, line_number )
+    .
+    
+    function open_editor ( source_code_location bug_source_code_location )
+    
+        const config = se_runtime_debug_config.config
+        
+        const file_supplier = config.source_code_file_supplier
+        if file_supplier is null then
+            return
+        .
+
+        const file_opener = config.source_code_file_opener
+        if file_opener is null then
+            return
+        .
+        
+        const source_code_file = file_supplier.get ( i_source_code_location.TFS_id_path )
+        if source_code_file is null then
+            return
+        .
+        
+        file_opener.open ( source_code_file, line_number = i_source_code_location.script_line_number )
+    .
+    
+.
+        

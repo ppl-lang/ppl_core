@@ -1,0 +1,26 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template get_string_attribute_from_java_value
+
+	param attribute_id end
+	param java_getter end
+
+	attribute {attribute_id}
+		get
+			script
+				java
+					String value = a_java_value.{java_getter};
+					if ( value != null && ! value.isEmpty() ) {
+						o_{attribute_id} = new fa_string ( value );
+					}
+				end java
+			end
+		end
+	end
+
+end template

@@ -1,0 +1,221 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type directory
+
+	inherit directory_or_file
+		redefine
+			att path directory_path
+
+			command name
+				out result type:directory_name end
+			end
+
+            function try_set_readable_permission -> directory_error or null
+            function try_set_writable_permission -> directory_error or null
+            function try_set_executable_permission -> directory_error or null
+		end
+	end
+
+	inherit has_compare_to < directory > end
+	
+	function is_empty -> yes_no or directory_error
+		%directory_exists_in_check
+    .
+
+	command is_root_directory
+		out result type:yes_no end
+	end
+
+	command parent_directory
+		out result type:directory or null end
+	end
+
+	command append_name
+		in name type:directory_name end
+		
+		out result type:directory end
+	end
+
+	command append_path
+		in path type:relative_directory_path end
+		
+		out result type:directory end
+	end
+
+///
+	command append_file_path
+		in file type:relative_file_path end
+		
+		out result type:file end
+	end
+
+	command make_relative
+		in root_directory type:directory &
+			check: i_object_.to_current_OS_path.starts_with ( i_root_directory.to_current_OS_path ) end
+			
+		out result type:relative_directory_path end
+	end
+.///
+
+	// create
+
+	function try_create -> create_directory_error or null
+		in_check
+            check not i_object_.exists \
+                message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be created because it exists already.""" \
+                id: directory_exists_already
+            if i_object_.parent_directory as parent_directory is not null then
+                check parent_directory.exists \
+                    message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be created because its parent directory doesn't exist.""" \
+                    id: directory_does_not_exist
+            .
+		.
+    .
+	
+	function try_create_if_not_exists -> create_directory_error or null
+		in_check
+		    if i_object_.parent_directory as parent_directory is not null then
+    		    check parent_directory.exists \
+                    message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be created because its parent directory doesn't exist.""" \
+                    id: directory_does_not_exist
+            .
+        .
+    .
+	
+	function try_create_path -> create_directory_error or null
+		in_check: not i_object_.exists \
+            message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be created because it exists already.""" \
+            id: directory_exists_already
+    .
+	
+	function try_create_path_if_not_exists -> create_directory_error or null
+	
+	// delete
+	
+	function try_delete -> delete_directory_error or null
+		in_check: i_object_.exists \
+            message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be deleted, because it doesn't exist.""" \
+            id: directory_does_not_exists
+    .
+
+	function try_delete_if_exists -> delete_directory_error or null
+
+	function try_delete_content -> delete_directory_error or null
+		in_check: i_object_.exists \
+            message: """Contents of directory '{{i_object_.path.to_current_OS_path}}' cannot be deleted, because the directory does not exist.""" \
+            id: directory_does_not_exists
+    .
+	
+	function try_delete_content_if_exists -> delete_directory_error or null
+	
+	// rename
+	
+	function try_rename ( new_directory_name directory_name ) -> directory or rename_directory_error
+		in_check
+            check i_object_.exists \
+                message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be renamed, because it doesn't exist.""" \
+                id: directory_does_not_exists
+            
+            const new_directory = fa_directory.create ( i_object_.path.rename ( i_new_directory_name ) )
+            check not new_directory.exists \
+                message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be renamed to '{{i_new_directory_name}}' because '{{i_new_directory_name}}' exists already.""" \
+                id: directory_exists_already
+		.
+    .
+
+	function try_rename_if_exists ( new_directory_name directory_name ) -> directory or rename_directory_error or null
+		in_check
+            const new_directory = fa_directory.create ( i_object_.path.rename ( i_new_directory_name ) )
+            check not new_directory.exists \
+                message: """Directory '{{i_object_.path.to_current_OS_path}}' cannot be renamed to '{{i_new_directory_name}}' because '{{i_new_directory_name}}' exists already.""" \
+                id: directory_exists_already
+		.
+    .
+    
+    // streams
+
+	function try_get_file_stream -> stream<file> or read_directory_error
+	    in include_child_directories yes_no default:yes
+	    in follow_links yes_no default:yes
+		%directory_exists_in_check
+    .
+    
+	function try_get_file_path_stream -> stream<file_path> or read_directory_error
+	    in include_child_directories yes_no default:yes
+	    in follow_links yes_no default:yes
+		%directory_exists_in_check
+    .
+    
+	function try_get_directory_stream -> stream<directory> or read_directory_error
+	    in include_this_directory yes_no
+	    in include_child_directories yes_no default:yes
+	    in follow_links yes_no default:yes
+		%directory_exists_in_check
+    .
+    
+	function try_get_directory_path_stream -> stream<directory_path> or read_directory_error
+	    in include_this_directory yes_no
+	    in include_child_directories yes_no default:yes
+	    in follow_links yes_no default:yes
+		%directory_exists_in_check
+    .
+    
+	function try_get_directory_or_file_stream -> stream<directory_or_file> or read_directory_error
+	    in include_this_directory yes_no
+	    in include_child_directories yes_no default:yes
+	    in follow_links yes_no default:yes
+		%directory_exists_in_check
+    .
+    
+	function try_get_directory_or_file_path_stream -> stream<directory_or_file_path> or read_directory_error
+	    in include_this_directory yes_no
+	    in include_child_directories yes_no default:yes
+	    in follow_links yes_no default:yes
+		%directory_exists_in_check
+    .
+    
+    // for each
+	        
+	function try_for_each_file -> null or read_directory_error
+	    in consumer object_consumer<file>
+	    in include_child_directories yes_no default:yes
+		%directory_exists_in_check
+    .
+
+    // function try_try_for_each_file<$consumer_error child_of:null or anticipated_error>  -> null or anticipated_error
+    //    in consumer trying_object_consumer<object:file error:$consumer_error>
+	function try_try_for_each_file -> null or anticipated_error
+	    in consumer trying_object_consumer<object:file error:anticipated_error>
+	    in include_child_directories yes_no default:yes
+		%directory_exists_in_check
+    .
+    
+    // lists
+
+	function directory_or_file_list -> indexed_list<directory_or_file> or null or read_directory_error
+		in include_child_directories yes_no
+		in filter object_filter<directory_or_file_path> or null default:null
+		in sort_by_path yes_no default:yes
+		%directory_exists_in_check
+	.
+
+	function directory_list -> indexed_list<directory> or null or read_directory_error
+		in include_child_directories yes_no
+		in filter object_filter<directory_path> or null default:null
+		in sort_by_path yes_no default:yes
+		%directory_exists_in_check
+	.
+	
+	function file_list -> indexed_list<file> or null or read_directory_error
+		in include_child_directories yes_no
+		in filter object_filter<file_path> or null default:null
+		in sort_by_path yes_no default:yes
+		%directory_exists_in_check
+	.
+
+.

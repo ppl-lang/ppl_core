@@ -1,0 +1,20 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type list < element usage:in_out >
+
+	inherit \
+		collection<t_element>,
+		mutable_or_immutable_list<t_element>
+	
+	function first -> t_element
+
+	function last -> t_element
+	
+	function copy_to_mutable -> mutable_list<t_element>
+
+.

@@ -1,0 +1,7 @@
+type OS_process_error
+
+    inherit runtime_error
+    
+    att config OS_command_config
+    
+.

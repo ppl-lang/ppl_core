@@ -1,0 +1,6 @@
+type check_program_reflection_error
+
+    inherit reflection_error
+    
+    att check_program_error check_program_error
+.

@@ -1,0 +1,107 @@
+service Java_reflection_class_loader
+
+	java_header
+        import java.io.File;
+        import java.net.MalformedURLException;
+        import java.net.URL;
+        import java.net.URLClassLoader;
+        import java.util.ArrayList;
+        import java.util.HashSet;
+        import java.util.List;
+        import java.util.Set;
+	end java_header
+
+    java
+        private static Set<URL> extraLoadedURLs = new HashSet<URL>();
+
+        private static List<ClassLoader> extraClassLoaders = new ArrayList<>();
+        
+        public static Class<?> getClassOrThrow ( String fullClassName ) throws ClassNotFoundException {
+        
+            Class<?> clazz = getClassOrNull ( fullClassName );
+            if ( clazz != null ) {
+                return clazz;
+            } else {
+                throw new ClassNotFoundException ( fullClassName );
+            }
+        }
+
+        public static Class<?> getClassOrNull ( String fullClassName ) {
+
+            try {
+                return Class.forName ( fullClassName );
+            } catch ( ClassNotFoundException e ) {
+                return loadClassFromExtraLoadersOrNull ( fullClassName );
+            }
+        }
+
+        private static void addJarFile ( File file ) {
+            addJarFileOrDirectory ( file );
+        }
+        
+        private static void addDirectory ( File file ) {
+            
+            // TD add child-directories too?
+            
+            addJarFileOrDirectory ( file );
+        }
+
+        private static void addJarFileOrDirectory ( File file ) {
+
+            URL url;
+            try {
+                url = file.toURI().toURL();
+            } catch ( MalformedURLException e ) {
+                throw new RuntimeException ( e );
+            }
+            
+            addURL ( url );
+        }
+        
+        private static void addURL ( URL url ) {
+
+            if ( extraLoadedURLs.contains ( url ) ) {
+                return;
+            }
+            extraLoadedURLs.add ( url );
+
+            URLClassLoader classLoader = new URLClassLoader ( new URL[]{url} );
+            extraClassLoaders.add ( classLoader );
+        }
+
+        private static Class<?> loadClassFromExtraLoadersOrNull ( String fullClassName ) {
+
+            for ( ClassLoader classLoader : extraClassLoaders ) {
+                Class<?> clazz = loadClassOrNull ( fullClassName, classLoader );
+                if ( clazz != null ) {
+                    return clazz;
+                }
+            }
+            return null;
+        }
+
+        private static Class<?> loadClassOrNull ( String fullClassName, ClassLoader classLoader ) {
+
+            try {
+                return classLoader.loadClass ( fullClassName );
+            } catch ( ClassNotFoundException e ) {
+                return null;
+            }
+        }
+    end java
+    
+    function add_jar_file ( file )
+        java
+            addJarFile ( i_file.getJavaFile() );
+        end java
+    .
+    
+    function add_directory ( directory )
+        java
+            addDirectory ( i_directory.getJavaFile() );
+        end java
+    .
+    
+    tests
+    .
+.

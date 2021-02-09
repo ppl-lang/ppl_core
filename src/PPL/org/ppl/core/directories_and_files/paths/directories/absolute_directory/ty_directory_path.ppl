@@ -1,0 +1,60 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type directory_path
+
+	inherit absolute_or_relative_directory_path
+		redefine
+            function parent -> directory_path or null
+
+			function append_name      -> directory_path
+			function append_path      -> directory_path
+			function append_file_name -> file_path
+			function append_file_path -> file_path
+
+            function rename -> directory_path
+        .
+    .
+
+	inherit directory_or_file_path
+	
+	inherit has_compare_to<directory_path>
+	
+	functions
+
+        is_equal_to_or_ancestor_of ( other directory_path ) -> yes_no
+        
+        is_non_equal_ancestor_of ( other directory_path ) -> yes_no
+
+        is_equal_to_or_child_of ( other directory_path ) -> yes_no
+        
+        is_non_equal_child_of ( other directory_path ) -> yes_no
+
+        make_relative -> relative_directory_path
+            in root directory_path check:i_root.is_non_equal_ancestor_of ( i_object_ ) \
+                message: """Directory {{i_object_.to_string}} cannot be made relative to root directory {{i_root.to_string}}, because the root directory is not an ancestor."""
+        .
+        
+        to_directory -> directory
+        
+        try_to_existing_directory -> directory or directory_inexistent_error
+
+        /// TD
+    	    is_parent_of ( other directory_path ) -> yes_no
+
+    	    is_descendant_of ( other directory_path ) -> yes_no
+    	    is_child_of ( other directory_path ) -> yes_no
+
+            starts_with ( path directory_path ) -> yes_no
+            
+            has_common_ancestor_with ( other directory_path ) -> yes_no
+            get_common_ancestor_or_null ( other directory_path ) -> directory_path -> or null
+            
+            to_URI -> URI
+        .///
+    .
+.

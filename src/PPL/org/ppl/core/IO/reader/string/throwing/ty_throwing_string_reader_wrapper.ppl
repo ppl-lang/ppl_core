@@ -1,0 +1,13 @@
+type throwing_string_reader_wrapper
+
+	inherit closable_IO_resource
+	
+	att reader string_reader
+
+	function read_character -> character or null
+
+	function read_line -> emptyable_string or null
+
+	function read_all -> string or null
+.
+    

@@ -1,0 +1,5 @@
+type binary_function < in_1 usage:in, in_2 usage:in, out usage:out >
+
+	function apply ( in_1 t_in_1, in_2 t_in_2 ) -> t_out
+
+.

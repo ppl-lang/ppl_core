@@ -1,0 +1,16 @@
+type factory_path
+
+    inherit virtual_factory_path
+        redefine
+            att value and_check: se_factory_info.is_existing_factory_path_string ( value ) \
+                message: """Factory '{{value}}' doesn't exist."""
+        .
+    .
+    
+    /// TD
+    inherit factory_path
+
+    check: se_factory_info.is_existing_factory_path ( i_object_ )
+    .///
+.
+ 

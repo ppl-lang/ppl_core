@@ -1,0 +1,5 @@
+template fa_TFS_selector_commands
+
+	function to_string = a_path.id.value
+
+.

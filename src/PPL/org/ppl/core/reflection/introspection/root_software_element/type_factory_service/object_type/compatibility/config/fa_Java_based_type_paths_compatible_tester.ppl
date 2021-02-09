@@ -1,0 +1,40 @@
+factory Java_based_type_paths_compatible_tester type:type_paths_compatible_tester
+
+    java_header
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+        import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+    end java_header
+
+    function is_compatible
+    
+        if i_source =r i_target then
+            return yes
+        .
+
+        const source_type_path type_path = i_source type_check:no
+        assert source_type_path is not null // avoid not used error
+        const target_type_path type_path = i_target type_check:no
+        assert target_type_path is not null // avoid not used error
+
+        variable success yes_no
+        java
+            v_success = fa_yes_no.of ( se_PPL_type_Java_introspection.areTypePathsCompatible (
+                c_source_type_path, c_target_type_path ) );
+        end java
+        assert success is not null
+        return success
+    .
+
+    creator create kind:in_all
+    
+    tests
+        const tester = create
+        const non_error = se_common_type_paths.non_error
+        const string = se_common_type_paths.string
+
+        verify tester.is_compatible ( source = string, target = non_error )
+        verify not tester.is_compatible ( source = non_error, target = string )
+        verify tester.is_compatible ( source = string, target = string )
+    .
+
+.

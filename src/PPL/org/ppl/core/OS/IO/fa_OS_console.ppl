@@ -1,0 +1,338 @@
+factory OS_console
+
+	java_header
+		import java.io.Console;
+		import java.io.PrintWriter;
+
+		import java.util.Arrays;
+	end java_header
+
+	java
+		private Console a_java_console;
+		private PrintWriter a_java_writer;
+		
+		private ty_string ask ( ty_string message ) {
+
+			String input;
+			if ( message == null ) {
+				input = a_java_console.readLine();
+			} else {
+				input = a_java_console.readLine ( "%s", message.getJavaString() );
+			}
+
+			// input is null if EOF (end of file), for example Ctrl-Z on Windows, has been pressed
+			if ( input != null && input.length() > 0 ) {
+				return new fa_string ( input );
+			} else {
+				return null;
+			}
+		}
+	end java
+	
+	function write
+        java
+            a_java_writer.print ( i_string.getJavaString() );
+        end java
+    .
+
+	function write_line
+        java
+            a_java_writer.println ( i_string.getJavaString() );
+            a_java_writer.flush();
+        end java
+    .
+
+	function write_new_line
+        java
+            a_java_writer.println();
+            a_java_writer.flush();
+        end java
+    .
+    
+    function ask_press_key
+        java
+            ask ( i_message );
+        end java
+    .
+	
+	function ask_press_Enter
+	    ask_press_key ( "Please press <Enter> to continue: " )
+    .
+
+	function ask_string_or_null
+	
+        write_line ( i_message )
+
+        if i_default_value is not null then
+            write ( """[{{i_default_value}}] """ )
+        .
+        
+        variable input string or null = null
+        java
+            v_input = ask ( i_message );
+        end java
+        assert input may be null
+
+        return input if_null: i_default_value
+	.
+	
+	function ask_string
+	
+        repeat i_max_retry_count times
+            const input = ask_string_or_null ( message, default_value )
+            if input is not null then
+                return input
+            .
+            if i_default_value is not null then
+                return i_default_value
+            else
+                write_line ( "Please enter a non-empty value!" )
+            .
+        .
+        return user_input_error<string>.create (
+            info = "An empty value is not allowed"
+            data = null )
+    .
+
+
+	function ask_string_and_validate
+	
+	    var input string or null = null
+	    var error_message string or null = null
+	    
+        repeat i_max_retry_count times
+            case type of ask_string ( message, default_value, max_retry_count )
+                when string s
+                    input = s
+                    error_message = i_validator.validate ( input )?.to_string
+                    if error_message is null then
+                        return input
+                    .
+                    write_line ( error_message )
+                    next repeat
+                when user_input_error<*> e
+                    const et user_input_error<string> = e type_check:no
+                    return et
+            .
+        .
+        
+        assert error_message is not null
+        return user_input_error<string>.create (
+            info = error_message
+            data = input )
+    .
+
+	function ask_password
+	
+	    variable r string or null = null
+        java
+            char[] char_array = a_java_console.readPassword ( "%s", i_message.getJavaString() );
+            if ( char_array != null && char_array.length > 0 ) {
+                String input = new String ( char_array );
+                Arrays.fill ( char_array, ' ' ); // Java doc says: If an application needs to read a password, it should manually zero the returned character array after processing to minimize the lifetime of sensitive data in memory.
+                v_r = new fa_string ( input );
+            }
+        end java
+        assert r may be null
+        
+        return r
+    .
+	
+	function ask_yes_no
+	
+	    var input string or null = null
+	    var error_message string or null = null
+	    
+        repeat i_max_retry_count times
+            case type of ask_string ( message, default_value = i_default_value?.to_string, max_retry_count )
+                when string s
+                    case type of fa_yes_no.try_parse ( s )
+                        when yes_no c
+                            return c
+                        when error e
+                            input = s
+                            error_message = e.info
+                            write_line ( error_message )
+                            next repeat
+                    .
+                        
+                when user_input_error<*> e
+                    const et user_input_error<string> = e type_check:no
+                    return et
+            .
+        .
+        
+        assert error_message is not null
+        return user_input_error<string>.create (
+            info = error_message
+            data = input )
+    .
+    
+    function ask_yes_no_or_null
+        case type of ask_yes_no ( message, default_value, max_retry_count )
+            when yes_no yn
+                return yn
+            when user_input_error<*>
+                return null
+        .
+    .
+	
+///
+	function ask_zero_positive_32_and_validate
+		script
+			repeat i_max_retry_count times
+
+				const string_input string = ask_string ( i_message )
+				if c_string_input =r void then
+					o_result = void
+					o_error = fa_user_input_error.create ( &
+						info = "Please enter a value!" &
+						data = c_string_input )
+					// i_error_handler.handle_system_error ( o_error )
+					co_write_input_error ( o_error )
+					next repeat
+				end if
+
+				var conversion_error conversion_error
+				i_converter.convert ( &
+					input = c_string_input ) &
+					( o_result = result &
+					v_conversion_error = error )
+				if v_conversion_error #r void then
+					o_result = void
+					o_error = fa_user_input_error.create ( &
+						info = """'{{se_object.force_to_string ( c_string_input )}}' is not a valid number.""" &
+						data = c_string_input )
+					// i_error_handler.handle_system_error ( o_error )
+					co_write_input_error ( o_error )
+					next repeat
+				end if
+
+				if i_validator #r void then
+					var is_valid yes_no
+					var validation_error validation_error
+					i_validator.is_valid ( &
+						object = o_result ) &
+						( is_valid = result &
+						v_validation_error = error )
+					if v_validation_error #r void then
+						o_result = void
+						o_error = fa_user_input_error.create ( &
+							info = """'{{se_object.force_to_string ( c_string_input )}}' is invalid. Reason:
+{{v_validation_error.info}}""" &
+							data = c_string_input )
+						// i_error_handler.handle_system_error ( o_error )
+						co_write_input_error ( o_error )
+						next repeat
+					end if
+				end if
+				
+				o_error = void
+				exit repeat
+				
+			end repeat
+		end
+	end
+
+	function ask_positive_32
+		script
+			repeat i_max_retry_count times
+
+				const string_input string = ask_string ( i_message )
+				if c_string_input =r void then
+					o_result = void
+					if not i_null_allowed then
+						o_error = fa_user_input_error.create ( &
+							info = "Please enter a value!" &
+							data = c_string_input )
+						// i_error_handler.handle_system_error ( o_error )
+						co_write_input_error ( o_error )
+						next repeat
+					else
+						o_error = null
+						exit script
+					end if
+				end if
+
+				var conversion_error conversion_error
+				i_converter.convert ( &
+					input = c_string_input ) &
+					( o_result = result &
+					v_conversion_error = error )
+				if v_conversion_error #r void then
+					o_result = void
+					o_error = fa_user_input_error.create ( &
+						info = """'{{c_string_input}}' is not a valid number.""" &
+						data = c_string_input )
+					// i_error_handler.handle_system_error ( o_error )
+					co_write_input_error ( o_error )
+					next repeat
+				end if
+
+				if i_validator #r void then
+					var is_valid yes_no
+					var validation_error validation_error
+					i_validator.is_valid ( &
+						object = o_result ) &
+						( is_valid = result &
+						v_validation_error = error )
+					if v_validation_error #r void then
+						o_result = void
+						o_error = fa_user_input_error.create ( &
+							info = """'{{se_object.force_to_string ( c_string_input )}}' is invalid. Reason:
+{{v_validation_error.info}}""" &
+							data = c_string_input )
+						// i_error_handler.handle_system_error ( o_error )
+						co_write_input_error ( o_error )
+						next repeat
+					end if
+				end if
+				
+				o_error = void
+				exit repeat
+				
+			end repeat
+		end
+	end
+
+	function write_input_error private:yes
+		in error type:user_input_error end
+		
+		script
+			co_write_line ( i_error.info )
+		end
+	end
+.///
+
+
+
+	creator create -> OS_console or null
+
+        variable has_console yes_no
+        java
+            // Google app engine:
+            // System.console() raises NoClassDefFoundError
+            // class java.io.Console isn't supported (see http://code.google.com/appengine/docs/java/jrewhitelist.html)
+            Console console = null;
+            try {
+                console = System.console();
+            } catch ( Throwable e ) {}
+
+            if ( console == null ) {
+                v_has_console = fa_yes_no.of ( false );
+            } else {
+                v_has_console = fa_yes_no.of ( true );
+                c_this.a_java_console = console;
+                c_this.a_java_writer = console.writer();
+            }
+        end java
+        assert has_console is not null
+        
+        if has_console then
+            return this
+        else
+            return null
+        .
+    .
+
+.

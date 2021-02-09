@@ -1,0 +1,19 @@
+template fa_mutable_or_immutable_ordered_set_commands
+
+    function first
+    
+        const r = iterator.next?.object
+        assert r is not null
+        return r
+    .
+
+    function last
+    
+        variable r t_element
+        repeat for each element in iterator
+            r = element
+        .
+        assert r is not null
+        return r
+    .
+.

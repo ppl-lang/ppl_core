@@ -1,0 +1,96 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type file
+
+	inherit directory_or_file
+		redefine
+			att path file_path
+
+			function name -> file_name
+
+            function try_set_readable_permission -> file_error or null
+            function try_set_writable_permission -> file_error or null
+            function try_set_executable_permission -> file_error or null
+		.
+	.
+	
+	inherit has_compare_to<file>
+	
+	function directory -> directory
+
+	function size_in_bytes -> zero_pos_64
+		%file_exists_in_check
+    .
+    
+    // create
+    
+	function try_create -> create_file_error or null
+		in_check
+            check not i_object_.exists \
+                message: """File '{{i_object_.path.to_current_OS_path}}' cannot be created because it exists already.""" \
+                id: file_exists_already
+            check i_object_.directory.exists \
+                message: """File '{{i_object_.path.to_current_OS_path}}' cannot be created because its directory doesn't exists.""" \
+                id: directory_does_not_exist
+		.
+    .
+    
+	function try_create_if_not_exists -> create_file_error or null
+		in_check: i_object_.directory.exists \
+            message: """File '{{i_object_.path.to_current_OS_path}}' cannot be created because its directory doesn't exists.""" \
+            id: directory_does_not_exist
+    .
+    
+	function try_create_path -> directory_or_file_error or null
+		in_check: not i_object_.exists \
+            message: """File '{{i_object_.path.to_current_OS_path}}' cannot be created because it exists already.""" \
+            id: file_exists_already
+    .
+    
+	function try_create_path_if_not_exists -> directory_or_file_error or null
+    
+    // delete
+
+	function try_delete -> delete_file_error or null
+		in_check: i_object_.exists \
+            message: """File '{{i_object_.path.to_current_OS_path}}' cannot be deleted, because it doesn't exist.""" \
+            id: file_does_not_exists
+    .
+    
+	function try_delete_if_exists -> delete_file_error or null
+    
+    // rename
+	
+	function try_rename ( new_file_name file_name ) -> file or rename_file_error
+		in_check
+            check i_object_.exists \
+                message: """File '{{i_object_.path.to_current_OS_path}}' cannot be renamed, because it doesn't exist.""" \
+                id: file_does_not_exists
+            const new_file = file.create_for_name ( file_name = i_new_file_name, directory = i_object_.path.directory )
+            check not new_file.exists \
+                message: """File '{{i_object_.path.to_current_OS_path}}' cannot be renamed to '{{i_new_file_name}}' because '{{i_new_file_name}}' exists already.""" \
+                id: file_exists_already
+		.
+    .
+    
+	function try_rename_if_exists ( new_file_name file_name ) -> file or null or rename_file_error
+		in_check
+            const new_file = file.create_for_name ( file_name = i_new_file_name, directory = i_object_.path.directory )
+            check not new_file.exists \
+                message: """File '{{i_object_.path.to_current_OS_path}}' cannot be renamed to '{{i_new_file_name}}' because '{{i_new_file_name}}' exists already.""" \
+                id: file_exists_already
+		.
+    .
+    
+    /// TD
+    function try_change_time_last_modified ( time local_date_time ) -> file_error or null
+        %directory_or_file_exists_in_check
+    .
+    .///
+.
+ 

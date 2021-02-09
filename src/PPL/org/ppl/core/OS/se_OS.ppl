@@ -1,0 +1,15 @@
+service OS
+
+	// TD? variable
+    att standard_input_string_reader string_reader  = fa_OS_standard_input_string_reader.create
+    att standard_output_string_writer string_writer = fa_OS_standard_output_string_writer.create
+    att standard_error_string_writer string_writer  = fa_OS_standard_error_string_writer.create
+
+	// TD? variable
+    att in throwing_string_reader_wrapper  = throwing_string_reader_wrapper.create ( a_standard_input_string_reader )
+    att out throwing_string_writer_wrapper = throwing_string_writer_wrapper.create ( a_standard_output_string_writer )
+    att err throwing_string_writer_wrapper = throwing_string_writer_wrapper.create ( a_standard_error_string_writer )
+
+    att console OS_console or null default:fa_OS_console.create
+
+.

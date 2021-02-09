@@ -1,0 +1,6 @@
+factory PPL_attribute
+
+    function to_string = """Attribute '{{a_id}}'' in '{{a_TFS_id_path.id}}'"""
+
+    creator create kind:in_all
+.

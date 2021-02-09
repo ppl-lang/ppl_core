@@ -1,0 +1,69 @@
+factory ordered_set
+
+    java_header
+        import java.util.Collections;
+        import java.util.LinkedHashSet;
+        import java.util.Objects;
+        import java.util.Set;
+        
+        import org.ppl.core.collections.iterators.finite_iterator.implementations.fa_Java_Spliterator_wrapper_iterator_with_size;
+        import org.ppl.core.collections.java.se_immutable_Java_collection_checker;
+        import org.ppl.core.stream.fa_stream;
+    end java_header
+
+    java
+        private Set <t_element> a_java_set;
+
+        public Set<t_element> getJavaSet() {
+            return Collections.unmodifiableSet ( a_java_set );
+        }
+        
+        // public fa_ordered_set ( LinkedHashSet<t_element> i_java_set, ty_object_type i_element_type ) {
+        public fa_ordered_set ( Set<t_element> i_java_set, ty_object_type i_element_type ) {
+            Objects.requireNonNull ( i_java_set );
+            Objects.requireNonNull ( i_element_type );
+            
+            if ( ! se_immutable_Java_collection_checker.is_immutable_set ( i_java_set ) ) throw new RuntimeException ( "The input for an immutable set constructor cannot be a mutable set." );
+            
+            if ( i_java_set.isEmpty() ) throw new RuntimeException ( "The input for an immutable set constructor cannot be an empty set." );
+            
+            a_java_set = i_java_set;
+            t_element = i_element_type;
+        }
+    end java
+
+%fa_mutable_or_immutable_set_commands < pos_32 >
+%fa_mutable_or_immutable_ordered_set_commands
+
+    creator create_singleton ( element t_element ) -> ordered_set<t_element>
+
+        java
+            c_this.a_java_set = new LinkedHashSet<t_element>();
+            c_this.a_java_set.add ( i_element );
+        end java
+        return this
+    .
+
+    creator create_duo ( element_1 t_element, element_2 t_element ) -> ordered_set<t_element>
+        // in_check check: key_1.to_string #v key_2.to_string end
+
+        java
+            c_this.a_java_set = new LinkedHashSet<t_element>();
+            c_this.a_java_set.add ( i_element_1 );
+            c_this.a_java_set.add ( i_element_2 );
+        end java
+        return this
+    .
+    
+    creator create_trio ( element_1 t_element, element_2 t_element, element_3 t_element ) -> ordered_set<t_element>
+
+        java
+            c_this.a_java_set = new LinkedHashSet<t_element>();
+            c_this.a_java_set.add ( i_element_1 );
+            c_this.a_java_set.add ( i_element_2 );
+            c_this.a_java_set.add ( i_element_3 );
+        end java
+        return this
+    .
+
+.

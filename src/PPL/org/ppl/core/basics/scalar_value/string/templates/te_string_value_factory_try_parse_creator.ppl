@@ -1,0 +1,32 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template string_value_factory_try_parse_creator
+
+	param type_id
+
+	creator try_parse ( string ) -> {type_id} or parse_object_error<{type_id}>
+	    script
+            try
+                return create ( i_string )
+            
+            // catch check_program_error e
+            catch_any e
+            
+                const cause = invalid_string_data_error.create (
+                    info = se_unanticipated_error.get_source_error_info ( e )
+                    data = i_string )
+            
+                return parse_object_error<{type_id}>.create (
+                    info = """'{{i_string}}' is an invalid {type_id}."""
+                    data = i_string
+                    cause )
+            .
+        .
+    .
+
+.

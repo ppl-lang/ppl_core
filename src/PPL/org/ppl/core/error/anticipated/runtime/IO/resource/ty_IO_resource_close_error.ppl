@@ -1,0 +1,5 @@
+type IO_resource_close_error
+
+    inherit IO_resource_error
+    
+.

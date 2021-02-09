@@ -1,0 +1,183 @@
+factory generified_object_type
+
+	function is_equal_to
+
+		if this =r i_other then
+			return yes
+		.
+		
+		case type of i_other
+
+			when generified_object_type other_generified_object_type
+
+				if a_type_path #v other_generified_object_type.type_path then
+				    return no
+                .
+                
+                if is_wildcard and other_generified_object_type.is_wildcard then
+                    return yes
+                .
+                
+                if is_wildcard #v other_generified_object_type.is_wildcard then
+                    return no
+                .
+
+                const this_type_parameters = a_type_parameters
+                assert this_type_parameters is not null
+                const other_type_parameters = other_generified_object_type.type_parameters
+                assert other_type_parameters is not null
+                repeat for each type_parameter_assignment in this_type_parameters
+                    const other_assignment = other_type_parameters.get (
+                        type_parameter_assignment.id )
+                    if type_parameter_assignment #v other_assignment then
+                        return no
+                    .
+                .
+                return yes
+
+			otherwise
+				return no
+		.
+	.
+
+    function check_compatible_to_other
+    
+        case type of i_other
+            
+            when generified_object_type other_generified_object_type
+
+                se_object_type_compatibility.check_type_paths_compatible (
+                    source = this, target = other_generified_object_type, i_config ) on_error: return_error
+                
+                return check_type_parameters_compatible (
+                    target = other_generified_object_type
+                    config )
+
+            when union_object_type union_object_type
+                return union_object_type.check_other_compatible_to_me ( other = this, config )
+
+            when type_parameter_object_type type_parameter_object_type
+                return type_parameter_object_type.check_other_compatible_to_me ( other = this, i_config )
+
+            when standard_object_type standard_object_type
+                return se_object_type_compatibility.check_type_paths_compatible (
+                    source = this, target = standard_object_type, i_config )
+            
+            when enumerated_object_type
+                return object_type_incompatibility_error.create_with_reason (
+                    reason = "A generified type is never compatible to an enumerated type."
+                    source = this
+                    target = i_other )
+            
+        .
+    .
+
+    function is_nullable = no
+    
+    function to_nullable = union_object_type.create_nullable ( this )
+        
+    function to_non_nullable = this
+            
+    function uses_type_parameters
+    
+        if is_wildcard then
+            return no
+        .
+    
+        assert a_type_parameters is not null
+        repeat for each assignment in a_type_parameters
+            if assignment.object_type as object_type is not null then
+                if object_type.uses_type_parameters then
+                    return yes
+                .
+            .
+        .
+        return no
+    .
+    
+    function type_selector = fa_generified_type_selector.create ( path = a_type_path, type_parameters )
+
+    function is_wildcard = a_type_parameters =r null
+
+	function to_string = to_string_ ( no )
+
+	function to_long_string = to_string_ ( yes )
+
+	functions access:private
+	
+		function check_type_parameters_compatible -> object_type_incompatibility_error or null
+			in target generified_object_type // e.g. map < key:string, value:product >
+			in config object_type_compatibility_config
+
+			if i_target.is_wildcard then
+			    return null
+            .
+            
+            ///
+			if is_wildcard then
+			    return object_type_incompatibility_error.create_with_reason (
+			        reason = "Generified object types are not compatible if the source type is a wildcard (<*>)." 
+			        source = this
+			        i_target )
+            .
+            .///
+            
+            const target_type_parameters = i_target.type_parameters
+            assert target_type_parameters is not null
+            return se_generified_object_type.check_type_parameters_compatible (
+                source = this
+                i_target,
+                source_type_parameter_assignments = a_type_parameters
+                target_type_parameter_assignments = target_type_parameters
+                i_config )
+        .
+        
+        function to_string_ ( long_version yes_no ) -> string
+    
+            const r = mutable_string.create
+            
+            if i_long_version then
+                r.append ( type_path.value )
+            else
+                r.append ( type_path.id.value )
+            .
+            
+            if a_type_parameters is null then
+                r.append ( "<*>" )
+            else
+                r.append ( "<" )
+                repeat for each assignment in a_type_parameters is_first:is_first
+                    if not is_first then
+                        r.append ( ", " )
+                    .
+    
+                    r.append ( assignment.id.value )
+                    r.append ( ":" )
+    
+                    case enum of assignment.kind
+                        when default
+                        when wildcard
+                            r.append ( "*" )
+                        when child_of, parent_of, only
+                            r.append ( assignment.kind.to_string )
+                            r.append ( ":" )
+                    .
+                    
+                    if assignment.object_type as object_type is not null then
+                        if i_long_version then
+                            r.append ( object_type.to_long_string )
+                        else
+                            r.append ( object_type.to_string )
+                        .
+                    .
+                .
+                r.append ( ">" )
+            .
+            
+            return r.to_string
+        .
+    .
+
+
+    creator create kind:in_all
+.

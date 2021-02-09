@@ -1,0 +1,71 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service Java_collection_utilities
+
+	java_header
+		import java.util.function.Consumer;
+		
+		import org.ppl.core.basics.base_types.ty_any;
+		import org.ppl.core.basics.scalar.ty_scalar_or_scalar_value;
+		import org.ppl.core.collections.iterators.finite_iterator.ty_finite_iterator;
+		import org.ppl.core.collections.lists.ty_list;
+		import org.ppl.core.collections.maps.ty_map;
+		import org.ppl.core.collections.set.ty_set;
+		import org.ppl.core.collections.ty_collection;
+		import org.ppl.core.utilities.object.reference.ty_object_reference;
+	end java_header
+	
+	java
+		public static <t_element extends ty_any> void forEachElementInCollection (
+			ty_collection<t_element> collection,
+			Consumer<t_element> consumer ) {
+
+            forEachElementInIterator ( collection.iterator(), consumer );
+		}
+		
+		public static <t_element extends ty_any> void forEachElementInList (
+			ty_list<t_element> list,
+			Consumer<t_element> consumer ) {
+
+            forEachElementInIterator ( list.iterator(), consumer );
+		}
+		
+		public static <t_element extends ty_scalar_or_scalar_value> void forEachElementInSet (
+			ty_set<t_element> set,
+			Consumer<t_element> consumer ) {
+
+            forEachElementInIterator ( set.iterator(), consumer );
+		}
+		
+		public static <t_key extends ty_scalar_or_scalar_value> void forEachKeyInMap (
+			ty_map<t_key, ?> map,
+			Consumer<t_key> consumer ) {
+
+            forEachElementInIterator ( map.key_iterator(), consumer );
+		}
+		
+		public static <t_value extends ty_any> void forEachValueInMap (
+			ty_map<?, t_value> map,
+			Consumer<t_value> consumer ) {
+
+            forEachElementInIterator ( map.iterator(), consumer );
+		}
+
+		public static <t_element extends ty_any> void forEachElementInIterator (
+			ty_finite_iterator<? extends t_element> iterator,
+			Consumer<t_element> consumer ) {
+
+	        while ( true ) {
+	            ty_object_reference<? extends t_element> next = iterator.next();
+	            if ( next == null ) break;
+
+	            consumer.accept ( next.getObject() );
+            }
+		}
+	end java
+.

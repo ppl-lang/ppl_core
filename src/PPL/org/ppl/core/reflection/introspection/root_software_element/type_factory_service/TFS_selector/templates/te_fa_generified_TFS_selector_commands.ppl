@@ -1,0 +1,19 @@
+template fa_generified_TFS_selector_commands
+
+	function is_wildcard
+	
+	    if a_type_parameters is null then
+	        return yes
+        .
+	
+        repeat for each assignment in a_type_parameters
+            if assignment.object_type is not null then
+                return no
+            .
+        .
+        return yes
+	.
+	
+	function to_string = """{{a_path.id.value}}{{se_generified_TFS_selector.type_parameters_to_string ( this )}}"""
+
+.

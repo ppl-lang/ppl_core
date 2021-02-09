@@ -1,0 +1,366 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory local_date
+
+	java_header
+		import java.time.DateTimeException;
+		import java.time.format.DateTimeFormatter;
+		import java.time.format.DateTimeParseException;
+		import java.time.format.FormatStyle;
+		import java.time.LocalDate;
+
+		import org.ppl.core.date_and_time.date.day_of_week.fa_day_of_week;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.positive_32.fa_pos_32;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.error.java.fa_java_exception;
+	end java_header
+	
+	java
+		private LocalDate a_JavaLocalDate;
+
+		public LocalDate getJavaLocalDate() { return a_JavaLocalDate; }
+
+		public fa_local_date ( LocalDate localDate ) {
+
+			if (localDate == null) throw new IllegalArgumentException ( "Input for fa_local_date constructor cannot be null." );
+
+			a_JavaLocalDate = localDate;
+		}
+
+		public static fa_local_date createOrNull ( LocalDate localDate ) {
+
+			if ( localDate == null ) {
+				return null;
+			}
+
+			return new fa_local_date ( localDate );
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_local_date ) ) return false;
+		
+			return a_JavaLocalDate.equals ( ((ty_local_date) other).getJavaLocalDate() );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_JavaLocalDate.hashCode();
+		}
+
+		public int compareTo ( ty_local_date other ) {
+			if ( this == other ) return 0;
+			return a_JavaLocalDate.compareTo ( other.getJavaLocalDate() );
+		}
+	end java
+	
+	att year
+		get
+			script
+                var value positive_32
+                java
+                    v_value = new fa_pos_32 ( a_JavaLocalDate.getYear() );
+                end java
+                assert value is not null
+                
+                return fa_year.create ( value )
+            .
+			tests
+                const d = parse_or_throw ( "2011-07-06" )
+                verify d.year.value =v 2011
+            .
+        .
+		set
+		    throw "Not supposed to be called."
+        .
+    .
+
+	att month
+		get
+			script
+                var value positive_32
+                java
+                    v_value = new fa_pos_32 ( a_JavaLocalDate.getMonthValue() );
+                end java
+                assert value is not null
+                
+                return fa_month.create ( value )
+            .
+			tests
+                const d = parse_or_throw ( "2011-07-06" )
+                verify d.month.value =v 7
+            .
+        .
+		set
+		    throw "Not supposed to be called."
+        .
+    .
+
+	att day
+		get
+			script
+                var value positive_32
+                java
+                    v_value = new fa_pos_32 ( a_JavaLocalDate.getDayOfMonth() );
+                end java
+                assert value is not null
+                
+                return fa_day_of_month.create ( value )
+            .
+			tests
+                const d = parse_or_throw ( "2011-07-06" )
+                verify d.day.value =v 6
+            .
+        .
+		set
+		    throw "Not supposed to be called."
+        .
+    .
+    
+	function to_string native:yes
+		script
+			java
+			    return new fa_string ( a_JavaLocalDate.format ( DateTimeFormatter.ISO_LOCAL_DATE ) );
+			end java
+		.
+		tests
+            const d = create (
+                year = fa_year.create ( 2011 )
+                month = fa_month.create ( 7 )
+                day = fa_day_of_month.create ( 6 ) )
+
+            verify d.to_string =v "2011-07-06"
+        .
+    .
+	
+	function format native:yes
+		script
+			java
+			    return new fa_string ( a_JavaLocalDate.format ( DateTimeFormatter.ofPattern ( i_pattern.getJavaString() ) ) );
+			end java
+		.
+		tests
+            const d = create (
+                year = fa_year.create ( 2011 )
+                month = fa_month.create ( 7 )
+                day = fa_day_of_month.create ( 6 ) )
+            verify d.format ( "YYYY-MM" ) =v "2011-07"
+            verify d.format =v "2011-07-06"
+        .
+    .
+    
+	function format_to_long_default_locale native:yes
+		script
+			java
+			    return new fa_string ( a_JavaLocalDate.format ( DateTimeFormatter.ofLocalizedDate ( FormatStyle.FULL ) ) );
+			end java
+		.
+		tests
+            const d = create (
+                year = fa_year.create ( 2011 )
+                month = fa_month.create ( 7 )
+                day = fa_day_of_month.create ( 6 ) )
+            OS.out.write_line ( "Default locale date: " & d.format_to_long_default_locale )
+        .
+    .
+
+	function is_equal_to native:yes
+		script
+			java
+				return fa_yes_no.of ( equals ( i_other ) );
+			end java
+		.
+		tests
+            const d1 = create (
+                year = fa_year.create ( 2011 )
+                month = fa_month.create ( 7 )
+                day = fa_day_of_month.create ( 6 ) )
+            const d2 = parse_or_throw ( "2011-07-06" )
+            const d3 = parse_or_throw ( "2011-07-05" )
+
+            verify d1 =v d2
+            verify d2 =v d1
+            verify d1 #v d3
+            verify d3 #v d1
+            verify d2 #v d3
+        .
+    .
+
+	function compare_to native:yes
+		script
+			java
+				return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+			end java
+		.
+		tests
+            var d1 = create (
+                year = fa_year.create ( 2011 )
+                month = fa_month.create ( 7 )
+                day = fa_day_of_month.create ( 6 ) )
+            var d2 = parse_or_throw ( "2011-07-06" )
+            var d3 = parse_or_throw ( "2011-07-05" )
+
+            verify d1 =v d2
+            verify d1 ># d3
+            verify d1 >= d3
+            verify d3 <# d1
+            verify d3 <= d1
+        .
+    .
+
+	function hash_code native:yes
+        java
+            return new fa_signed_int_32 ( hashCode() );
+        end java
+    .
+
+    function day_of_week native:yes
+        script
+            java
+                return fa_day_of_week.create ( new fa_pos_32 ( a_JavaLocalDate.getDayOfWeek().getValue() ) );
+            end java
+        .
+        tests
+            const d = parse_or_throw ( "2017-07-26" )
+            verify d.day_of_week.value =v 3
+            verify d.day_of_week.is_wednesday
+        .
+    .
+
+	creator create kind:in_all native:yes
+		script
+			java
+			    return new fa_local_date ( LocalDate.of (
+					i_year.getValue().getJavaInt(), 
+					i_month.getValue().getJavaInt(), 
+					i_day.getValue().getJavaInt() ) );
+			end java
+		.
+		tests
+            var d = create (
+                year = fa_year.create ( 2011 )
+                month = fa_month.create ( 7 )
+                day = fa_day_of_month.create ( 6 ) )
+
+            verify d.year.value =v 2011
+            verify d.month.value =v 7
+            verify d.day.value =v 6
+            verify d.to_string =v "2011-07-06"
+
+            test year = fa_year.create ( 2011 ) \
+                month = fa_month.create ( 2 ) \
+                day = fa_day_of_month.create ( 30 )
+            verify_error
+        .
+    .
+
+	creator today native:yes -> local_date
+		script
+			java
+				return new fa_local_date ( LocalDate.now() );
+			end java
+		.
+		tests
+            const d = today
+            OS.out.write_line ( "Current date: " & d.to_string )
+        .
+    .
+	
+	creator try_parse ( string ) -> local_date or parse_object_error<local_date>
+        script
+            variable r local_date or null = null
+			var java_exception java_exception or null = null
+			java
+			    try {
+    			    v_r = new fa_local_date ( LocalDate.parse ( i_string.getJavaString() ) );
+				} catch ( DateTimeParseException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			assert java_exception may be null
+
+			if java_exception is null then
+				assert r is not null
+				return r
+			else
+			    return parse_object_error<local_date>.create (
+                    info = """'{{i_string}}' is not a valid ISO date."""
+                    java_exception,
+                    data = i_string )
+            .
+		.
+		tests
+		    case type of try_parse ( "2011-07-04" )
+		        when local_date d
+                    verify d.year.value =v 2011
+                    verify d.month.value =v 7
+                    verify d.day.value =v 4
+                    verify d.to_string =v "2011-07-04"
+		        when error
+                    verify no
+            .
+            
+		    case type of try_parse ( "2011-02-30" )
+		        when local_date
+		            verify no
+		        when error
+            .
+        .
+    .
+    
+%parse_or_throw_creator<local_date>
+
+	creator try_create_from_integers -> local_date or invalid_data_error<local_date>
+		in year zero_positive_32
+		in month zero_positive_32
+		in day zero_positive_32
+		
+        script
+            variable r local_date or null = null
+			var java_exception java_exception or null = null
+			java
+			    try {
+    			    v_r = new fa_local_date ( LocalDate.of (
+    			        i_year.getJavaInt(),
+    			        i_month.getJavaInt(),
+    			        i_day.getJavaInt() ) );
+				} catch ( DateTimeException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			assert java_exception may be null
+ 
+			if java_exception is null then
+				assert r is not null
+				return r
+			else
+			    return invalid_data_error<local_date>.create (
+                    info = "Error creating a local date object. One or more values are out of range."
+                    java_exception,
+                    data = null )
+            .
+		.
+		tests
+            test year = 2011, month = 7, day =6
+            verify result.to_string =v "2011-07-06"
+
+            case type of try_create_from_integers ( year = 2011, month = 2, day = 30 )
+                when local_date
+                    verify no
+                when invalid_data_error<*>
+            .
+        .
+    .
+.

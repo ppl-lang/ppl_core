@@ -1,0 +1,29 @@
+factory user_string_input_error type:user_input_error<string>
+
+	java
+		public static ty_user_input_error<? extends ty_string> createFromJava ( String string, String info ) {
+		
+		    return create_for_string_or_null ( fa_string.createOrNull ( string ), fa_string.createOrNull ( info ) );
+        }
+    end java
+    
+    function to_string = a_info
+    
+    creator create kind:in_all
+    
+    creator create_for_string -> user_input_error<string>
+        in string string
+        in info string or null
+        
+        return create (
+            info = i_info if_null: """'{{i_string}}' is an invalid input."""
+            data = i_string )
+    .
+    
+    creator create_for_string_or_null -> user_input_error<string>
+        in string string or null
+        in info string or null
+        
+        return create_for_string ( string = i_string if_null: "null", info )
+    .
+.

@@ -1,0 +1,10 @@
+type supplier_program_error
+
+	inherit program_error
+
+	att supplier_error unanticipated_error
+	
+	function stack_trace -> indexed_list<bug_source_code_location>
+
+	function source_error -> unanticipated_error
+.

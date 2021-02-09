@@ -1,0 +1,6 @@
+type parse_object_error<object>
+
+    inherit invalid_string_data_error
+    
+    att error_position pos_64 or null default:null 
+.

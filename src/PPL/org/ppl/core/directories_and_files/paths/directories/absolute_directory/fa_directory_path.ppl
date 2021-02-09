@@ -1,0 +1,170 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory directory_path type:directory_path
+
+%fa_absolute_or_relative_directory_or_file_path < &
+    type_id: directory_path &
+    directory_or_file: directory >
+		
+%fa_absolute_or_relative_directory_path_functions
+
+	function to_string = to_current_OS_path
+	
+	function parent
+
+        var parent_name string
+        java
+            Path parent = a_java_value.getParent();
+            v_parent_name = parent != null ? new fa_string ( parent.toString() ) : null;
+        end java
+        assert parent_name may be null
+
+        if parent_name is not null then
+            return fa_directory_path.create ( parent_name )
+        else
+            return null
+        .
+    .
+	
+	function is_root = parent =r null
+	
+	function append_name = create_for_child_name (
+        parent = this
+        name )
+
+	function append_path = create_for_relative_path ( i_path, root_directory = this )
+
+	function append_file_name native:yes
+	    // TD check input null
+	    java
+	        return new fa_file_path ( a_java_value.resolve ( i_name.to_string().getJavaString() ) );
+	    end java
+    .
+
+	function append_file_path native:yes
+	    // TD check input null
+	    java
+	        return new fa_file_path ( a_java_value.resolve ( i_path.getJavaPath() ) );
+	    end java
+    .
+
+	function is_non_equal_ancestor_of = is_equal_to_or_ancestor_of ( i_other ) and this #v i_other
+
+	function is_equal_to_or_ancestor_of
+	
+	    variable r yes_no
+	    java
+	        v_r = fa_yes_no.of ( i_other.getJavaPath().normalize().startsWith ( a_java_value.normalize() ) );
+	    end java
+	    assert r is not null
+	    return r
+    .
+	
+	function is_non_equal_child_of = is_equal_to_or_child_of ( i_other ) and this #v i_other
+
+	function is_equal_to_or_child_of
+	
+	    variable r yes_no
+	    java
+	        v_r = fa_yes_no.of ( a_java_value.normalize().startsWith ( i_other.getJavaPath().normalize() ) );
+	    end java
+	    assert r is not null
+	    return r
+    .
+	
+	function make_relative native:yes
+	    // TD check input null
+	    java
+	        return new fa_relative_directory_path ( i_root.getJavaPath().relativize ( a_java_value ) );
+	    end java
+    .
+	
+    function rename
+
+		if parent as parent_directory is not null then
+		    return fa_directory_path.create_for_child_name (
+                parent = parent_directory
+                name = i_new_name )
+        else
+            return fa_directory_path.create_root ( i_new_name )
+        .
+    .
+    
+    function to_directory = fa_directory.create ( this )
+
+	function try_to_existing_directory
+	
+	    const directory = to_directory
+	    
+	    if directory.exists then
+            return directory
+        else
+            return directory_inexistent_error.create_for_directory ( directory )
+        .
+    .
+
+	creator create kind:in_all
+
+        java
+            c_this.a_java_value = Paths.get ( i_value.getJavaString() );
+        end java
+        
+        return this
+	.
+	
+	creator create_for_relative_path ( path relative_directory_path, root_directory directory_path ) -> directory_path
+
+        java
+            c_this.a_java_value = i_root_directory.getJavaPath().resolve ( i_path.getJavaPath() );
+        end java
+        
+        return this
+    .
+
+	creator create_root ( name directory_name ) -> directory_path
+	    return create ( i_name.value )
+	.
+
+	creator create_for_child_name -> directory_path
+		in name directory_name
+		in parent directory_path
+		
+        java
+            c_this.a_java_value = i_parent.getJavaPath().resolve ( i_name.getValue().getJavaString() );
+        end java
+        
+        return this
+    .
+	
+	creator create_from_root_and_id -> directory_path
+		in root_directory directory_path
+		in i_id PPL_identifier
+
+        java
+            c_this.a_java_value = i_root_directory.getJavaPath().resolve ( i_id.getValue().getJavaString() );
+        end java
+        
+        return this
+    .
+	
+	creator create_from_root_and_id_path -> directory_path
+		in root_directory directory_path
+		in id_path PPL_identifier_path
+		
+		const path = relative_directory_path.create ( i_id_path.value.replace_all (
+            to_replace = se_PPL_identifier_constants.id_separator
+            replace_by = se_directory_constants.current_OS_directory_separator ) )
+        
+        return create_for_relative_path ( path, root_directory )
+    .
+	
+%string_value_factory_try_parse_creator<directory_path>
+
+	// TD creator create_from_URI 
+
+.

@@ -1,0 +1,4 @@
+type string_or_binary_reader
+
+	inherit closable_IO_resource
+.

@@ -1,0 +1,9 @@
+type time_zone_offset
+
+    inherit string_value
+		redefine
+			att value and_check: value.matches_regex ( se_time_zone_constants.ISO_time_zone_offset_regex ) \
+			    message: """'{{value}}' is not a valid time zone offset, because it doesn't match the format +-hh:mm"""
+		.
+	.
+.

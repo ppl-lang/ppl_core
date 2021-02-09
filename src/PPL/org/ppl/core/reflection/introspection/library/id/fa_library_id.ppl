@@ -1,0 +1,8 @@
+factory library_id
+
+    function to_string = a_value
+
+    function to_prefixed_string = """{{se_PPL_library_constants.id_prefix}}{{a_value}}"""
+    
+    creator create kind:in_all
+.

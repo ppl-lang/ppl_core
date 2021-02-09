@@ -1,0 +1,1321 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory string
+
+	java_header
+		import java.util.regex.Pattern;
+		import java.util.regex.Matcher;
+		
+		import org.ppl.core.basics.scalar.character.fa_character;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.string.helper.string_find_result.fa_string_find_result;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+		import org.ppl.core.regular_expressions.fa_regex_match_result;
+	end java_header
+
+	java
+		private String a_java_value;
+
+		public String getJavaString() { return a_java_value; }
+
+		public fa_string ( String i_java_value ) {
+
+			if (i_java_value == null) {
+				throw new IllegalArgumentException ("Input for fa_string constructor cannot be null.");
+			}
+			if (i_java_value.isEmpty()) {
+				throw new IllegalArgumentException ("Input for fa_string constructor cannot be an empty string.");
+			}
+
+			a_java_value = i_java_value;
+		}
+		
+		public static fa_string createOrNull ( String i_java_value ) {
+
+			if ( i_java_value == null || i_java_value.isEmpty() ) {
+				return null;
+			}
+
+			return new fa_string ( i_java_value );
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_string ) ) return false;
+			
+			String other_string = ((ty_string) other).getJavaString();
+			return a_java_value.equals ( other_string );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_java_value.hashCode();
+		}
+
+		public int compareTo ( ty_string other ) {
+			if ( this == other ) return 0;
+			return a_java_value.compareTo ( other.getJavaString() );
+		}
+	end java
+
+    function element_type = se_common_object_types.character
+    
+	function to_string = this
+
+	function to_long_string = this
+
+	
+	// has_compare_to
+
+    functions native:yes
+
+        function is_equal_to
+            java
+                if ( this == i_other ) return fa_yes_no.a_yes;
+                return fa_yes_no.of ( a_java_value.equals ( i_other.getJavaString() ) );
+            end java
+        .
+
+        function is_equal_to_ignore_case
+            java
+                if ( this == i_other ) return fa_yes_no.a_yes;
+                return fa_yes_no.of ( a_java_value.equalsIgnoreCase ( i_other.getJavaString() ) );
+            end java
+        .
+
+        function compare_to
+            java
+                return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+            end java
+        .
+
+        function compare_to_ignore_case
+            java
+                return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( a_java_value.compareToIgnoreCase ( i_other.getJavaString() ) );
+            end java
+        .
+
+        function min
+            java
+                if ( this == i_other ) return this;
+                return ( a_java_value.compareTo ( i_other.getJavaString() ) != 1 ) ? this : i_other;
+            end java
+        .
+    
+        function max
+            java
+                if ( this == i_other ) return this;
+                return ( a_java_value.compareTo ( i_other.getJavaString() ) != -1 ) ? this : i_other;
+            end java
+        .
+
+        function is_between
+            java
+                if ( this == i_min || this == i_max ) return fa_yes_no.a_yes;
+                return fa_yes_no.of (
+                    a_java_value.compareTo ( i_min.getJavaString() ) != -1 && 
+                    a_java_value.compareTo ( i_max.getJavaString() ) != 1 );
+            end java
+        .
+    
+        function hash_code
+            java
+                return new fa_signed_int_32 ( hashCode() );
+            end java
+        .
+	
+    .
+
+
+    // indexed_list
+
+	function iterator = fa_string_iterator.create ( this )
+
+	functions native:yes
+	
+        function size
+            java
+                return new fa_pos_32 ( a_java_value.length() );
+            end java
+        .
+    
+        function first
+            java
+                return new fa_character ( a_java_value.charAt ( 0 ) );
+            end java
+        .
+    
+        function last
+            java
+                return new fa_character ( a_java_value.charAt ( a_java_value.length() - 1 ) );
+            end java
+        .
+    . 
+
+	function get
+	    variable r character
+        java
+            v_r = new fa_character ( a_java_value.charAt ( i_index.getJavaInt() - 1 ) );
+        end java
+        assert r is not null
+        return r
+	.
+	
+	function stream = fa_stream<character>.create_from_iterator ( iterator )
+    
+    function copy_to_mutable
+
+        if yes then
+            throw "Not yet implemented"
+        .
+        return mutable_indexed_list<character>.create
+    .
+
+
+    // substring
+    
+    function substring
+        script
+            variable r string
+            java
+                v_r = new fa_string ( a_java_value.substring ( i_from.getJavaInt() - 1, i_to.getJavaInt() ) );
+            end java
+            assert r is not null
+            return r
+        end
+
+        tests
+            java
+                v_test_object_ = new fa_string ( "abc" );
+            end java
+    
+            test from = 1 to = 1
+            verify v_result =v "a"
+
+            test from = 1 to = 2
+            verify v_result =v "ab"
+
+            test from = 1 to = 3
+            verify v_result =v "abc"
+
+            test from = 2 to = 3
+            verify v_result =v "bc"
+
+            test from = 3 to = 3
+            verify v_result =v "c"
+
+            test from = 4 to = 3
+            verify_error
+
+            test from = 1 to = 4
+            verify_error
+
+            test from = 2 to = 1
+            verify_error
+        .
+    .
+    
+    function substring_from
+        script
+            variable r string
+            java
+                v_r = new fa_string ( a_java_value.substring ( i_from.getJavaInt() - 1 ) );
+            end java
+            assert r is not null
+            return r
+        .
+
+        tests
+            java
+                v_test_object_ = new fa_string ( "abc" );
+            end java
+    
+            test i_from = 1
+            verify v_result =v "abc"
+
+            test i_from = 2
+            verify v_result =v "bc"
+
+            test i_from = 3
+            verify v_result =v "c"
+
+            test i_from = 4
+            verify_error
+        .
+    .
+
+    function substring_to
+        script
+            variable r string
+            java
+                v_r = new fa_string ( a_java_value.substring ( 0, i_to.getJavaInt() ) );
+            end java
+            assert r is not null
+            return r
+        .
+        
+        test
+            java
+                v_test_object_ = new fa_string ( "abc" );
+            end java
+
+            test 1
+            verify v_result =v "a"
+
+            test 2
+            verify v_result =v "ab"
+
+            test 3
+            verify v_result =v "abc"
+
+            test 4
+            verify_error
+        .
+    .
+    
+    
+    // find
+
+    function find_first native:yes
+        java
+            int v_index = a_java_value.indexOf ( i_to_find.getJavaString() );
+            return v_index > -1 ? new fa_pos_32 ( v_index + 1 ) : null;
+        end java
+    .
+
+    function find_last native:yes
+        java
+            int v_index = a_java_value.lastIndexOf ( i_to_find.getJavaString() ) ;
+            return v_index > -1 ? new fa_pos_32 ( v_index + 1 ) : null;
+        end java
+    .
+    
+    function find_first_from
+
+        variable r pos_32 or null
+        java
+            int v_index = a_java_value.indexOf ( i_to_find.getJavaString(), i_from.getJavaInt() - 1 );
+            v_r = v_index > -1 ? new fa_pos_32 ( v_index + 1 ) : null;
+        end java
+        assert r may be null
+        return r
+    .
+
+    function find_first_regex native:yes
+        script
+            java
+                Pattern pattern = i_regex.getJavaPattern();
+                Matcher matcher = pattern.matcher ( a_java_value );
+
+                if ( matcher.find() ) {
+                    if ( matcher.end() >= matcher.start() + 1 ) {
+                        return new fa_regex_match_result ( matcher.toMatchResult() );
+                    }
+                }
+                
+                return null;
+            end java
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "*(abAB_1_?" );
+            end java
+    
+            test regex.create ( '''[a-zA-Z0-9_]+''' )
+            verify result is not null
+            verify result.start_index =v 3
+            verify result.end_index =v 9
+            verify result.found =v "abAB_1_"
+
+            java
+                v_test_object_ = new fa_string ( "AB_1_?" );
+            end java
+    
+            test regex.create ( '''[a-zA-Z0-9_]+''' )
+            verify result is not null
+            verify result.start_index =v 1
+            verify result.end_index =v 5
+            verify result.found =v "AB_1_"
+        .
+    .
+
+    function find_first_regex_from
+        script
+            variable r regex_match_result or null = null
+            java
+                Pattern pattern = i_regex.getJavaPattern();
+                Matcher matcher = pattern.matcher ( a_java_value );
+
+                if ( matcher.find(i_from.getJavaInt() - 1) ) {
+                    if ( matcher.end() >= matcher.start() + 1 ) {
+                        v_r = new fa_regex_match_result ( matcher.toMatchResult() );
+                    }
+                }
+            end java
+            assert r may be null
+            return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "*(AB_1?#@" );
+            end java
+    
+            const regex = regex.create ( '''[a-zA-Z0-9_]+''' )
+            test regex = regex, from = 1
+            verify result is not null
+            verify result.start_index =v 3
+            verify result.end_index =v 6
+            verify result.found =v "AB_1"
+    
+            test regex = regex, from = 3
+            verify result is not null
+            verify result.start_index =v 3
+            verify result.end_index =v 6
+            verify result.found =v "AB_1"
+    
+            test regex = regex, from = 4
+            verify result is not null
+            verify result.start_index =v 4
+            verify result.end_index =v 6
+            verify result.found =v "B_1"
+
+            test regex = regex, from = 7
+            verify result is null
+        .
+    .
+    
+    
+    // checks
+
+    function starts_with native:yes
+        java
+            return fa_yes_no.of ( a_java_value.startsWith ( i_string.getJavaString() ) );
+        end java
+    .
+
+    function ends_with native:yes
+        java
+            return fa_yes_no.of ( a_java_value.endsWith ( i_string.getJavaString() ) );
+        end java
+    .
+
+    function starts_with_at_position
+        script
+            variable r yes_no
+            java
+                v_r = fa_yes_no.of ( a_java_value.startsWith ( i_start.getJavaString(), i_position.getJavaInt() - 1 ) );
+            end java
+            assert r is not null
+            return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "123abc" );
+            end java
+    
+            test start = "ab", position = 1
+            verify not result
+    
+            test start = "ab", position = 3
+            verify not result
+    
+            test start = "ab", position = 4
+            verify result
+    
+            test start = "cd", position = 6
+            verify not result
+        .
+    .
+
+	function starts_with_regex_at_position = starts_with_regex_match_at_position ( regex, position ) #r null
+
+    function starts_with_regex_match_at_position
+        script
+			variable r regex_match_result or null = null
+			java
+                Pattern pattern = i_regex.getJavaPattern();
+                Matcher matcher = pattern.matcher ( a_java_value );
+
+                matcher.region ( i_position.getJavaInt() - 1, a_java_value.length() );
+
+                if ( matcher.lookingAt() ) {
+                    if ( matcher.end() >= matcher.start() + 1 ) {
+                        v_r = new fa_regex_match_result ( matcher.toMatchResult() );
+                    }
+                }
+			end java
+			assert r may be null
+			return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "*(AB_1?#@" );
+            end java
+    
+            const regex = regex.create ( '''[a-zA-Z0-9_]+''' )
+            test regex = regex, position = 1
+            verify result is null
+    
+            test regex = regex, position = 3
+            verify result is not null
+            verify result.start_index =v 3
+            verify result.end_index =v 6
+            verify result.found =v "AB_1"
+    
+            test regex = regex, position = 4
+            verify result is not null
+            verify result.start_index =v 4
+            verify result.end_index =v 6
+            verify result.found =v "B_1"
+
+            test regex = regex, position = 7
+            verify result is null
+        .
+    .
+
+	functions native:yes
+	
+        function contains
+            java
+                return fa_yes_no.of ( a_java_value.contains ( i_string.getJavaString() ) );
+            end java
+        .
+    
+        function contains_character
+            java
+                int v_index = a_java_value.indexOf ( i_character.getJavaChar() );
+                return fa_yes_no.of ( v_index > -1 );
+            end java
+        .
+    .
+        
+    function matches_regex native:yes
+        java
+            Pattern pattern = i_regex.getJavaPattern();
+            Matcher matcher = pattern.matcher ( a_java_value );
+
+            return fa_yes_no.of ( matcher.matches() );
+        end java
+    .
+    
+    function match_with_regex native:yes
+        java
+            Pattern pattern = i_regex.getJavaPattern();
+            Matcher matcher = pattern.matcher ( a_java_value );
+            if ( matcher.matches() ) {
+                return new fa_regex_match_result ( matcher.toMatchResult() );
+            } else {
+                return null;
+            }
+        end java
+    .
+
+    
+    // append
+    
+	functions native:yes
+	
+        function append
+            script
+                java
+                    return new fa_string ( a_java_value + i_string.getJavaString() );
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "abc" );
+                end java
+    
+                test i_string = "d"
+                verify v_result =v "abcd"
+    
+                test i_string = "def"
+                verify v_result =v "abcdef"
+            .
+        .
+    
+        function repeat
+            script
+                java
+                    return new fa_string ( a_java_value.repeat ( i_count.getJavaInt() ) );
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "abc " );
+                end java
+    
+                test 1
+                verify v_result =v "abc "
+    
+                test 2
+                verify v_result =v "abc abc "
+    
+                test 3
+                verify v_result =v "abc abc abc "
+            .
+        .
+    .
+    
+    function pad_left
+        script
+			variable r string
+			java
+                int v_space_count = i_width.getJavaInt() - a_java_value.length();
+                if ( v_space_count > 0 ) {
+                    v_r = new fa_string ( " ".repeat ( v_space_count ) + a_java_value );
+                }
+                else {
+                    v_r = this;
+                }
+			end java
+			assert r is not null
+			return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "abc" );
+            end java
+
+            test i_width = 5
+            verify v_result =v "  abc"
+
+            test i_width = 3
+            verify v_result =v "abc"
+
+            test i_width = 2
+            verify_error
+        .
+    .
+
+    function pad_right
+        script
+			variable r string
+			java
+                int v_space_count = i_width.getJavaInt() - a_java_value.length();
+                if ( v_space_count > 0 ) {
+                    v_r = new fa_string ( a_java_value + " ".repeat ( v_space_count ) );
+                }
+                else {
+                    v_r = this ;
+                }
+			end java
+			assert r is not null
+			return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "abc" );
+            end java
+
+            test i_width = 5
+            verify v_result =v "abc  "
+
+            test i_width = 3
+            verify v_result =v "abc"
+
+            test i_width = 2
+            verify_error
+        .
+    .
+    
+    
+    // remove
+	
+    function remove_from_to
+        script
+			variable r string or null = null
+			java
+                String result = a_java_value.substring ( 0, i_from.getJavaInt() - 1 ) +
+                    a_java_value.substring ( i_to.getJavaInt() );
+                if ( ! result.isEmpty() ) {
+                    v_r = new fa_string ( result );
+                }
+			end java
+			assert r may be null
+			return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "12345" );
+            end java
+
+            test from = 2, to = 4
+            verify v_result is not null
+            verify v_result =v "15"
+
+            test from = 1, to = 5
+            verify v_result is null
+
+            test from = 1, to = 1
+            verify v_result is not null
+            verify v_result =v "2345"
+
+            test from = 5, to = 5
+            verify v_result is not null
+            verify v_result =v "1234"
+        .
+    .
+	
+	function remove_from = remove_from_to ( from, to = size )
+	
+	function remove_to = remove_from_to ( from = 1, to )
+
+    function remove_first
+        script
+			variable r string
+			java
+				v_r = new fa_string ( a_java_value.substring ( 1 ) );
+			end java
+			assert r is not null
+			return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "a" );
+            end java
+            test
+            verify_error
+
+            java
+                v_test_object_ = new fa_string ( "ab" );
+            end java
+            test
+            verify v_result =v "b"
+
+            java
+                v_test_object_ = new fa_string ( "ABC" );
+            end java
+            test
+            verify v_result =v "BC"
+        .
+    .
+
+    function remove_last
+        script
+			variable r string
+			java
+				v_r = new fa_string ( a_java_value.substring ( 0, a_java_value.length() - 1 ) );
+			end java
+			assert r is not null
+			return r
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "a" );
+            end java
+            test
+            verify_error
+
+            java
+                v_test_object_ = new fa_string ( "ab" );
+            end java
+            test
+            verify v_result =v "a"
+
+            java
+                v_test_object_ = new fa_string ( "ABC" );
+            end java
+            test
+            verify v_result =v "AB"
+        .
+    .
+    
+    functions native:yes
+
+        function remove_all_substrings
+            script
+                java
+                    String result = a_java_value.replace ( i_to_remove.getJavaString(), "");
+    
+                    if ( ! result.isEmpty() ) {
+                        return new fa_string ( result );
+                    } else {
+                        return null;
+                    }
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "ab" );
+                end java
+                test "a"
+                assert v_result is not null
+                verify v_result =v "b"
+    
+                java
+                    v_test_object_ = new fa_string ( "ab1ab2ab" );
+                end java
+                test "ab"
+                assert v_result is not null
+                verify v_result =v "12"
+    
+                java
+                    v_test_object_ = new fa_string ( "ab" );
+                end java
+                test "1"
+                assert v_result is not null
+                verify v_result =v "ab"
+    
+                java
+                    v_test_object_ = new fa_string ( "abab" );
+                end java
+                test "ab"
+                verify v_result is null
+            .
+        .
+    
+        function remove_all_character
+            script
+                java
+                    String result = a_java_value.replace ( String.valueOf ( i_to_remove.getJavaChar() ), "");
+    
+                    if ( ! result.isEmpty() ) {
+                        return new fa_string ( result );
+                    } else {
+                        return null;
+                    }
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "_a_bcd_" );
+                end java
+                test '_'
+                assert v_result is not null
+                verify v_result =v "abcd"
+            .
+        .
+    
+        function remove_all_regex
+            script
+                java
+                    // String result = a_java_value.replaceAll ( i_to_remove.getJavaString(), "" ); //doesn't work with multiline regex
+                    String result = i_to_remove.getJavaPattern().matcher ( a_java_value ).replaceAll ( "" );
+    
+                    if ( ! result.isEmpty() ) {
+                        return new fa_string ( result );
+                    } else {
+                        return null;
+                    }
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "ab" );
+                end java
+                test regex.create ( "a" )
+                assert v_result is not null
+                verify v_result =v "b"
+    
+                java
+                    v_test_object_ = new fa_string ( "ab1ab2abc" );
+                end java
+                test regex.create ( '''ab\d''' )
+                assert v_result is not null
+                verify v_result =v "abc"
+    
+                java
+                    v_test_object_ = new fa_string ( "ab" );
+                end java
+                test regex.create ( "c" )
+                assert v_result is not null
+                verify v_result =v "ab"
+    
+                java
+                    v_test_object_ = new fa_string ( "abab" );
+                end java
+                test regex.create ( "a." )
+                verify v_result is null
+                
+                var s = '''l1
+l2
+l3
+'''
+                assert s is not null
+                java
+                    v_test_object_ = new fa_string ( v_s.getJavaString() );
+                end java
+                test regex.create_with_multiline_mode ( "^l2$\r?\n?" )
+                assert v_result is not null
+                verify v_result =v '''l1
+l3
+'''
+    
+            .
+        .
+    
+        function remove_all_CR_or_LF_at_end
+            script
+                java
+                    int pos = a_java_value.length() - 1;
+                    char test_char = a_java_value.charAt(pos);
+                    while ( test_char == '\r' || test_char == '\n' ) {
+                        pos = pos - 1;
+                        if ( pos < 0 ) break;
+                        test_char = a_java_value.charAt(pos);
+                    }
+                    
+                    if ( pos == a_java_value.length() - 1 ) {
+                        return this;
+                    } else if ( pos < 0 ) {
+                        return null;
+                    } else {
+                        return new fa_string ( a_java_value.substring ( 0, pos + 1 ) );
+                    }
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "abc\r\n" );
+                end java
+    
+                test
+                assert v_result is not null
+                verify v_result =v "abc"
+    
+                java
+                    v_test_object_ = new fa_string ( "abc" );
+                end java
+    
+                test
+                assert v_result is not null
+                verify v_result =v "abc"
+    
+                java
+                    v_test_object_ = new fa_string ( "\r\n\r\n" );
+                end java
+    
+                test
+                verify v_result is null
+            .
+        .
+        
+        function remove_last_CR_LF
+            script
+                java
+                    int pos = a_java_value.length() - 1;
+                    if ( a_java_value.charAt(pos) == '\n' ) {
+                        pos = pos - 1;
+                        if ( a_java_value.charAt(pos) == '\r' ) {
+                            pos = pos - 1;
+                        }
+                    }
+                    
+                    if ( pos == a_java_value.length() - 1 ) {
+                        return this;
+                    } else if ( pos < 0 ) {
+                        return null;
+                    } else {
+                        return new fa_string ( a_java_value.substring ( 0, pos + 1 ) );
+                    }
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "abc\r\n" );
+                end java
+    
+                test
+                assert v_result is not null
+                verify v_result =v "abc"
+    
+                java
+                    v_test_object_ = new fa_string ( "abc\n" );
+                end java
+    
+                test
+                assert v_result is not null
+                verify v_result =v "abc"
+    
+                java
+                    v_test_object_ = new fa_string ( "abc\r\n\r\n" );
+                end java
+    
+                test
+                assert v_result is not null
+                verify v_result =v "abc\r\n"
+    
+                java
+                    v_test_object_ = new fa_string ( "abc" );
+                end java
+    
+                test
+                assert v_result is not null
+                verify v_result =v "abc"
+    
+                java
+                    v_test_object_ = new fa_string ( "\r\n" );
+                end java
+    
+                test
+                verify v_result is null
+            .
+        .
+
+        function trim_whitespace
+            script
+                java
+                    String result = a_java_value.trim();
+                    if ( ! result.isEmpty() ) {
+                        return new fa_string ( result );
+                    } else {
+                        return null;
+                    }
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "  abc " );
+                end java
+    
+                test
+                assert v_result is not null
+                verify v_result =v "abc"
+    
+                java
+                    v_test_object_ = new fa_string ( "  " );
+                end java
+    
+                test
+                 verify v_result is null
+            .
+        .
+    .
+        
+	function truncate
+		script
+			if size <= i_width then
+				return this
+			else
+				return substring_to ( i_width )
+			.
+		.
+		tests
+            java
+                v_test_object_ = new fa_string ( "abcde" );
+            end java
+
+            test i_width = 1
+            verify v_result =v "a"
+
+            test i_width = 4
+            verify v_result =v "abcd"
+
+            test i_width = 5
+            verify v_result =v "abcde"
+
+            test i_width = 6
+            verify v_result =v "abcde"
+		.
+	.
+
+
+    // replace
+    
+	function replace_from_to
+		script
+		    variable r string
+			if i_from ># 1 then
+				r = substring_to ( i_from - 1 ) & i_replace_by
+			else
+				r = i_replace_by.to_string
+			.
+
+			if i_to <# size then
+				r = r & substring_from ( i_to + 1 )
+			.
+			return r
+		.
+		tests
+            java
+                v_test_object_ = new fa_string ( "abcde" );
+            end java
+
+            test from = 2; to = 4; replace_by = "1234"
+            verify v_result =v "a1234e"
+
+            test from = 1; to = 3; replace_by = "1234"
+            verify v_result =v "1234de"
+
+            test from = 4; to = 5; replace_by = "1234"
+            verify v_result =v "abc1234"
+
+            test from = 1; to = 5; replace_by = "1234"
+            verify v_result =v "1234"
+
+            test from = 1; to = 6; replace_by = "a"
+            verify_error
+
+            test from = 2; to = 1; replace_by = "a"
+            verify_error
+		.
+	.
+
+	function replace_or_remove_from_to
+	    
+	    if replace_by is not null then
+	        return replace_from_to ( from, to, replace_by )
+        else
+	        return remove_from_to ( from, to )
+        .
+    .
+    
+    function replace_first
+
+        script
+            const start_pos = find_first ( i_to_replace )
+            if start_pos is null then
+                return this
+            .
+            
+            const end_pos = start_pos + i_to_replace.size - 1
+            
+            if start_pos =v 1 then
+                if end_pos =v size then
+                    return i_replace_by
+                else
+                    return i_replace_by & substring_from ( end_pos + 1 )
+                .
+            else
+                if end_pos =v size then
+                    return substring_to ( start_pos - 1 ) & i_replace_by
+                else
+                    return substring_to ( start_pos - 1 ) & i_replace_by & substring_from ( end_pos + 1 )
+                .
+            .
+        .
+        tests
+            java
+                v_test_object_ = new fa_string ( "abcd" );
+            end java
+
+            test i_to_replace = "123" i_replace_by = "RR"
+            verify v_result =v "abcd"
+
+            test i_to_replace = "abcd" i_replace_by = "RR"
+            verify v_result =v "RR"
+
+            test i_to_replace = "ab" i_replace_by = "RR"
+            verify v_result =v "RRcd"
+
+            test i_to_replace = "bc" i_replace_by = "RR"
+            verify v_result =v "aRRd"
+
+            test i_to_replace = "d" i_replace_by = "RR"
+            verify v_result =v "abcRR"
+        .
+    .
+
+	functions native:yes
+
+        function replace_all
+            script
+                java
+                    return new fa_string ( a_java_value.replace (
+                        i_to_replace.getJavaString(), i_replace_by.getJavaString() ) );
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "This is a text" );
+                end java
+    
+                test i_to_replace = "a" i_replace_by = "one"
+                verify v_result =v "This is one text"
+    
+                test i_to_replace = "text" i_replace_by = "?"
+                verify v_result =v "This is a ?"
+    
+                test i_to_replace = "t" i_replace_by = "?"
+                verify v_result =v "This is a ?ex?"
+    
+                test i_to_replace = "qwe" i_replace_by = "asd"
+                verify v_result =v "This is a text"
+            .
+        .
+    
+        function replace_all_character
+            script
+                java
+                    return new fa_string (
+                        a_java_value.replace ( i_to_replace.getJavaChar(), i_replace_by.getJavaChar() ) );
+                end java
+            .
+            test
+                java
+                    v_test_object_ = new fa_string ( "abcabca" );
+                end java
+    
+                test to_replace = 'a' replace_by = '!'
+                verify result =v "!bc!bc!"
+    
+                test to_replace = 'z' replace_by = '!'
+                verify result =v "abcabca"
+            .
+        .
+
+        function replace_first_regex
+            script
+                java
+                    // doesn't work with multiline regex
+                    // return new fa_string ( a_java_value.replaceFirst (
+                    //    i_to_replace.getJavaString(), i_replace_by.getJavaString() ) ) ;
+                    
+                    return new fa_string ( i_to_replace.getJavaPattern().matcher ( a_java_value )
+                        .replaceFirst ( i_replace_by.getJavaString() ) );
+                end java
+            .
+            tests
+                java
+                    v_test_object_ = new fa_string ( "ab1ab2aa1" );
+                end java
+    
+                test to_replace = regex.create ( '''b\d''' ) replace_by = "XXX"
+                verify v_result =v "aXXXab2aa1"
+            .
+        .
+    
+        function replace_all_regex
+            script
+                java
+                    // doesn't work with multiline regex
+                    // return new fa_string ( a_java_value.replaceAll (
+                    //    i_to_replace.getJavaString(), i_replace_by.getJavaString() ) ) ;
+                    return new fa_string ( i_to_replace.getJavaPattern().matcher ( a_java_value )
+                        .replaceAll ( i_replace_by.getJavaString() ) );
+                end java
+            .
+            test
+                java
+                    v_test_object_ = new fa_string ( "ab1ab2aa1" );
+                end java
+    
+                test to_replace = regex.create ( '''b\d''' ) replace_by = "XXX"
+                verify v_result =v "aXXXaXXXaa1"
+            .
+        .
+    
+    .
+    
+
+	// split
+
+	function split_by_new_line = split_by_regex ( regex.create ( '''\r?\n''' ) )
+	
+	function split = split_by_regex ( se_regex_utilities.literal_string_to_regex ( i_split_by ) )
+
+	function split_by_regex
+		script
+			const list = mutable_indexed_list_with_nulls<string or null>.create
+			java
+				// String[] result_array = a_java_value.split ( i_regex.getJavaString(), Integer.MAX_VALUE ); //doesn't work with multiline regex
+				String[] result_array = i_regex.getJavaPattern().split ( a_java_value, Integer.MAX_VALUE );
+				for ( int i = 0; i < result_array.length; i++ ) {
+					if ( result_array[i].equals("") ) {
+						c_list.append ( null );
+					} else {
+						c_list.append ( new fa_string ( result_array[i] ) );
+					}
+				}
+			end java
+			return list.make_immutable
+		.
+		tests
+            java
+                v_test_object_ = new fa_string ( "ab&de" );
+            end java
+
+            test fa_regex.create ( "&" )
+            assert v_result is not null
+            verify v_result.size =v 2
+            verify v_result.first if_null:throw =v "ab"
+            verify v_result.last if_null:throw =v "de"
+
+            java
+                v_test_object_ = new fa_string ( "&ab&&d&" );
+            end java
+
+            test fa_regex.create ( "&" )
+            assert v_result is not null
+            verify v_result.size =v 5
+            verify v_result.get ( 1 ) =r null
+            verify v_result.get ( 2 ) if_null:throw =v "ab"
+            verify v_result.get ( 3 ) =r null
+            verify v_result.get ( 4 ) if_null:throw =v "d"
+            verify v_result.get ( 5 ) =r null
+
+            test fa_regex.create ( "@" )
+            assert v_result is not null
+            verify v_result.size =v 1
+            verify v_result.get ( 1 ) if_null:throw =v "&ab&&d&"
+
+            java
+                v_test_object_ = new fa_string ( ":" );
+            end java
+            test fa_regex.create ( ":" )
+            assert v_result is not null
+            verify v_result.size =v 2
+            verify v_result.get ( 1 ) =r null
+            verify v_result.get ( 2 ) =r null
+		.
+	.
+	
+	function split_by_regex_to_set
+	    
+        const r = mutable_set<string>.create
+	 
+	    repeat for each item in split_by_regex ( regex )
+	        if item is null then
+	            return invalid_data_error<string>.create (
+	                info = "Empty strings are not allowed in a set."
+	                data = this )
+            .
+            if not r.contains ( item ) then
+                r.add ( item )
+            else
+                if not i_allow_doubles then
+                    return invalid_data_error<string>.create (
+                        info = """'{{item}}' is defined twice."""
+                        data = this )
+                .
+            .
+	    .
+	    
+	    return r.make_immutable
+    .
+
+	
+	// transform
+
+	functions native:yes
+
+        function to_lower_case
+            java
+                return new fa_string ( a_java_value.toLowerCase() );
+            end java
+        .
+    
+        function to_upper_case
+            java
+                return new fa_string ( a_java_value.toUpperCase() );
+            end java
+        .
+    
+        function to_first_upper_case
+            java
+                return new fa_string ( a_java_value.substring(0,1).toUpperCase() + a_java_value.substring(1) );
+            end java
+        .
+    .
+.

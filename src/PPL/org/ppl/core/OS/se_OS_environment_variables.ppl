@@ -1,0 +1,42 @@
+service OS_environment_variables
+
+	java_header
+		import java.util.Map;
+
+		import org.ppl.core.basics.scalar.string.emptyable_string.fa_emptyable_string;
+		import org.ppl.core.basics.scalar.string.fa_string;
+	end java_header
+
+	function has_value ( name string ) -> yes_no = get_value_or_null ( name ) #r null
+
+	function get_string_value_or_null ( name string ) -> string or null = get_value_or_null ( name )?.to_string_or_null
+
+	function get_value_or_null ( name string ) -> emptyable_string or null
+	
+	    variable r emptyable_string or null
+        java
+            String java_value = System.getenv ( i_name.getJavaString() );
+            if ( java_value != null ) {
+                v_r = fa_emptyable_string.create ( java_value );
+            } else {
+                v_r = null;
+            }
+        end java
+        assert r may be null
+        return r
+    .
+    
+    function get_values -> map<key:string, value:emptyable_string> or null
+    
+        const r = mutable_map<key:string, value:emptyable_string>.create
+
+        java
+            Map<String,String> java_map = System.getenv();
+            for ( String key: java_map.keySet() ) {
+                c_r.add ( new fa_string ( key ), fa_emptyable_string.create ( java_map.get( key ) ) );
+            }
+        end java
+        
+        return r.make_immutable_or_null
+    .
+.

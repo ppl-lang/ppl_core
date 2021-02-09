@@ -1,0 +1,9 @@
+template file_exists_in_check
+    
+    in_check: i_object_.exists \
+		message: """The function cannot be executed because file '{{i_object_.to_string}}' doesn't exist.""" \
+		id: file_does_not_exist \
+		data: i_object_
+
+.
+    

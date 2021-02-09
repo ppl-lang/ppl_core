@@ -1,0 +1,95 @@
+template fa_integer_functions
+
+    // param creator_id
+    
+%fa_number_functions<a_java_value>
+
+	function to_string native:yes
+        java
+            return new fa_string ( a_java_value.toString() );
+        end java
+    .
+
+	// has_compare_to
+
+	function is_equal_to native:yes
+        java
+            return fa_yes_no.of ( equals ( i_other ) );
+        end java
+    .
+
+	function compare_to native:yes
+        java
+            return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+        end java
+	.
+
+	function min native:yes
+        java
+            BigInteger result = a_java_value.min ( i_other.getJavaBigInteger() );
+            if ( result == a_java_value ) {
+                return this;
+            } else {
+                return i_other;
+            }
+        end java
+	.
+
+	function max native:yes
+        java
+            BigInteger result = a_java_value.max ( i_other.getJavaBigInteger() );
+            if ( result == a_java_value ) {
+                return this;
+            } else {
+                return i_other;
+            }
+        end java
+	.
+
+	function is_between native:yes
+        java
+            return fa_yes_no.of ( ( a_java_value.compareTo ( i_min.getJavaBigInteger() ) > -1 && a_java_value.compareTo ( i_max.getJavaBigInteger() ) < 1 ) );
+        end java
+	.
+
+
+	function hash_code native:yes
+        java
+            return new fa_signed_int_32 ( hashCode() );
+        end java
+	.
+
+	// arithmetic
+
+	function add native:yes
+        java
+            return new fa_signed_integer ( a_java_value.add ( i_operand.getJavaBigInteger() ) );
+        end java
+	.
+
+	function subtract native:yes
+        java
+            return new fa_signed_integer ( a_java_value.subtract ( i_operand.getJavaBigInteger() ) );
+        end java
+	.
+
+	function multiply native:yes
+        java
+            return new fa_signed_integer ( a_java_value.multiply ( i_operand.getJavaBigInteger() ) );
+        end java
+	.
+
+	function divide native:yes
+        java
+            return new fa_signed_integer ( a_java_value.divide ( i_operand.getJavaBigInteger() ) );
+        end java
+	.
+
+	function unary_minus native:yes
+        java
+            return new fa_signed_integer ( a_java_value.negate() );
+        end java
+	.
+
+.
+    

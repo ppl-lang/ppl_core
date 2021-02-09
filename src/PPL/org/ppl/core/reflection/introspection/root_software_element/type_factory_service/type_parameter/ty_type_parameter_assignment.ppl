@@ -1,0 +1,17 @@
+type type_parameter_assignment
+
+    inherit has_equal_to<type_parameter_assignment>
+
+	att id type_parameter_id
+    att object_type object_type or null
+	att kind type_parameter_assignment_kind
+	
+	attributes_check
+	    if kind =r type_parameter_assignment_kind.wildcard then
+	        check object_type =r null
+        else
+	        check object_type #r null
+        .
+	.
+	
+.

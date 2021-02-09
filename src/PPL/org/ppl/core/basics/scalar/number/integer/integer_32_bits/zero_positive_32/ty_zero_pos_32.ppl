@@ -1,0 +1,23 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type zero_pos_32
+
+	inherit signed_int_32
+		redefine
+			command unary_minus
+				out result zero_neg_32
+			.
+			command abs
+				out result zero_pos_32
+			.
+		.
+	.
+
+	function to_zero_pos_64 -> zero_pos_64
+
+.

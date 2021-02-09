@@ -1,0 +1,210 @@
+service object_type
+
+    // This function assumes that all data are coherent (e.g. there must be an assignment for each type parameter)
+    
+    function apply_generified_type_parameters_to_TFS_object_type -> object_type
+        in TFS_object_type object_type
+        in TFS_selector TFS_selector or null
+        in script_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+        in use_min_object_type_for_type_parameters yes_no
+        in config object_type_compatibility_config
+        
+        variable TFS_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null = null
+        variable is_TFS_wildcard = no
+
+        case type of i_TFS_selector
+            when generified_TFS_selector generified_TFS_selector
+                TFS_generified_type_parameters = generified_TFS_selector.type_parameters
+                is_TFS_wildcard = generified_TFS_selector.is_wildcard
+            when null
+            otherwise
+        .
+
+        if TFS_generified_type_parameters =r null and not is_TFS_wildcard and \
+            i_script_generified_type_parameters =r null then
+            return i_TFS_object_type
+        .
+
+        case type of i_TFS_object_type
+        
+            when standard_object_type, enumerated_object_type
+                return i_TFS_object_type
+        
+            when generified_object_type generified_object_type
+                if not generified_object_type.uses_type_parameters or \
+                    generified_object_type.is_wildcard then
+                    return i_TFS_object_type
+                else
+                    return apply_generified_type_parameters_to_generified_object_type (
+                        TFS_object_type = generified_object_type
+                        TFS_selector,
+                        script_generified_type_parameters,
+                        use_min_object_type_for_type_parameters,
+                        i_config )
+                .
+
+            when type_parameter_object_type type_parameter_object_type
+                return apply_generified_type_parameters_to_type_parameter_object_type (
+                    TFS_object_type = type_parameter_object_type
+                    TFS_generified_type_parameters,
+                    script_generified_type_parameters,
+                    use_min_object_type_for_type_parameters )
+
+            when union_object_type union_object_type
+                if not union_object_type.uses_type_parameters then
+                    return i_TFS_object_type
+                else
+                    return apply_generified_type_parameters_to_union_object_type (
+                        TFS_object_type = union_object_type
+                        TFS_selector,
+                        script_generified_type_parameters,
+                        use_min_object_type_for_type_parameters,
+                        i_config )
+                .
+        .
+
+    .
+
+    functions access:private
+
+        function apply_generified_type_parameters_to_type_parameter_object_type -> object_type
+            in TFS_object_type type_parameter_object_type
+            in TFS_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+            in script_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+            in use_min_object_type_for_type_parameters yes_no
+            
+            const assignment = get_assignment_for_type_parameter (
+                type_parameter_id = i_TFS_object_type.type_parameter.id
+                TFS_generified_type_parameters,
+                script_generified_type_parameters )
+                
+            const kind = assignment?.kind if_null:type_parameter_assignment_kind.wildcard
+
+            variable r object_type
+                
+            case enum of kind
+                when default, only
+                    r = get_assignment_object_type_or_throw ( assignment )
+                when child_of
+                    if i_use_min_object_type_for_type_parameters then
+                        r = get_assignment_object_type_or_throw ( assignment )
+                    else
+                        r = i_TFS_object_type.type_parameter.max_object_type
+                    .
+                when parent_of
+                    if i_use_min_object_type_for_type_parameters then
+                        r = i_TFS_object_type.type_parameter.min_object_type
+                    else
+                        r = get_assignment_object_type_or_throw ( assignment )
+                    .
+                when wildcard
+                    if i_use_min_object_type_for_type_parameters then
+                        r = i_TFS_object_type.type_parameter.min_object_type
+                    else
+                        r = i_TFS_object_type.type_parameter.max_object_type
+                    .
+            .
+            
+            return r
+        .
+        
+        function get_assignment_object_type_or_throw ( assignment type_parameter_assignment or null ) -> object_type
+        
+            assert i_assignment is not null
+            const r = i_assignment.object_type
+            assert r is not null
+            return r
+        .
+
+        function apply_generified_type_parameters_to_generified_object_type -> object_type
+            in TFS_object_type generified_object_type
+            in TFS_selector TFS_selector or null
+            in script_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+            in use_min_object_type_for_type_parameters yes_no
+            in config object_type_compatibility_config
+            
+            if i_TFS_object_type.is_wildcard then
+                // list<*> -> list<*>
+                return i_TFS_object_type
+            .
+
+            // replace each generic parameter id (recursively)
+            // e.g. map<key:$t1, value:$t2>  ->  map<key:string, value:number>
+            
+            const new_parameters = mutable_map<key:type_parameter_id, value:type_parameter_assignment>.create
+            
+            const type_parameters = i_TFS_object_type.type_parameters
+            assert type_parameters is not null
+            repeat for each assignment in type_parameters
+            
+                variable new_object_type object_type or null
+                if assignment.object_type as object_type is not null then
+                    new_object_type = apply_generified_type_parameters_to_TFS_object_type (
+                        TFS_object_type = object_type
+                        TFS_selector,
+                        script_generified_type_parameters,
+                        use_min_object_type_for_type_parameters,
+                        i_config )
+                else
+                    new_object_type = null
+                .
+                        
+                const new_assignment = type_parameter_assignment.create (
+                    id = assignment.id
+                    object_type = new_object_type
+                    kind = assignment.kind )
+
+                new_parameters.add (
+                    key = new_assignment.id
+                    value = new_assignment )
+            .
+            return generified_object_type.create (
+                type_path = i_TFS_object_type.type_path
+                type_parameters = new_parameters.make_immutable )
+        .
+        
+        function apply_generified_type_parameters_to_union_object_type -> object_type
+            in TFS_object_type union_object_type
+            in TFS_selector TFS_selector or null
+            in script_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+            in use_min_object_type_for_type_parameters yes_no
+            in config object_type_compatibility_config
+
+            const builder = union_object_type_builder.create ( i_config )
+
+            variable at_least_one_member_changed = no
+            repeat for each existing_member in i_TFS_object_type.members
+                
+                variable new_member = apply_generified_type_parameters_to_TFS_object_type (
+                    TFS_object_type = existing_member
+                    TFS_selector,
+                    script_generified_type_parameters,
+                    use_min_object_type_for_type_parameters,
+                    i_config )
+                builder.add_object_type ( new_member )
+                
+                if new_member #r existing_member then
+                    at_least_one_member_changed = yes
+                .
+            .
+            
+            if at_least_one_member_changed then
+                return builder.create_object_type ( known_parent_object_type = null )
+            else
+                return i_TFS_object_type
+            .
+        .
+
+        function get_assignment_for_type_parameter -> type_parameter_assignment or null
+            in type_parameter_id
+            in TFS_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+            in script_generified_type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+            
+            if i_TFS_generified_type_parameters?.get_or_null ( i_type_parameter_id ) as r is not null then
+                return r
+            else
+                return i_script_generified_type_parameters?.get ( i_type_parameter_id )
+            .
+        .
+    .
+.

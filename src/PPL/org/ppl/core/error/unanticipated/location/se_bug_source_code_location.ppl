@@ -1,0 +1,9 @@
+service bug_source_code_location
+
+    function is_same_script ( location_1 bug_source_code_location, location_2 bug_source_code_location ) -> yes_no
+    
+        return location_1.script_id =v location_2.script_id and \
+            location_1.TFS_id_path.value =v location_2.TFS_id_path.value
+    .
+        
+.

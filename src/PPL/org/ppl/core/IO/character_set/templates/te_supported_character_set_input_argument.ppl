@@ -1,0 +1,13 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template supported_character_set_input_argument
+
+	// in character_set type:supported_character_set voidable:yes default:void end
+	in character_set supported_character_set default:se_character_set_constants.UTF_8
+
+.

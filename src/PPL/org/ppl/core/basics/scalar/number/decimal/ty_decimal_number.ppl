@@ -1,0 +1,66 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type decimal_number
+
+	java_header
+		import java.math.BigDecimal;
+	end java_header
+
+	java
+		public BigDecimal getJavaBigDecimal();
+	end java
+
+	inherit \
+		number,
+		has_compare_to<decimal_number>,
+		has_min_max<decimal_number>,
+		has_hash_code
+		
+    %ty_arithmetic_functions<decimal_number>
+    
+    function number_of_digits_stored -> positive_32
+    function number_of_decimal_digits -> signed_integer_32
+
+    function is_zero -> yes_no
+    function is_zero_or_positive -> yes_no
+    function is_zero_or_negative -> yes_no
+
+	function divide_and_round ( operand decimal_number, rounding_config decimal_number_rounding_config ) -> decimal_number
+		
+	function divide_and_round_and_remainder ( operand decimal_number, rounding_config decimal_number_rounding_config ) \
+	    -> ( result decimal_number, remainder decimal_number )
+		
+    // see Java doc. for limit to 999999999
+	function power_of_n ( n zero_positive_32 check: n <= 999999999 ) -> decimal_number
+
+	function round ( config decimal_number_rounding_config ) -> decimal_number
+	
+	function round_half_up ( decimal_digits signed_integer_32 ) -> decimal_number
+	
+	/// TD temporary disabled because ty_locale is defined in org.ppl.ext
+	// see java.util.Formatter for instructions
+	function format_with_locale ( format string, locale locale ) -> string or invalid_data_error<string>
+	.///
+	
+	// see java.util.Formatter for instructions
+	// function format_with_default_locale ( format string ) -> string or invalid_data_error<string>
+	// TD function format ( pattern string ) -> string
+	
+	/// TD see Java doc. for other functions to add
+		doubleValue()
+		intValue()
+		longValue()
+		scaleByPowerOfTen(int n)
+		toBigInteger()
+		toEngineeringString()
+		toPlainString()
+		toString()
+		unscaledValue()
+	.///
+	
+.

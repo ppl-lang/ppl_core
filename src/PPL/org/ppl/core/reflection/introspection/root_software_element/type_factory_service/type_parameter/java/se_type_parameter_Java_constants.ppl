@@ -1,0 +1,14 @@
+service type_parameter_Java_constants
+
+	java_header
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.se_type_parameter_constants;
+	end java_header
+	
+	java
+		public static String type_parameter_prefix = se_type_parameter_constants.getId_prefix().getJavaString();
+		public static int type_parameter_prefix_size = type_parameter_prefix.length();
+		public static String type_parameter_field_prefix = type_parameter_prefix;
+		public static String type_parameter_getter_prefix = type_parameter_field_prefix;
+	end java
+
+.

@@ -1,0 +1,15 @@
+template parse_or_throw_creator
+
+	param type_id
+
+	creator parse_or_throw ( string ) -> {type_id}
+	    script
+            case type of try_parse ( i_string )
+                when {type_id} r
+                    return r
+                when parse_object_error<*> e
+                    throw e.info
+            .
+        .
+    .
+.

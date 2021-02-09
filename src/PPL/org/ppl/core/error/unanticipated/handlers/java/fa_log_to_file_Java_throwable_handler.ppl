@@ -1,0 +1,42 @@
+factory log_to_file_Java_throwable_handler type:Java_throwable_handler
+
+	attributes private:yes
+		log_file file
+		also_write_to_system_error_device yes_no
+	.
+	
+    function handle_throwable
+	
+	    const title = """THE FOLLOWING APPLICATION ERROR OCCURRED ({{fa_local_date_time.now.to_string}}):""" 
+
+        if a_also_write_to_system_error_device then
+            OS.err.write_new_line
+            OS.err.write_line ( title )
+            OS.err.write_line ( i_throwable.to_string )
+            OS.err.write_line ( """See file '{{a_log_file.to_string}}' for more information.""" )
+            OS.err.write_new_line
+        .
+        
+        const message = """
+{{title}}
+
+{{i_throwable.to_long_string}}"""
+
+        se_text_file_writer.append_to_new_or_existing_file (
+            string = message
+            file = a_log_file )
+    .
+ 
+	creator create -> Java_throwable_handler
+		in log_file file \
+		    check: i_log_file.directory.exists message: \
+		        """Directory '{{i_log_file.directory.to_string}}' (used to log runtime errors) doesn't exist.""" \
+		    default: file.create_for_name_in_working_directory ( file_name.create ( "errors.log" ) )
+		in also_write_to_system_error_device yes_no default:yes
+		
+        this.log_file = i_log_file
+        this.also_write_to_system_error_device = i_also_write_to_system_error_device
+        
+        return this
+    .
+.

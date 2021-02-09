@@ -1,0 +1,6 @@
+type string_string_reader
+
+    inherit string_reader
+    
+    att string string
+.

@@ -1,0 +1,11 @@
+type trying_object_consumer < object usage:in, error child_of:anticipated_error >
+
+	function try_consume ( object t_object ) -> t_error or null
+.
+
+///
+type trying_object_consumer < in usage:in, out child_of:anticipated_error or null >
+
+	function try_consume ( in t_in ) -> t_out or null
+.
+.///

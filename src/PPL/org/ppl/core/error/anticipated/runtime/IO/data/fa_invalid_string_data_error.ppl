@@ -1,0 +1,7 @@
+factory invalid_string_data_error
+
+    function to_string = a_info
+    
+    creator create kind:in_all
+    
+.

@@ -1,0 +1,64 @@
+service Java_scalar_helper
+
+    java_header
+        import org.ppl.core.java.wrapper.fa_Java_Object_wrapper;
+    end java_header
+
+    function PPL_to_Java_scalar ( scalar ) -> Java_Object_wrapper
+    
+        java
+            Object JavaObject = null;
+        end java
+
+        case type of i_scalar
+            when string string
+                java
+                    JavaObject = c_string.getJavaString();
+                end java
+            when yes_no yes_no
+                java
+                    JavaObject = c_yes_no.getJavaBoolean();
+                end java
+            when character character
+                java
+                    JavaObject = c_character.getJavaChar();
+                end java
+            when signed_int_32 signed_int_32
+                java
+                    JavaObject = c_signed_int_32.getJavaInt();
+                end java
+            when signed_int_64 signed_int_64
+                java
+                    JavaObject = c_signed_int_64.getJavaLong();
+                end java
+            when enumerated_base enumerated
+                java
+                    JavaObject = c_enumerated.to_string().getJavaString();
+                end java
+            when enumerated enumerated
+                java
+                    JavaObject = c_enumerated.to_string().getJavaString();
+                end java
+            when float_64 float_64
+                java
+                    JavaObject = c_float_64.getJavaDouble();
+                end java
+            when decimal_number decimal_number
+                java
+                    JavaObject = c_decimal_number.getJavaBigDecimal();
+                end java
+            when signed_integer signed_integer
+                java
+                    JavaObject = c_signed_integer.getJavaBigInteger();
+                end java
+        .
+        
+        variable r Java_Object_wrapper
+        java
+            v_r = new fa_Java_Object_wrapper ( JavaObject );
+        end java
+        assert r is not null
+        
+        return r
+    .
+.

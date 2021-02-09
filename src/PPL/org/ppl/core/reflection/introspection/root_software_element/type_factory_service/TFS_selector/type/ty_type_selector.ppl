@@ -1,0 +1,11 @@
+type type_selector
+
+    inherit has_equal_to < type_selector >
+
+	inherit TFS_selector
+		redefine
+			att path virtual_type_path
+		.
+	.
+.
+

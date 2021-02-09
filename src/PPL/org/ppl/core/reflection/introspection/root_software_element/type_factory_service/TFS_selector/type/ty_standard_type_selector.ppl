@@ -1,0 +1,6 @@
+type standard_type_selector
+
+	inherit standard_or_generified_type_selector
+
+.
+

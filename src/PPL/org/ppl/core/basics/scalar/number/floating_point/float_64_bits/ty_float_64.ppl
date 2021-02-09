@@ -1,0 +1,22 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type float_64
+
+	java
+		public double getJavaDouble();
+	end java
+
+	inherit \
+		floating_point_number,
+		has_compare_to<float_64>,
+		has_min_max<float_64>,
+		has_hash_code
+		
+    %ty_arithmetic_functions<float_64>
+    
+.

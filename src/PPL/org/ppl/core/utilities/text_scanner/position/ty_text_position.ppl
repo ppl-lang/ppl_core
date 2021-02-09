@@ -1,0 +1,7 @@
+type text_position
+
+    attributes
+        line_number pos_64
+        column_number pos_64 or null
+    .
+.

@@ -1,0 +1,20 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template positive_32_value_factory_with_is_equal_to
+
+	param type_id end
+
+	factory {type_id} type:{type_id}
+	
+		%positive_32_value_factory_with_is_equal_to_commands
+
+		%scalar_value_factory_creator
+
+	end
+	
+end

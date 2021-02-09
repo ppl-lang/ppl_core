@@ -1,0 +1,6 @@
+type invalid_absolute_or_relative_directory_or_file_path_error
+
+    inherit invalid_string_data_error
+    
+    att error_position pos_32 or null
+.

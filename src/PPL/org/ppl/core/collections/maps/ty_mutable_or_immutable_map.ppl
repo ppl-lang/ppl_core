@@ -1,0 +1,51 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_or_immutable_map<key child_of:scalar_or_scalar_value usage:in_out, value usage:in_out>
+	
+	inherit mutable_or_immutable_collection<t_value>
+
+	inherit has_to_long_string
+
+	functions
+	
+        // types
+        key_type   -> object_type
+        value_type -> object_type
+        
+        contains_key ( key t_key ) -> yes_no
+        
+        // getters
+        
+        get -> t_value
+            in key t_key check: i_object_.contains_key ( i_key ) \
+                message: """Key '{{i_key.to_string}}' doesn't exist.""" \
+                id: inexistant_key
+        .
+        
+        get_or_null ( key t_key ) -> t_value or null
+        get_or_default ( key t_key, default t_value ) -> t_value
+//        try_get ( key t_key ) -> t_value or key_not_contained_in_map_error
+        try_get ( key t_key ) -> any
+        
+        // streams
+        key_stream        -> stream<key>
+        sorted_key_stream -> stream<key>
+        value_stream      -> stream<value>
+        key_value_stream  -> stream<key_value_pair<key:key value:value>>
+        
+        // iterators
+        key_iterator       -> finite_iterator_with_size<key>
+        key_value_iterator -> finite_iterator_with_size<key_value_pair<key:key value:value>>
+        
+        /// TD
+            keys -> set<key>
+            sorted_keys -> set<key>
+            values -> indexed_list<value>
+        .///
+    .
+.

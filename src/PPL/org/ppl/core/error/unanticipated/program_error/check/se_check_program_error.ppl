@@ -1,0 +1,26 @@
+service check_program_error
+
+    function define_description -> string
+        in failure_info program_check_failure_info or null
+        in default string
+        
+        if failure_info is null then
+            return default
+        .
+        
+        if failure_info.message as message is not null then
+            return message
+        .
+
+        if failure_info.source_code as source_code is not null then
+            if source_code.contains ( "\n" )
+                return """Violation of:
+{{source_code}}"""
+            else
+                return """Violation of '{{source_code}}'"""
+            .
+        .
+
+	    return default
+	.
+.

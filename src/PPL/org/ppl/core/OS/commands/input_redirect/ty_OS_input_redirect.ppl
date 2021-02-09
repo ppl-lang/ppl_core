@@ -1,0 +1,30 @@
+record type OS_input_redirect
+
+///
+    att kind OS_input_redirect_kind
+    
+    att file_path file_path or null
+    
+    attributes_check
+        case enum of kind
+            when inherit, pipe
+                check file_path =r null
+            when read_from_file
+                check file_path #r null
+        .
+    .
+.///
+
+    sub_types
+        OS_input_redirect_inherit
+        OS_input_redirect_pipe
+        OS_input_redirect_from_file
+            att file_path file_path
+        .
+        /// TD
+        OS_input_redirect_write_from_reader
+            att reader string_reader
+        .
+        .///
+    .
+.

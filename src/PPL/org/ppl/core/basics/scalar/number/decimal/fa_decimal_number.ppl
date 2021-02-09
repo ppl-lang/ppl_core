@@ -1,0 +1,816 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory decimal_number
+
+	java_header
+		import java.util.IllegalFormatException;
+		
+		import java.math.BigDecimal;
+		import java.math.MathContext;
+		import java.math.RoundingMode;
+		import java.text.DecimalFormat;
+
+		import org.ppl.core.basics.scalar.number.decimal.rounding.ty_decimal_number_rounding_config;
+		import org.ppl.core.basics.scalar.number.decimal.rounding.se_decimal_number_rounding_utilities;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.error.java.se_Java_exception;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.java.se_java_utilities;
+	end java_header
+
+	java
+		private BigDecimal a_java_value;
+
+		public BigDecimal getJavaBigDecimal() { return a_java_value; }
+
+		public fa_decimal_number ( BigDecimal i_java_value ) {
+		
+			if ( i_java_value == null ) {
+				throw new IllegalArgumentException ( "Input for fa_decimal_number constructor cannot be null." );
+			}
+			
+			this.a_java_value = i_java_value ;
+		}
+		
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_decimal_number ) ) return false;
+			
+			BigDecimal other_decimal = ((ty_decimal_number) other).getJavaBigDecimal();
+			// deliberately use compareTo(); see Java doc. for equals() method
+			// return a_java_value.equals ( other_decimal );
+			return a_java_value.compareTo ( other_decimal ) == 0;
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_java_value.hashCode();
+		}
+
+		public int compareTo ( ty_decimal_number other ) {
+			if ( this == other ) return 0;
+			return a_java_value.compareTo ( other.getJavaBigDecimal() );
+		}
+
+		private int get_new_precision ( int i_new_scale ) {
+		
+			int delta_scale = a_java_value.scale() - i_new_scale;
+			return a_java_value.precision() - delta_scale;
+		}
+		
+		private MathContext get_math_context ( ty_decimal_number_rounding_config i_rounding_config ) {
+		
+			int new_precision = get_new_precision ( i_rounding_config.getDecimal_digits().getJavaInt() );
+			RoundingMode rounding_mode = se_decimal_number_rounding_utilities.ppl_to_java_rounding_mode ( i_rounding_config.getMode() );
+			return new MathContext ( new_precision, rounding_mode );
+		}
+	end java 
+	
+%fa_number_functions<a_java_value>
+
+	function to_string native:yes
+        java
+            // return new fa_string ( a_java_value.toString() );
+            // return new fa_string ( a_java_value.toEngineeringString() );
+            return new fa_string ( a_java_value.toPlainString() );
+        end java
+    .
+
+	// has_compare_to
+
+	function is_equal_to native:yes
+		script
+			java
+				return fa_yes_no.of ( equals ( i_other ) );
+			end java
+		.
+		tests
+            v_test_object_ = parse_or_throw ( "100" )
+            test co_create_from_integer_32 ( 100 )
+            verify v_result
+
+            v_test_object_ = parse_or_throw ( "100.12" )
+            test co_create_from_integer_32 ( 100 )
+            verify not v_result
+            
+            verify co_create_from_integer_32 ( 100 ) =v co_create_from_integer_32 ( 100 )
+            verify co_create_from_integer_32 ( 100 ) #v co_create_from_integer_32 ( 101 )
+        .
+    .
+
+	function compare_to native:yes
+		script
+			java
+				return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+			end java
+		.
+		tests
+            v_test_object_ = parse_or_throw ( "100" )
+            test co_create_from_integer_32 ( 100 )
+            verify v_result =r ty_comparator_result.equal
+
+            v_test_object_ = parse_or_throw ( "100.12" )
+            test co_create_from_integer_32 ( 100 )
+            verify v_result =r ty_comparator_result.greater
+
+            v_test_object_ = parse_or_throw ( "100.12" )
+            test co_create_from_integer_32 ( 101 )
+            verify v_result =r ty_comparator_result.less
+
+            verify co_create_from_integer_32 ( 100 ) =v co_create_from_integer_32 ( 100 )
+            verify co_create_from_integer_32 ( 100 ) <# co_create_from_integer_32 ( 101 )
+            verify co_create_from_integer_32 ( 100 ) ># co_create_from_integer_32 ( 99 )
+		.
+	.
+
+	function min native:yes
+		script
+			java
+				BigDecimal result = a_java_value.min ( i_other.getJavaBigDecimal() );
+				if ( result == a_java_value ) {
+					return this;
+				} else {
+					return i_other;
+				}
+			end java
+		. 
+		tests
+            v_test_object_ = parse_or_throw ( "100" )
+            test co_create_from_integer_32 ( 101 )
+            verify v_result =r v_test_object_
+
+            var operand decimal_number = co_create_from_integer_32 ( 99 )
+            test v_operand
+            verify v_result =r v_operand
+
+            v_test_object_ = parse_or_throw ( "100" )
+            test co_create_from_integer_32 ( 100 )
+            verify v_result =r v_test_object_
+		.
+	.
+
+	function max native:yes
+		script
+			java
+				BigDecimal result = a_java_value.max ( i_other.getJavaBigDecimal() );
+				if ( result == a_java_value ) {
+					return this;
+				} else {
+					return i_other;
+				}
+			end java
+		.
+		tests
+            v_test_object_ = parse_or_throw ( "100" )
+            var operand decimal_number = co_create_from_integer_32 ( 101 )
+            test v_operand
+            verify v_result =r v_operand
+
+            v_operand = co_create_from_integer_32 ( 99 )
+            test v_operand
+            verify v_result =r v_test_object_
+
+            v_test_object_ = parse_or_throw ( "100" )
+            test co_create_from_integer_32 ( 100 )
+            verify v_result =r v_test_object_
+		.
+	.
+
+	function is_between native:yes
+		script
+			java
+				return fa_yes_no.of ( a_java_value.compareTo ( i_min.getJavaBigDecimal() ) > -1 &&
+				    a_java_value.compareTo ( i_max.getJavaBigDecimal() ) < 1 );
+			end java
+		.
+		tests
+            v_test_object_ = co_create_from_integer_32 ( 100 )
+            const d99 decimal_number = co_create_from_integer_32 ( 99 )
+            const d101 decimal_number = co_create_from_integer_32 ( 101 )
+            test min = d99; max = d101
+            verify v_result
+
+            v_test_object_ = co_create_from_integer_32 ( 98 )
+            test min = d99; max = d101
+            verify not v_result
+
+            v_test_object_ = co_create_from_integer_32 ( 102 )
+            test min = d99; max = d101
+            verify not v_result
+
+            v_test_object_ = co_create_from_integer_32 ( 99 )
+            test min = d99; max = d101
+            verify v_result
+
+            v_test_object_ = co_create_from_integer_32 ( 101 )
+            test min = d99; max = d101
+            verify v_result
+		.
+	.
+
+
+	function hash_code native:yes
+        java
+            return new fa_signed_int_32 ( hashCode() );
+        end java
+	.
+
+	function number_of_digits_stored native:yes
+        java
+            return new fa_pos_32 ( a_java_value.precision() );
+        end java
+    .
+	
+	function number_of_decimal_digits native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value.scale() );
+        end java
+    .
+
+	function is_zero native:yes
+        script
+            java
+                return fa_yes_no.of ( a_java_value.signum() == 0 );
+            end java
+        .
+        tests
+            verify create_from_integer_32 ( 0 ).is_zero
+            verify not create_from_integer_32 ( 1 ).is_zero
+            verify not create_from_integer_32 ( -1 ).is_zero
+        .
+    .
+	
+	function is_zero_or_positive native:yes
+        script
+            java
+                return fa_yes_no.of ( a_java_value.signum() >= 0 );
+            end java
+        .
+        tests
+            verify create_from_integer_32 ( 0 ).is_zero_or_positive
+            verify create_from_integer_32 ( 1 ).is_zero_or_positive
+            verify not create_from_integer_32 ( -1 ).is_zero_or_positive
+        .
+    .
+	
+	function is_zero_or_negative native:yes
+        script
+            java
+                return fa_yes_no.of ( a_java_value.signum() <= 0 );
+            end java
+        .
+        tests
+            verify create_from_integer_32 ( 0 ).is_zero_or_negative
+            verify not create_from_integer_32 ( 1 ).is_zero_or_negative
+            verify create_from_integer_32 ( -1 ).is_zero_or_negative
+        .
+    .
+
+	// arithmetic
+
+	function add native:yes
+		script
+			java
+				return new fa_decimal_number ( a_java_value.add ( i_operand.getJavaBigDecimal() ) );
+			end java
+		.
+		tests
+            v_test_object_ = parse_or_throw ( "100.12" )
+            test parse_or_throw ( "100.1234" )
+            verify v_result.to_string =v "200.2434"
+		.
+	.
+
+	function subtract native:yes
+		script
+			java
+				return new fa_decimal_number ( a_java_value.subtract ( i_operand.getJavaBigDecimal() ) );
+			end java
+		.
+		tests
+            v_test_object_ = parse_or_throw ( "100.12" )
+            test parse_or_throw ( "100.1234" )
+            verify v_result.to_string =v "-0.0034"
+		.
+	.
+
+	function multiply native:yes
+		script
+			java
+				return new fa_decimal_number ( a_java_value.multiply ( i_operand.getJavaBigDecimal() ) );
+			end java
+		.
+		tests
+            v_test_object_ = parse_or_throw ( "100.12" )
+            test parse_or_throw ( "100.1234" )
+            verify v_result.to_string =v "10024.354808"
+		.
+	.
+
+	function divide native:yes
+		script
+			java
+				return new fa_decimal_number ( a_java_value.divide ( i_operand.getJavaBigDecimal() ) );
+			end java
+		.
+		tests
+            v_test_object_ = co_create_from_integer_32 ( 1 )
+            test co_create_from_integer_32 ( 8 )
+            verify v_result.to_string =v "0.125"
+
+            v_test_object_ = co_create_from_integer_32 ( 1 )
+            test co_create_from_integer_32 ( 3 )
+            verify_error // because the exact quotient cannot be represented (because it has a non-terminating decimal expansion)
+		.
+	.
+
+	function divide_and_round native:yes
+		script
+			java
+				int scale = i_rounding_config.getDecimal_digits().getJavaInt();
+				RoundingMode rounding_mode = se_decimal_number_rounding_utilities.ppl_to_java_rounding_mode (
+				    i_rounding_config.getMode() );
+				BigDecimal result = a_java_value.divide ( i_operand.getJavaBigDecimal(), scale, rounding_mode );
+				return new fa_decimal_number ( result );
+			end java
+		.
+		tests
+            v_test_object_ = co_create_from_integer_32 ( 1 )
+            var operand decimal_number = co_create_from_integer_32 ( 8 )
+            var rounding_config decimal_number_rounding_config = se_decimal_number_rounding_constants.half_up_2_decimals
+            test operand = v_operand; rounding_config = v_rounding_config
+            verify v_result.to_string =v "0.13"
+
+            v_rounding_config = se_decimal_number_rounding_constants.half_up_1_decimal
+            test operand = v_operand; rounding_config = v_rounding_config
+            verify v_result.to_string =v "0.1"
+		.
+	.
+
+	function divide_and_round_and_remainder
+		script
+			const res = divide_and_round ( i_operand, i_rounding_config )
+			
+			variable rem decimal_number
+			java
+				BigDecimal remainder = a_java_value.subtract (
+				    i_operand.getJavaBigDecimal().multiply ( c_res.getJavaBigDecimal() ) );
+				v_rem = new fa_decimal_number ( remainder );
+			end java
+			assert rem is not null
+			
+			return result = res, remainder = rem
+		.
+		tests
+            v_test_object_ = co_create_from_integer_32 ( 1 )
+            var operand decimal_number = co_create_from_integer_32 ( 8 )
+            var rounding_config decimal_number_rounding_config = se_decimal_number_rounding_constants.half_up_2_decimals
+            test operand = v_operand; rounding_config = v_rounding_config
+            verify v_result.to_string =v "0.13"
+            verify v_remainder.to_string =v "-0.04"
+
+            v_rounding_config = se_decimal_number_rounding_constants.half_up_1_decimal
+            test operand = v_operand; rounding_config = v_rounding_config
+            verify v_result.to_string =v "0.1"
+            verify v_remainder.to_string =v "0.2"
+		.
+	.
+
+	function power_of_n native:yes
+		script
+			java
+				return new fa_decimal_number ( a_java_value.pow ( i_n.getJavaInt() ) );
+			end java
+		.
+		tests
+            v_test_object_ = co_create_from_integer_32 ( 100 )
+            test 2
+            verify v_result.to_string =v "10000"
+
+            v_test_object_ = co_create_from_integer_32 ( -100 )
+            test 2
+            verify v_result.to_string =v "10000"
+		.
+	.
+
+	function unary_minus native:yes
+		script
+			java
+				return new fa_decimal_number ( a_java_value.negate() );
+			end java
+		.
+		tests
+            v_test_object_ = co_create_from_integer_32 ( 100 )
+            test
+            verify v_result.to_string =v "-100"
+
+            v_test_object_ = co_create_from_integer_32 ( -100 )
+            test
+            verify v_result.to_string =v "100"
+		.
+	.
+
+	function abs native:yes
+		script
+			java
+				return new fa_decimal_number ( a_java_value.abs() );
+			end java
+		.
+		tests
+            v_test_object_ = co_create_from_integer_32 ( 100 )
+            test
+            verify v_result.to_string =v "100"
+
+            v_test_object_ = co_create_from_integer_32 ( -100 )
+            test
+            verify v_result.to_string =v "100"
+		.
+	.
+	
+	function round native:yes
+		script
+			java
+				BigDecimal result = a_java_value.round ( get_math_context ( i_config ) );
+				return new fa_decimal_number ( result );
+			end java
+		.
+		tests
+            // half up
+            
+            var config decimal_number_rounding_config = se_decimal_number_rounding_constants.half_up_2_decimals
+            
+            v_test_object_ = parse_or_throw ( "100.177" )
+            test v_config
+            verify v_result.to_string =v "100.18"
+            verify v_result.number_of_digits_stored =v 5
+            verify v_result.number_of_decimal_digits =v 2
+
+            v_test_object_ = parse_or_throw ( "100.154" )
+            test v_config
+            verify v_result.to_string =v "100.15"
+
+            v_test_object_ = parse_or_throw ( "100.155" )
+            test v_config
+            verify v_result.to_string =v "100.16"
+
+            v_test_object_ = parse_or_throw ( "100" )
+            test v_config
+            verify v_result.to_string =v "100"
+            verify v_result.number_of_digits_stored =v 3
+            verify v_result.number_of_decimal_digits =v 0
+
+            v_test_object_ = parse_or_throw ( "100.00" )
+            test v_config
+            verify v_result.to_string =v "100.00"
+            verify v_result.number_of_digits_stored =v 5
+            verify v_result.number_of_decimal_digits =v 2
+
+            v_test_object_ = parse_or_throw ( "100.000" )
+            test v_config
+            verify v_result.to_string =v "100.00"
+            verify v_result.number_of_digits_stored =v 5
+            verify v_result.number_of_decimal_digits =v 2
+            
+            v_config = se_decimal_number_rounding_constants.half_up_4_decimals
+            
+            v_test_object_ = parse_or_throw ( "100.177" )
+            test v_config
+            verify v_result.to_string =v "100.177"
+            verify v_result.number_of_digits_stored =v 6
+            verify v_result.number_of_decimal_digits =v 3
+
+            v_config = se_decimal_number_rounding_constants.half_up_0_decimals
+            
+            v_test_object_ = parse_or_throw ( "12345.45" )
+            test v_config
+            verify v_result.to_string =v "12345"
+            verify v_result.number_of_digits_stored =v 5
+            verify v_result.number_of_decimal_digits =v 0
+            
+            v_config = fa_decimal_number_rounding_config.create ( &
+                decimal_digits = -3 &
+                mode = ty_decimal_number_rounding_mode.half_up )
+            
+            v_test_object_ = parse_or_throw ( "12345.67" )
+            test v_config
+            verify v_result.to_string =v "12000"
+            verify v_result.number_of_digits_stored =v 2
+            verify v_result.number_of_decimal_digits =v -3
+		.
+	.
+
+	function round_half_up = round ( fa_decimal_number_rounding_config.create (
+	    i_decimal_digits,
+        mode = ty_decimal_number_rounding_mode.half_up ) )
+	
+///
+	function format
+	    return i_formatter.format ( this )
+    .
+	
+	// TD see remark in ty_decimal_number
+	function format_with_locale
+		script
+			var java_exception java_exception
+
+			java
+				try {
+					o_result = new fa_string ( String.format ( i_locale.to_string().getJavaString(), "%" + i_format.to_string().getJavaString(), a_java_value ) );
+				} catch ( IllegalFormatException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			
+			if v_java_exception #r void then
+				o_error = fa_invalid_data_error<decimal_number>.create ( &
+					info = """'{{i_format}}' is an invalid format. Reason:
+{{v_java_exception.to_string}}""" &
+					data = i_format )
+			.
+		.
+		
+		tests
+            v_test_object_ = parse_or_throw ( "1234567.89" )
+
+            const english locale = se_locale.en_US
+            const german locale = se_locale.de_DE
+
+            test format = ".2f"; locale = english
+            
+            // test ".2f"; english => "1234567.89"
+            
+            verify v_result =v "1234567.89"
+            test format = ".2f"; locale = german
+            verify v_result =v "1234567,89"
+
+            test format = ",.2f"; locale = english
+            verify v_result =v "1,234,567.89"
+            test format = ",.2f"; locale = german
+            verify v_result =v "1.234.567,89"
+            test format = " "; locale = german
+            verify v_error #r void
+
+            v_test_object_ = parse_or_throw ( "-12345.67" )
+            test format = ",12.2f"; locale = german
+            verify v_result =v "  -12.345,67"
+		.
+	.
+
+ 	function format_with_default_locale
+		script
+			var java_exception java_exception
+			java
+				try {
+					o_result = new fa_string ( String.format ( "%" + i_format.to_string().getJavaString(), a_java_value ) );
+				} catch ( IllegalFormatException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			
+			if java_exception is null then
+			    return result
+            else
+                return invalid_data_error<string>.create (
+					info = """'{{i_format}}' is an invalid format for a decimal number. Reason:
+{{java_exception.to_string}}"""
+					data = i_format )
+			.
+        .
+
+		/// disabled because the result depends on the OS config
+		tests
+		    /// TD
+		        set
+		            parse_or_throw ( "12345.67" ).format_with_default_locale ( ".2f" ) -> "12345.67"
+		            parse_or_throw ( "12345.67" ).format_with_default_locale ( ",12.2f" ) -> "   12,345.67"
+		            ...
+                .
+            .///
+		            
+            test_object_ = parse_or_throw ( "12345.67" )
+            case type of test_object_.format_with_default_locale ( ".2f" )
+                when string s
+                    verify s =v "12345.67"
+                otherwise
+                    verify no
+            .
+
+            variable r string = test_object_.format_with_default_locale ( ",12.2f" ) type_check:no
+            verify r =v "   12,345.67"
+            
+            r = test_object_.format_with_default_locale ( "+,12.2f" ) type_check:no
+            verify r =v "  +12,345.67"
+
+            test format = " "
+            case type of test_object_.format_with_default_locale ( " " )
+                when string s
+                    verify no
+                otherwise
+                    verify yes
+            .
+            
+            test_object_ = parse_or_throw ( "-12345.67" )
+            r = test_object_.format_with_default_locale ( ".2f" ) type_check:no
+            verify r =v "-12345.67"
+
+            r = test_object_.format_with_default_locale ( ",.2f" ) type_check:no
+            verify r =v "-12,345.67"
+
+            r = test_object_.format_with_default_locale ( ",12.2f" ) type_check:no
+            verify r =v "  -12,345.67"
+
+            r = test_object_.format_with_default_locale ( "+,12.2f" ) type_check:no
+            verify r =v "  -12,345.67"
+		.
+		.///
+	.
+.///
+	
+	creator create_from_integer_32 ( value signed_integer_32 ) -> decimal_number
+		script
+			java
+				c_this.a_java_value = new BigDecimal ( i_value.getJavaInt() );
+			end java
+			return this
+		.
+		tests
+            var value = create_from_integer_32 ( 100 )
+            verify value.to_string =v "100"
+            verify value.number_of_digits_stored =v 3
+            verify value.number_of_decimal_digits =v 0
+            
+            value = create_from_integer_32 ( 0 )
+            verify value.to_string =v "0"
+            verify value.number_of_digits_stored =v 1
+            verify value.number_of_decimal_digits =v 0
+
+            value = co_create_from_integer_32 ( -100 )
+            verify value.to_string =v "-100"
+            verify value.number_of_digits_stored =v 3
+            verify value.number_of_decimal_digits =v 0
+        .
+    .
+	
+	creator create_from_int_64 ( value signed_int_64 ) -> decimal_number
+		script
+			java
+				c_this.a_java_value = new BigDecimal ( i_value.getJavaLong() );
+			end java
+			return this
+		.
+		tests
+            var value = create_from_int_64 ( 100L )
+            verify value.to_string =v "100"
+            verify value.number_of_digits_stored =v 3
+            verify value.number_of_decimal_digits =v 0
+        .
+    .
+	
+	creator create_from_float_64 ( value float_64 ) -> decimal_number or invalid_data_error<float_64>
+		script
+            variable exception Java_exception_runtime_error or null = null
+			java
+				try {
+					c_this.a_java_value = BigDecimal.valueOf ( i_value.getJavaDouble() );
+				} catch ( NumberFormatException e ) {
+                    v_exception = se_Java_exception.to_runtime_error ( e );
+				}
+			end java
+			assert exception may be null
+
+			if exception is not null then
+                return invalid_data_error<float_64>.create (
+					info = """'{{i_value.to_string}}' could not be converted to a decimal number.
+Reason: {{exception.to_string}}"""
+                    cause = exception
+					data = i_value )
+            .
+            
+            return this
+        .
+		tests
+            var value decimal_number = create_from_float_64 ( 123.45 ) type_check:no
+            verify value.to_string =v "123.45"
+            verify value.number_of_digits_stored =v 5
+            verify value.number_of_decimal_digits =v 2
+            
+            value = create_from_float_64 ( 0.0 ) type_check:no
+            verify value.to_string =v "0.0"
+            verify value.number_of_digits_stored =v 1
+            verify value.number_of_decimal_digits =v 1
+
+            value = create_from_float_64 ( -123.456e-2 ) type_check:no
+            verify value.to_string =v "-1.23456"
+            verify value.number_of_digits_stored =v 6
+            verify value.number_of_decimal_digits =v 5
+        .
+    .
+    
+    creator try_parse ( string ) -> decimal_number or parse_object_error<decimal_number>
+        script
+            variable exception Java_exception_runtime_error or null = null
+			java
+				try {
+					c_this.a_java_value = new BigDecimal ( i_string.getJavaString() );
+				} catch ( NumberFormatException e ) {
+					v_exception = se_Java_exception.to_runtime_error ( e );
+				}
+			end java
+			assert exception may be null
+			
+			if exception is not null then
+                return parse_object_error<decimal_number>.create (
+                    info = """'{{i_string}}' is not a valid decimal number.
+Reason: {{exception.to_string}}"""
+    				data = i_string
+    				cause = exception )
+            .
+
+            return this
+        .
+    .
+    
+%parse_or_throw_creator<decimal_number>
+
+    tests
+        // integer
+        
+        var value decimal_number = parse_or_throw ( "100" )
+        verify value.to_string =v "100"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v 0
+        
+        value = parse_or_throw ( "0" )
+        verify value.to_string =v "0"
+        verify value.number_of_digits_stored =v 1
+        verify value.number_of_decimal_digits =v 0
+
+        value = parse_or_throw ( "-100" )
+        verify value.to_string =v "-100"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v 0
+        
+        // fractional part
+
+        value = parse_or_throw ( "100.12" )
+        verify value.to_string =v "100.12"
+        verify value.number_of_digits_stored =v 5
+        verify value.number_of_decimal_digits =v 2
+        
+        value = parse_or_throw ( "100.00" )
+        verify value.to_string =v "100.00"
+        verify value.number_of_digits_stored =v 5
+        verify value.number_of_decimal_digits =v 2
+        
+        value = parse_or_throw ( "0.00" )
+        verify value.to_string =v "0.00"
+        verify value.number_of_digits_stored =v 1
+        verify value.number_of_decimal_digits =v 2
+        
+        value = parse_or_throw ( ".00" )
+        verify value.to_string =v "0.00"
+        verify value.number_of_digits_stored =v 1
+        verify value.number_of_decimal_digits =v 2
+        
+        value = parse_or_throw ( "0.00123" )
+        verify value.to_string =v "0.00123"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v 5
+        
+        value = parse_or_throw ( ".00123" )
+        verify value.to_string =v "0.00123"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v 5
+        
+        // exponent
+        
+        value = parse_or_throw ( "100E3" )
+        verify value.to_string =v "100000"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v -3
+        
+        value = parse_or_throw ( "+100e+3" )
+        verify value.to_string =v "100000"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v -3
+
+        value = parse_or_throw ( "100e-2" )
+        verify value.to_string =v "1.00"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v 2
+
+        value = parse_or_throw ( "100e-3" )
+        verify value.to_string =v "0.100"
+        verify value.number_of_digits_stored =v 3
+        verify value.number_of_decimal_digits =v 3
+    .
+.

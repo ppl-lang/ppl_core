@@ -1,0 +1,26 @@
+type PPL_identifier_path
+
+	inherit string_value
+		redefine
+			att value
+				and_check
+					script
+						check i_value.matches_regex ( se_PPL_identifier_constants.id_path_regex ) \
+							message: """'{{i_value}}' is an invalid PPL identifier path. A PPL identifier path is composed of PPL identifiers, separated by a dot(.). A PPL identifier must start with a letter [a-zA-Z], followed by any number of letters, digits [0-9] and underlines [_]. Example: foo.bar.zar""" \
+							id: invalid_PPL_identifier_path \
+							data: i_value
+					.
+				.
+			.
+		.
+	.
+
+	function id -> PPL_identifier
+
+///
+	function id_list -> indexed_list<PPL_identifier>
+	function root_id -> PPL_identifier
+	function parent -> PPL_identifier_path or null
+.///
+
+.

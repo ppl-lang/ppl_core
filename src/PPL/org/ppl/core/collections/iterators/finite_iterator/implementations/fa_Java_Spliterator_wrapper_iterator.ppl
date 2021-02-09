@@ -1,0 +1,39 @@
+factory Java_Spliterator_wrapper_iterator type:finite_iterator
+
+    java_header
+        import java.util.Objects;
+		import java.util.Spliterator;
+		
+		import org.ppl.core.utilities.object.reference.fa_object_reference;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+    end java_header
+
+    java
+        private class ObjectReference<T> {
+            t_element object;
+            ObjectReference ( t_element i_object ) { object = i_object; } 
+        }
+
+        private Spliterator<t_element> a_JavaSpliterator = null;
+
+        private final ObjectReference<t_element> ref = new ObjectReference<t_element>(null);
+
+        public fa_Java_Spliterator_wrapper_iterator ( Spliterator<t_element> i_spliterator, ty_object_type i_element_type ) {
+		    Objects.requireNonNull ( i_spliterator );
+		    Objects.requireNonNull ( i_element_type );
+            
+            a_JavaSpliterator = i_spliterator;
+            t_element = i_element_type;
+        }
+    end java
+    
+    function next native:yes
+        java
+            if ( a_JavaSpliterator.tryAdvance ( v -> ref.object = v ) ) {
+                return fa_object_reference.create ( ref.object, t_element );
+            } else {
+                return null;
+            }
+        end java
+    .
+.

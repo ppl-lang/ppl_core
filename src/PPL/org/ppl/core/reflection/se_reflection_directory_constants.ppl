@@ -1,0 +1,8 @@
+service reflection_directory_constants
+
+    attributes type:directory_name
+		att Java_lib_directory_name = directory_name.create ( "lib" )
+		att PPL_lib_directory_name  = directory_name.create ( "plib" )
+		att WEB_INF_directory_name  = directory_name.create ( "WEB-INF" )
+	.
+.

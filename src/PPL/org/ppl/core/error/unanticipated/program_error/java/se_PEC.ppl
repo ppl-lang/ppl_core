@@ -1,0 +1,439 @@
+// Program Error Creator
+service PEC
+
+	java_header
+		import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		
+		import org.ppl.core.error.anticipated.ty_anticipated_error;
+
+		import org.ppl.core.error.unanticipated.java.se_NAREC;
+		import org.ppl.core.error.unanticipated.location.ty_bug_source_code_location;
+		import org.ppl.core.error.unanticipated.state.fa_script_state;
+		import org.ppl.core.error.unanticipated.state.ty_script_state;
+		
+        import org.ppl.core.error.unanticipated.program_error.arithmetic_overflow.*;
+        import org.ppl.core.error.unanticipated.program_error.assertions.*;
+		import org.ppl.core.error.unanticipated.program_error.check.attribute.*;
+		import org.ppl.core.error.unanticipated.program_error.failure_info.*;
+        import org.ppl.core.error.unanticipated.program_error.failure_info.values.*;
+		import org.ppl.core.error.unanticipated.program_error.check.input.*;
+		import org.ppl.core.error.unanticipated.program_error.check.object.*;
+		import org.ppl.core.error.unanticipated.program_error.check.output.*;
+        import org.ppl.core.error.unanticipated.program_error.if_expression.*;
+        import org.ppl.core.error.unanticipated.program_error.null_pointer.*;
+		import org.ppl.core.error.unanticipated.program_error.thrown.*;
+        import org.ppl.core.error.unanticipated.program_error.unchecked_type.*;
+
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.fa_PPL_attribute_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.ty_PPL_attribute_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.input.fa_PPL_command_input_argument_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.input.ty_PPL_command_input_argument_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.output.fa_PPL_command_output_argument_id;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.output.ty_PPL_command_output_argument_id;
+	end java_header
+
+    java
+        public static ty_assert_is_null_program_error assert_is_null (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            return fa_assert_is_null_program_error.create_with_defaults (
+                location, script_state );
+        }
+            
+        public static ty_assert_is_not_null_program_error assert_is_not_null (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            return fa_assert_is_not_null_program_error.create_with_defaults (
+                location, script_state );
+        }
+            
+        public static ty_invalid_attribute_program_error invalid_attribute (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+            String attribute_id,
+            ty_non_null attribute_value,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+
+            ty_PPL_attribute_id id = fa_PPL_attribute_id.create ( new fa_string ( attribute_id ) );
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            if ( script_state == null ) {
+                script_state = fa_script_state.create_for_single_attribute ( id, null, attribute_value );
+            }
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_invalid_attribute_program_error.create_with_defaults (
+                id, attribute_value, location, script_state, failure_info );
+        }
+        
+        public static ty_invalid_attribute_program_error invalid_null_attribute (
+		    Class<?> clazz,
+            String script_id,
+            String attribute_id ) {
+            
+            return invalid_attribute ( clazz, script_id, 0, null, attribute_id,
+                null, null,
+                new fa_string ( "Attribute " + attribute_id + " cannot be null." ),
+                null, null, false, null, null );
+        }
+
+        public static ty_invalid_input_argument_program_error invalid_input_argument (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+            String input_argument_id,
+            ty_non_null input_argument_value,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+            
+            ty_PPL_command_input_argument_id id = fa_PPL_command_input_argument_id.create (
+                new fa_string ( input_argument_id ) );
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            if ( script_state == null ) {
+                script_state = fa_script_state.create_for_single_input_argument ( id, null, input_argument_value );
+            }
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_invalid_input_argument_program_error.create_with_defaults (
+                id, input_argument_value, location, script_state, failure_info );
+        }
+        
+        public static ty_invalid_input_argument_program_error invalid_null_input_argument (
+		    Class<?> clazz,
+            String script_id,
+            String input_argument_id ) {
+            
+            return invalid_input_argument ( clazz, script_id, 0, null, input_argument_id,
+                null, null,
+                new fa_string ( "Input argument " + input_argument_id + " cannot be null." ),
+                null, null, false, null, null );
+        }
+        
+        public static ty_invalid_output_argument_program_error invalid_output_argument (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+            String output_argument_id,
+            ty_non_null output_argument_value,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+            
+            ty_PPL_command_output_argument_id id = fa_PPL_command_output_argument_id.create (
+                new fa_string ( output_argument_id ) );
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            if ( script_state == null ) {
+                script_state = fa_script_state.create_for_single_output_argument ( id, null, output_argument_value );
+            }
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_invalid_output_argument_program_error.create_with_defaults (
+                id, output_argument_value, location, script_state, failure_info );
+        }
+        
+        public static ty_invalid_attributes_program_error invalid_attributes (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_invalid_attributes_program_error.create_with_defaults (
+                location, script_state, failure_info );
+        }
+        
+        public static ty_invalid_input_arguments_program_error invalid_input_arguments (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_invalid_input_arguments_program_error.create_with_defaults (
+                location, script_state, failure_info );
+        }
+        
+        public static ty_invalid_output_arguments_program_error invalid_output_arguments (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_invalid_output_arguments_program_error.create_with_defaults (
+                location, script_state, failure_info );
+        }
+        
+        public static ty_invalid_object_program_error invalid_object (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_invalid_object_program_error.create_with_defaults (
+                location, script_state, failure_info );
+        }
+        
+        public static ty_assertion_failed_program_error assertion_failed (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+
+            String source_code, // ty_program_check_failure_info
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+            
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                source_code, check_message, check_id, check_data, left_right_is_defined, condition_left, condition_right );
+            
+            return fa_assertion_failed_program_error.create_with_defaults (
+                location, script_state, failure_info );
+        }
+        
+        public static ty_explicitly_thrown_program_error explicitly_thrown (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+
+            ty_string check_message, // ty_program_check_failure_info
+            String check_id,
+            ty_non_null check_data ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            ty_program_check_failure_info failure_info = create_check_failure_info (
+                null, check_message, check_id, check_data, false, null, null );
+
+            return fa_explicitly_thrown_program_error.create_with_defaults (
+                location, script_state, failure_info );
+        }
+            
+        public static ty_anticipated_error_thrown_program_error anticipated_error_thrown (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+            
+            ty_anticipated_error anticipated_error ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            return fa_anticipated_error_thrown_program_error.create_with_defaults (
+                location, script_state, anticipated_error );
+        }
+            
+        public static ty_unchecked_type_assignment_program_error unchecked_type_assignment (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+             
+            String source_type,
+            String target_type ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            return fa_unchecked_type_assignment_program_error.create_with_defaults (
+                location, script_state, new fa_string ( source_type ), new fa_string ( target_type ) );
+        }
+            
+        public static ty_if_null_expression_program_error if_null_expression (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            return fa_if_null_expression_program_error.create_with_defaults (
+                location, script_state );
+        }
+            
+        public static ty_if_error_expression_program_error if_error_expression (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            return fa_if_error_expression_program_error.create_with_defaults (
+                location, script_state );
+        }
+            
+        public static ty_arithmetic_overflow_program_error arithmetic_overflow (
+		    Class<?> clazz, // ty_bug_source_code_location
+            String script_id,
+            int script_line_number,
+            
+            ty_script_state script_state,
+             
+            String value_1,
+            String value_2 ) {
+
+            ty_bug_source_code_location location = se_NAREC.create_bug_source_code_location ( 
+                clazz, script_id, script_line_number );
+                
+            return fa_arithmetic_overflow_program_error.create_with_defaults (
+                location, script_state, new fa_string ( value_1 ), new fa_string ( value_2 ) );
+        }
+            
+        public static ty_program_check_failure_info create_check_failure_info (
+            String source_code,
+            ty_string check_message,
+            String check_id,
+            ty_non_null check_data,
+            boolean left_right_is_defined,
+            ty_non_null condition_left,
+            ty_non_null condition_right ) {
+
+            ty_program_check_comparison_values check_values =
+                left_right_is_defined ? 
+                fa_program_check_comparison_values.create ( condition_left, condition_right ) : 
+                null;
+            
+            return fa_program_check_failure_info.create (
+                PPL_string ( source_code ),
+                check_message,
+                PPL_string ( check_id ),
+                check_data,
+                check_values );
+        }
+        
+        private static ty_string PPL_string ( String string ) {
+            return string == null || string.isEmpty() ? null : new fa_string ( string );
+        }
+    end java
+.

@@ -1,0 +1,14 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template new_or_existing_file_input_argument
+
+	in file type:file check: i_file.directory.exists &
+		message: """The directory for file '{{i_file.path.to_current_OS_path}}' doesn't exist""" &
+		id: directory_for_file_not_found end
+	
+end

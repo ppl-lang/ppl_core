@@ -1,0 +1,25 @@
+factory write_to_OS_error_unanticipated_error_handler type:unanticipated_error_handler
+
+	function handle_error
+	
+	    var source_error unanticipated_error
+        case type of i_error
+            when program_error pe
+                source_error = se_unanticipated_error.get_source_error ( pe )
+            otherwise
+                source_error = ( i_error )
+        .
+
+        const message = """
+THE FOLLOWING APPLICATION ERROR OCCURRED ({{fa_local_date_time.now.to_string}}):
+
+{{i_error.to_long_string}}"""
+
+        OS.err.write_line ( message )
+
+        se_runtime_debug_helper.open_editor ( source_error.source_code_location )
+	.
+	
+	creator create kind:in_all
+.
+

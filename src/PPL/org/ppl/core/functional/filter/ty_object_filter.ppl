@@ -1,0 +1,5 @@
+type object_filter<object usage:in>
+
+	function is_accepted ( object object ) -> yes_no
+	
+.

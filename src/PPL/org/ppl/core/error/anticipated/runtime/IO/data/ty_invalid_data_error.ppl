@@ -1,0 +1,8 @@
+type invalid_data_error<data>
+
+    inherit IO_error
+    
+    att data t_data or null
+    
+    att resource any default:null
+.

@@ -1,0 +1,8 @@
+type ordered_set < element child_of:scalar_or_scalar_value usage:in_out >
+
+    inherit set<element>
+    
+    function first -> t_element
+
+    function last -> t_element
+.

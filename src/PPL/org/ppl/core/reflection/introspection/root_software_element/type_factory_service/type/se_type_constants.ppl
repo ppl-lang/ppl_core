@@ -1,0 +1,5 @@
+service type_constants
+    
+    att id_prefix string = "ty_"
+    
+.

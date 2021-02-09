@@ -1,0 +1,5 @@
+type source_code_file_supplier
+
+    function get ( TFS_path ) -> file or null
+    
+.

@@ -1,0 +1,32 @@
+factory Java_throwable
+
+	java_header
+		import org.ppl.core.error.unanticipated.handlers.java.se_Java_throwable_writer;
+	end java_header
+
+	java
+		private Throwable a_throwable;
+		
+		public Throwable getJavaThrowable() { return a_throwable; }
+
+		public fa_Java_throwable ( Throwable i_throwable ) {
+			a_throwable = i_throwable;
+		}
+    end java
+
+
+	functions native:yes
+
+        to_string
+            java
+                return new fa_string ( "Java throwable: " + a_throwable.toString() );
+            end java
+        .
+        
+        to_long_string
+            java
+                return se_Java_throwable_writer.throwable_to_long_string ( a_throwable, Thread.currentThread() );
+            end java
+        .
+    .
+.

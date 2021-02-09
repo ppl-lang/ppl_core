@@ -1,0 +1,619 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory directory type:directory
+
+	java_header
+		import java.io.File;
+		import java.io.IOException;
+		import java.nio.file.attribute.BasicFileAttributes;
+		import java.nio.file.Files;
+		import java.nio.file.FileVisitOption;
+		import java.nio.file.LinkOption;
+		import java.nio.file.Path;
+		import java.nio.file.Paths;
+		import java.util.function.BiPredicate;
+		import java.util.stream.Stream;
+		
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.directories_and_files.file.fa_file;
+		import org.ppl.core.directories_and_files.file.ty_file;
+		import org.ppl.core.directories_and_files.paths.directories.absolute_directory.fa_directory_path;
+		import org.ppl.core.directories_and_files.paths.directories.absolute_directory.ty_directory_path;
+		import org.ppl.core.directories_and_files.paths.files.absolute_file.fa_file_path;
+		import org.ppl.core.directories_and_files.paths.files.absolute_file.ty_file_path;
+		import org.ppl.core.directories_and_files.paths.ty_directory_or_file_path;
+		import org.ppl.core.date_and_time.date_time.local.fa_local_date_time;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.error.java.se_Java_exception;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+		import org.ppl.core.stream.fa_stream;
+	end java_header
+
+	java
+		private File a_java_value ;
+
+		public File getJavaFile() {return a_java_value;}
+
+		/*
+		public fa_directory ( File i_java_value ) {
+
+			if (i_java_value == null) {
+				throw new IllegalArgumentException ("Input for fa_directory constructor cannot be null.");
+			}
+
+			a_java_value = i_java_value;
+			
+			// TD set a_path
+		}
+		*/
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+			
+			if ( ! ( other instanceof ty_directory ) ) return false;
+			
+			File other_file = ((ty_directory) other).getJavaFile();
+			return a_java_value.equals ( other_file );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_java_value.hashCode();
+		}
+
+		public int compareTo ( ty_directory other ) {
+			if ( this == other ) return 0;
+			return a_java_value.compareTo ( other.getJavaFile() );
+		}
+
+        private Stream<Path> get_path_stream (
+            boolean include_this_directory,
+            ty_yes_no include_child_directories,
+            ty_yes_no i_follow_links,
+            boolean include_files,
+            boolean include_directories ) throws IOException {
+
+            Path root_path = a_path.getJavaPath();
+
+            int maxDepth = include_child_directories.getJavaBoolean() ? Integer.MAX_VALUE : 1;
+            
+            boolean follow_links = i_follow_links.getJavaBoolean();
+            
+            BiPredicate<Path, BasicFileAttributes> matcher = get_matcher ( follow_links, include_files, include_directories );
+            
+            Stream<Path> result;
+            if ( follow_links ) {
+                result = Files.find ( root_path, maxDepth, matcher, FileVisitOption.FOLLOW_LINKS );
+            } else {
+                result = Files.find ( root_path, maxDepth, matcher );
+            }
+            
+            if ( ! include_this_directory ) {
+                result = result.filter ( path -> ! path.equals ( root_path ) );
+            }
+            
+            return result;
+        }
+        
+        private static BiPredicate<Path, BasicFileAttributes> get_matcher (
+            boolean follow_links,
+            boolean include_files,
+            boolean include_directories ) {
+
+            if ( include_files && ! include_directories ) {
+                if ( follow_links ) {
+                    return (p, a) -> Files.isRegularFile ( p );
+                } else {
+                    return (p, a) -> Files.isRegularFile ( p, LinkOption.NOFOLLOW_LINKS );
+                }
+                
+            } else if ( ! include_files && include_directories ) {
+                if ( follow_links ) {
+                    return (p, a) -> Files.isDirectory ( p );
+                } else {
+                    return (p, a) -> Files.isDirectory ( p, LinkOption.NOFOLLOW_LINKS );
+                }
+                
+            } else {
+                return (p, a) -> true;
+            }
+        }
+
+		private static void delete_directory_tree ( File directory ) throws IOException {
+		
+		    delete_directory_content_tree ( directory );
+
+			Files.delete ( directory.toPath() );
+		}
+
+		private static void delete_directory_content_tree ( File directory ) throws IOException {
+
+			for ( File file_or_directory : directory.listFiles() ) {
+				if ( file_or_directory.isDirectory() ) {
+					delete_directory_content_tree ( file_or_directory );
+					Files.delete ( file_or_directory.toPath() );
+				} else {
+					Files.delete ( file_or_directory.toPath() );
+				}
+			}
+		}
+	end java
+	
+	%fa_directory_or_file_commands<directory>
+
+	function is_root_directory = a_path.is_root
+
+	command parent_directory
+		script
+			const parent_directory_path = a_path.parent
+			if c_parent_directory_path is not null then
+				return create ( c_parent_directory_path )
+			else
+				return null
+			end if
+		end
+	end
+
+	command append_name = create ( a_path.append_name ( i_name ) )
+
+	command append_path = create ( a_path.append_path ( i_path ) )
+
+///
+	command append_file_path
+		script
+			o_result = fa_file.create ( a_path.append_file_path ( i_file ) )
+		end
+	end
+
+	command make_relative
+		script
+			o_result = a_path.make_relative ( i_root_directory.path )
+		end
+	end
+.///
+	
+	// create
+
+	function try_create = try_create_common ( recursive = no )
+    
+    function try_create_if_not_exists
+        
+        if not exists then
+    	    return try_create_common ( recursive = no )
+        else
+            return null
+        .
+    .
+
+	function try_create_path = try_create_common ( recursive = yes )
+    
+    function try_create_path_if_not_exists
+        
+        if not exists then
+    	    return try_create_common ( recursive = yes )
+        else
+            return null
+        .
+    .
+
+	function try_create_common access:private ( recursive yes_no ) -> create_directory_error or null
+
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                if ( ! i_recursive.getJavaBoolean() ) {
+                    Files.createDirectory ( a_java_value.toPath() );
+                } else {
+                    Files.createDirectories ( a_java_value.toPath() );
+                }
+            }
+            catch ( Exception e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return fa_create_directory_error.create (
+                info = """Directory '{{a_path.to_current_OS_path}}' could not be created."""
+                cause = exception
+                resource = this )
+        else
+            return null
+        .
+    .
+    
+    // delete
+
+	function try_delete = try_delete_common ( only_content = no )
+    
+    function try_delete_if_exists
+        
+        if exists then
+    	    return try_delete_common ( only_content = no )
+        else
+            return null
+        .
+    .
+	
+	function try_delete_content = try_delete_common ( only_content = yes )
+
+    function try_delete_content_if_exists
+        
+        if exists then
+    	    return try_delete_common ( only_content = yes )
+        else
+            return null
+        .
+    .
+	
+	function try_delete_common access:private ( only_content yes_no ) -> delete_directory_error or null
+	
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                if ( i_only_content.getJavaBoolean() ) {
+                    delete_directory_content_tree ( a_java_value );
+                } else {
+                    delete_directory_tree ( a_java_value );
+                }
+            } catch ( IOException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return fa_delete_directory_error.create (
+                info = if i_only_content
+                    then """The content of directory '{{a_path.to_current_OS_path}}' could not be deleted."""
+                    else """Directory '{{a_path.to_current_OS_path}}' could not be deleted."""
+                cause = exception
+                resource = this )
+        else
+            return null
+        .
+    .
+    
+    // rename
+	
+    function try_rename = try_rename_common ( new_directory_name )
+    
+    function try_rename_if_exists
+        
+        if exists then
+            return try_rename_common ( new_directory_name )
+        else
+            return null
+        .
+    .
+	
+    function try_rename_common access:private ( new_directory_name directory_name ) -> directory or rename_directory_error
+    
+        const renamed_directory = fa_directory.create ( a_path.rename ( i_new_directory_name ) )
+
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Files.move ( a_java_value.toPath(), c_renamed_directory.getJavaFile().toPath() );
+            } catch ( IOException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return fa_rename_directory_error.create (
+                info = """Directory '{{a_path.to_current_OS_path}}' could not be renamed to '{{i_new_directory_name}}'."""
+                cause = exception
+                resource = this )
+        else
+            return renamed_directory
+        .
+    .
+	
+	
+	function is_empty
+
+        variable is_empty yes_no or null = null
+        java
+            File[] file_array = a_java_value.listFiles();
+            if ( file_array != null ) {
+                v_is_empty = fa_yes_no.of ( file_array.length == 0 );
+            } else {
+                v_is_empty = null;
+            }
+        end java
+
+        if is_empty is null then
+            return fa_directory_error.create (
+                info = """Could not determine if directory '{{a_path.to_current_OS_path}}' is empty."""
+                resource = this )
+        else
+            return is_empty
+        .
+    .
+
+    function try_get_file_stream
+    
+        const file_path_stream = try_get_file_path_stream ( include_child_directories, follow_links ) \
+            on_error: return_error
+        return file_path_stream.map<file> ( { file_path => file_path.to_file } )
+    .
+	
+	function try_get_file_path_stream
+
+        variable r stream<file_path> or null = null
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Stream<Path> pathStream = get_path_stream ( true, i_include_child_directories, i_follow_links, true, false );
+                Stream<ty_file_path> stream = pathStream.map ( p -> new fa_file_path ( p ) );
+                v_r = new fa_stream<ty_file_path> ( stream, se_common_object_types.getFile_path() );
+                    
+            } catch ( IOException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+        
+        if exception is null then
+            assert r is not null
+            return r
+        else
+            return read_directory_error.create (
+                info = """Error reading the contents of directory '{{a_path.to_current_OS_path}}'."""
+                cause = exception
+                resource = this )
+        .
+    .
+
+    function try_get_directory_stream
+    
+        const directory_path_stream = try_get_directory_path_stream (
+            include_this_directory, include_child_directories, follow_links ) on_error: return_error
+        return directory_path_stream.map<directory> ( { directory_path => directory_path.to_directory } )
+    .
+	
+	function try_get_directory_path_stream
+
+        variable r stream<directory_path> or null = null
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Stream<Path> pathStream = get_path_stream (
+                    i_include_this_directory.getJavaBoolean(),
+                    i_include_child_directories, i_follow_links, false, true );
+                Stream<ty_directory_path> stream = pathStream.map ( p -> new fa_directory_path ( p ) );
+                v_r = new fa_stream<ty_directory_path> ( stream, se_common_object_types.getDirectory_path() );
+            } catch ( IOException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+        
+        if exception is null then
+            assert r is not null
+            return r
+        else
+            return read_directory_error.create (
+                info = """Error reading the contents of directory '{{a_path.to_current_OS_path}}'."""
+                cause = exception
+                resource = this )
+        .
+    .
+    
+    function try_get_directory_or_file_stream
+    
+        const directory_or_file_path_stream = try_get_directory_or_file_path_stream (
+            include_this_directory, include_child_directories, follow_links ) on_error: return_error
+
+        return directory_or_file_path_stream.map<directory_or_file> ( { directory_or_file_path ->
+            case type of directory_or_file_path
+                when directory_path dp
+                    return dp.to_directory
+                when file_path fp
+                    return fp.to_file
+            .
+        } )
+    .
+	
+	function try_get_directory_or_file_path_stream
+
+        variable r stream<directory_or_file_path> or null = null
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Stream<Path> pathStream = get_path_stream (
+                    i_include_this_directory.getJavaBoolean(),
+                    i_include_child_directories, i_follow_links, true, true );
+                Stream<ty_directory_or_file_path> stream = pathStream.map (
+                    p -> Files.isDirectory ( p ) ? new fa_directory_path ( p ) : new fa_file_path ( p ) );
+                v_r = new fa_stream<ty_directory_or_file_path> ( stream, se_common_object_types.getDirectory_or_file_path() );
+            } catch ( IOException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+        
+        if exception is null then
+            assert r is not null
+            return r
+        else
+            return read_directory_error.create (
+                info = """Error reading the contents of directory '{{a_path.to_current_OS_path}}'."""
+                cause = exception
+                resource = this )
+        .
+    .
+    
+	function try_for_each_file
+	
+        const stream = try_get_file_stream ( include_child_directories ) on_error: return_error
+        stream.for_each ( { -> i_consumer.consume ( i_object ) } )
+        return null
+    .
+
+	function try_try_for_each_file
+
+        const stream = try_get_file_stream ( include_child_directories ) on_error: return_error
+        
+        // return stream.try_for_each!<$consumer_error> ( { i_consumer.try_consume ( i_in ) } )
+        // return stream.try_for_each<anticipated_error or null> ( { i_consumer.try_consume ( i_in ) } )
+        return stream.try_for_each<anticipated_error> ( { i_consumer.try_consume ( i_object ) } )
+    .
+
+	function directory_or_file_list
+
+        const directory_or_file_stream = try_get_directory_or_file_stream (
+            include_this_directory = no, include_child_directories ) on_error:return_error
+        variable r = directory_or_file_stream
+        
+        if i_filter is not null then
+            r = r.filter ( { directory_or_file => i_filter.is_accepted ( directory_or_file.path ) } )
+        .
+        
+        if i_sort_by_path then
+            r = r.sort_by_key (
+                key_getter = { in.path.value.to_lower_case }
+                descending = no )
+        .
+        
+        return r.to_indexed_list_or_null
+	.
+
+	function directory_list
+
+        const directory_stream = try_get_directory_stream (
+            include_this_directory = no, include_child_directories ) on_error:return_error
+        variable r = directory_stream
+        
+        if i_filter is not null then
+            r = r.filter ( { directory => i_filter.is_accepted ( directory.path ) } )
+        .
+        
+        if i_sort_by_path then
+            r = r.sort_by_key (
+                key_getter = { in.path.value.to_lower_case }
+                descending = no )
+        .
+        
+        return r.to_indexed_list_or_null
+	.
+	
+	function file_list
+
+        const file_stream = try_get_file_stream ( include_child_directories ) on_error:return_error
+        variable r = file_stream
+        
+        if i_filter is not null then
+            r = r.filter ( { file => i_filter.is_accepted ( file.path ) } )
+        .
+        
+        if i_sort_by_path then
+            r = r.sort_by_key (
+                key_getter = { in.path.value.to_lower_case }
+                descending = no )
+        .
+        
+        return r.to_indexed_list_or_null
+	.
+
+
+    // create for path
+
+	creator create kind:in_all
+
+        this.path = i_path
+
+        java
+            c_this.a_java_value = new File ( i_path.getValue().getJavaString() );
+        end java
+        
+        return this
+	.
+
+    creator create_for_relative_path -> directory
+        in path relative_directory_path
+        in root_directory directory_path
+        
+        return create ( directory_path.create_for_relative_path ( path, root_directory ) )
+    .
+        
+    creator create_for_absolute_or_relative_path -> directory
+        in path absolute_or_relative_directory_path
+        in root_directory directory_path
+        
+        case type of i_path
+            when directory_path p
+                return create ( p )
+            when relative_directory_path p
+                return create_for_relative_path ( path = p, root_directory )
+        .
+    .
+    
+
+    // create for name
+    
+    creator create_for_child_name ( name directory_name, parent directory_path ) -> directory
+
+        return create ( directory_path.create_for_child_name ( name, parent ) )
+    .
+
+    // create in working directory
+    
+    creator create_for_name_in_working_directory ( name directory_name ) -> directory
+        
+        return create_for_child_name ( name, parent = se_OS_directories.current_working_directory_path )
+    .
+
+    creator create_for_absolute_or_relative_path_in_working_directory ( path absolute_or_relative_directory_path ) \
+        -> directory
+        
+        return create_for_absolute_or_relative_path (
+            path,
+            root_directory = se_OS_directories.current_working_directory_path )
+    .
+    
+
+	creator try_parse ( string ) -> directory or parse_object_error<directory>
+	    
+	    case type of directory_path.try_parse ( string )
+	        when directory_path path
+	            return create ( path )
+            when parse_object_error<*> e
+                return parse_object_error<directory>.create (
+                    info = """'{{i_string}}' is an invalid directory."""
+                    cause = e
+                    data = i_string )
+        .
+    .
+
+%parse_or_throw_creator<directory>
+
+	creator create_from_root_and_id -> directory
+		in root_directory directory
+		in id PPL_identifier
+
+        return create ( fa_directory_path.create_from_root_and_id (
+            root_directory = i_root_directory.path
+            id = i_id ) )
+    .
+	
+	creator create_from_root_and_id_path -> directory
+		in root_directory directory
+		in id_path PPL_identifier_path
+
+        return create ( fa_directory_path.create_from_root_and_id_path (
+            root_directory = i_root_directory.path
+            id_path = i_id_path ) )
+    .
+.

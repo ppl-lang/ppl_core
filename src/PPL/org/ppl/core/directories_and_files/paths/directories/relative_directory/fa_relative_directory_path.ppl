@@ -1,0 +1,137 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory relative_directory_path type:relative_directory_path
+
+%fa_absolute_or_relative_directory_or_file_path < &
+    type_id: relative_directory_path &
+    directory_or_file: directory >
+
+%fa_absolute_or_relative_directory_path_functions
+		
+	function to_string = a_value
+	
+	function parent
+
+        var parent_name string
+        java
+            Path parent = a_java_value.getParent();
+            v_parent_name = parent != null ? new fa_string ( parent.toString() ) : null;
+        end java
+        assert v_parent_name may be null
+
+        if v_parent_name is not null then
+            return fa_relative_directory_path.create ( v_parent_name )
+        else
+            return null
+        .
+    .
+
+	function is_root = parent =r null
+	
+	function append_name = create_for_child_name ( parent = this, name )
+
+	function append_path = create_from_root_and_child_directory (
+            root_directory = this
+            child_directory = i_path )
+
+	function append_file_name native:yes
+	    // TD check input null
+	    java
+	        return new fa_relative_file_path ( a_java_value.resolve ( i_name.to_string().getJavaString() ) );
+	    end java
+    .
+
+	function append_file_path native:yes
+	    // TD check input null
+	    java
+	        return new fa_relative_file_path ( a_java_value.resolve ( i_path.getJavaPath() ) );
+	    end java
+    .
+
+
+	function make_absolute = i_root.append_path ( this )
+
+    function make_absolute_to_working_directory = make_absolute ( se_OS_directories.current_working_directory.path )
+
+    function to_directory_path = i_root_directory_path.append_path ( this )
+    
+    function to_directory = directory.create ( to_directory_path ( i_root_directory_path ) )
+
+    function try_to_existing_directory
+	
+	    const directory = to_directory ( i_root_directory_path )
+	    
+	    if directory.exists then
+            return directory
+        else
+            return directory_inexistent_error.create (
+                info = """Directory '{{this}}' doesn't exist in directory '{{i_root_directory_path.to_string}}'."""
+                resource = directory )
+        .
+    .
+
+    function rename
+
+		if parent as parent_directory is not null then
+		    return fa_relative_directory_path.create_for_child_name (
+                parent = parent_directory
+                name = i_new_name )
+        else
+            return fa_relative_directory_path.create_from_directory_name ( i_new_name )
+        .
+    .
+
+	
+	creator create kind:in_all
+	
+        java
+            c_this.a_java_value = Paths.get ( i_value.getJavaString() );
+        end java
+        
+        return this
+	.
+
+%string_value_factory_try_parse_creator<relative_directory_path>
+
+	creator create_from_directory_name ( directory_name ) -> relative_directory_path
+	    return create ( i_directory_name.value )
+    .
+	
+	creator create_for_child_name -> relative_directory_path
+		in name directory_name
+		in parent relative_directory_path
+		
+        java
+            c_this.a_java_value = i_parent.getJavaPath().resolve ( i_name.getValue().getJavaString() );
+        end java
+        
+        return this
+    .
+	
+	creator create_from_root_and_id -> relative_directory_path
+		in root_directory relative_directory_path
+		in i_id PPL_identifier
+
+        java
+            c_this.a_java_value = i_root_directory.getJavaPath().resolve ( i_id.getValue().getJavaString() );
+        end java
+        
+        return this
+    .
+	
+	creator create_from_root_and_child_directory -> relative_directory_path
+		in root_directory relative_directory_path
+		in child_directory relative_directory_path
+
+        java
+            c_this.a_java_value = i_root_directory.getJavaPath().resolve ( i_child_directory.getJavaPath() );
+        end java
+        
+        return this
+    .
+.

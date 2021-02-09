@@ -1,0 +1,113 @@
+type text_scanner
+
+	att string_to_scan string
+	
+	functions
+	
+	    // queries
+	
+        has_more -> yes_no
+    
+        current_position -> pos_32 or null
+    
+        current_character -> character or null
+        
+        text_at_line ( line_number pos_64 ) -> string or null
+        
+        remaining_string_to_scan -> string or null
+
+    
+        // is_at
+        
+        is_at_character ( character ) -> yes_no
+    
+        is_at_string ( string ) -> yes_no
+    
+        is_at_regex ( regex ) -> yes_no
+    
+        is_at_regex_with_match_result ( regex ) -> regex_match_result or null
+    
+        is_at_space_or_tab -> yes_no
+        
+        is_at_new_line -> yes_no
+    
+        is_at_space_or_tab_or_new_line -> yes_no
+    
+        is_at_start_of_line -> yes_no
+    
+    
+        // skip
+            
+        skip_current_character -> yes_no
+    
+        skip_character ( character ) -> yes_no
+    
+        skip_string ( string ) -> yes_no
+    
+        skip_regex ( regex ) -> yes_no
+        
+        skip_spaces_and_tabs -> yes_no
+        
+        skip_single_new_line -> yes_no
+        
+        skip_spaces_tabs_and_new_lines -> yes_no
+        
+        skip_remaining -> yes_no
+        
+        skip_n_characters ( n pos_32 )
+        
+        /// TD
+        skip_all_to_character_including ( character ) -> yes_no
+        skip_all_to_string_including ( string ) -> yes_no
+        skip_all_to_regex_including ( regex ) -> yes_no
+        skip_all_to_new_line_including -> yes_no
+    
+        skip_all_to_character_excluding ( character ) -> yes_no
+        skip_all_to_string_excluding ( string ) -> yes_no
+        skip_all_to_regex_excluding ( regex ) -> yes_no
+        skip_all_to_new_line_excluding -> yes_no
+        .///
+
+    
+        // consume
+            
+        consume_current_character -> character or null
+    
+        consume_regex ( regex ) -> string or null
+    
+        consume_regex_with_match_result ( regex ) -> regex_match_result or null
+    
+        consume_spaces_and_tabs -> string or null
+        
+        consume_single_new_line -> string or null
+        
+        consume_spaces_tabs_and_new_lines -> ( result string or null, num_lines zero_pos_32 )
+        
+        consume_remaining -> string or null
+        
+        consume_n_characters ( n pos_32 ) -> string
+    
+
+        // consume_all_including
+        
+        consume_all_to_character_including ( character ) -> string or null
+    
+        consume_all_to_string_including ( string ) -> string or null
+    
+        consume_all_to_regex_including ( regex ) -> string or null
+        
+        consume_all_to_new_line_including -> string or null
+        
+        
+        // consume_all_excluding
+        
+        consume_all_to_character_excluding ( character ) -> string or null
+        
+        consume_all_to_string_excluding ( string ) -> string or null
+    
+        consume_all_to_regex_excluding ( regex ) -> string or null
+        
+        consume_all_to_new_line_or_eof_excluding -> string or null
+    .
+.	
+	

@@ -1,0 +1,16 @@
+type module_id
+
+    inherit virtual_module_id
+        redefine
+            att value and_check: se_PPL_module_info.is_existing_module_id_string ( value ) \
+                message: """Module '{{value}}' doesn't exist."""
+        .
+    .
+    
+    /// TD
+    inherit virtual_module_id
+
+    check: se_PPL_module_info.is_existing_module_id ( i_object_ )
+    .///
+.
+ 

@@ -1,0 +1,24 @@
+factory if_error_expression_program_error java: "extends RuntimeException"
+
+%fa_unanticipated_error_Java_code
+
+    function to_string
+        return a_info
+    .
+    
+	command to_long_string
+	    return se_program_error_writer.to_long_string ( this )
+    .
+    
+    creator create access:private kind:in_all
+    
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null ) -> if_error_expression_program_error
+	    
+        return create (
+            info = "The 'error' clause at the end of an 'if_error:' expression has been executed."
+            source_code_location, script_state )
+    .
+
+.

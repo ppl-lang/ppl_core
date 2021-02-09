@@ -1,0 +1,18 @@
+template ty_arithmetic_functions
+
+    param type
+
+	function add ( operand {type} ) -> {type}
+
+	function subtract ( operand {type} ) -> {type}
+
+	function multiply ( operand {type} ) -> {type}
+
+	function divide ( operand {type} ) -> {type}
+	    // in_check: i_operand #v se_{type}.zero message: "Division by zero." id: division_by_zero_error
+
+	function unary_minus -> {type}
+
+	function abs -> {type}
+
+.

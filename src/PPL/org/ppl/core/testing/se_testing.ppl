@@ -1,0 +1,181 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service testing
+
+    // Note: Before 2019-11-01, this service used se_jar_file_helper to extract the list of TFSs from a .jar file
+    // The current version uses Java modules (introduced in Java version 9)
+
+    java_header
+  		import java.lang.reflect.Method;
+
+        import org.ppl.core.error.java.fa_java_exception;
+        import org.ppl.core.testing.se_test_constants;
+        import org.ppl.core.testing.ty_test_context;
+        
+        import org.ppl.core.reflection.introspection.module.id.fa_module_id;
+        import org.ppl.core.reflection.introspection.module.id.ty_module_id;
+    end java_header
+
+    java
+        private static String TFSTestMethodName = se_test_constants.getTFS_test_command_id().getValue().getJavaString();
+        private static Class<?>[] testContextClassArray = new Class<?>[] { ty_test_context.class };
+
+	    public static void runProjectTests ( Class<?> callingClass ) {
+
+            ty_module_id moduleId = fa_module_id.create ( new fa_string ( callingClass.getModule().getName() ) );
+            ty_test_context testContext = test_context_from_command_line_arguments();
+            run_tests_in_module ( moduleId, testContext );
+            
+            int exitCode = testContext.test_errors_found().getJavaBoolean() ? 1 : 0;
+            
+            System.exit ( exitCode );
+	    }
+    end java
+
+	variable att default_test_message_handler test_message_handler = fa_system_out_test_message_handler.create
+	
+
+    function run_tests_in_module ( module_id, test_context )
+		
+        start_test_runs ( test_context, name = i_module_id.value )
+        
+        se_PPL_module_info.for_each_TFS_path_in_module (
+            module_id,
+            consumer = { TFS_path ->
+                run_tests_in_TFS ( TFS_path, test_context )
+            } )
+
+        stop_test_runs ( i_test_context )
+    .
+    
+	functions access:private
+        
+        function run_tests_in_TFS ( TFS_path, test_context )
+            
+            const TFS_path_value string = i_TFS_path.value
+    
+            if i_test_context.include_path_regex as include_path_regex is not null then
+                if not TFS_path_value.matches_regex ( include_path_regex ) then
+                    return
+                .
+            .
+            
+            if i_test_context.exclude_path_regex as exclude_path_regex is not null then
+                if TFS_path_value.matches_regex ( exclude_path_regex ) then
+                    return
+                .
+            .
+            
+            variable class_path string
+            case type of i_TFS_path
+                when type_path type_path
+                    class_path = se_PPL_type_Java_introspection.static_full_class_name_for_type_path ( type_path )
+                otherwise
+                    class_path = TFS_path_value
+            .
+                    
+            var java_exception java_exception or null = null
+            java
+                try {
+                    Class<?> clazz = Class.forName ( v_class_path.getJavaString() );
+                    Method test_method = null;
+                    try {
+                        // Note: A ClassNotFoundException can occur if 'clazz' contains an import of a class that cannot be found
+                        test_method = clazz.getMethod ( TFSTestMethodName, testContextClassArray );
+                    } catch ( NoSuchMethodException e ) {
+                        return;
+                    }
+                
+                    i_test_context.handle_RSE_test_start ( i_TFS_path );
+    
+                    test_method.invoke ( null, i_test_context );
+    
+                } catch ( Exception e ) {
+                    v_java_exception = new fa_java_exception ( e );
+                }
+            end java
+            assert java_exception may be null
+    
+            if v_java_exception is not null then
+                const source_code_location = bug_source_code_location.create (
+                    TFS_id_path = i_TFS_path,
+                    script_id = "test_script"
+                    script_line_number = null
+                    script_instruction = null )
+                i_test_context.handle_test_error ( test_error.create (
+                    info = """Test execution in '{{i_TFS_path}}' has been interrupted due to the following error:
+    {{v_java_exception.to_long_string}}"""
+                    source_code_location = source_code_location ) )
+            .
+        .
+    
+        function test_context_from_command_line_arguments -> test_context
+        
+            const command_line_arguments = se_OS_process.command_line_arguments
+    
+            var argument_1 string or null = null
+            var argument_2 string or null = null
+            var argument_3 string or null = null
+            if command_line_arguments is not null then
+                const argument_count = command_line_arguments.size
+                if argument_count >= 1 then
+                    argument_1 = command_line_arguments.get(1)
+                .
+                if argument_count >= 2 then
+                    argument_2 = command_line_arguments.get(2)
+                .
+                if argument_count >= 3 then
+                    argument_3 = command_line_arguments.get(3)
+                .
+            .
+
+            const include_path_regex = get_path_regex ( argument_1 )
+
+            const exclude_path_regex = get_path_regex ( argument_2 )
+    
+            variable display_info_messages = yes
+            if argument_3 is not null then
+                display_info_messages = argument_3 =v "yes"
+            .
+    
+            return test_context.create ( include_path_regex, exclude_path_regex, display_info_messages )
+        .
+        
+        function get_path_regex ( argument string or null ) -> regex or null
+        
+            if i_argument is null then
+                return null
+            .
+            
+            if i_argument =v se_string_constants.null then
+                return null
+            else
+                return regex.create ( i_argument )
+            .
+        .
+    
+        function start_test_runs ( test_context, name string )
+
+            i_test_context.start
+
+            i_test_context.handle_info_message ( """Running unit tests in {{i_name}}""" )
+
+            if i_test_context.include_path_regex as include_path_regex is not null then
+                i_test_context.handle_info_message ( """include_path_regex: {{include_path_regex}}""" )
+            .
+
+            if i_test_context.exclude_path_regex as exclude_path_regex is not null then
+                i_test_context.handle_info_message ( """exclude_path_regex: {{exclude_path_regex}}""" )
+            .
+        .
+        
+        function stop_test_runs ( test_context )
+            i_test_context.stop
+        .
+    .
+.	

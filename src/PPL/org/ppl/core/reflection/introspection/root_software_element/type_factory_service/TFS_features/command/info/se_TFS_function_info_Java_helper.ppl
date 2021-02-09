@@ -1,0 +1,261 @@
+service TFS_function_info_Java_helper
+
+	java_header
+        import java.lang.reflect.AnnotatedType;
+		import java.lang.reflect.Method;
+		import java.lang.reflect.Parameter;
+		import java.util.function.Consumer;
+		
+		import java.lang.annotation.Annotation;
+
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.basics.scalar.yes_no.ty_yes_no;
+
+		import org.ppl.core.collections.lists.ty_list;
+		import org.ppl.core.collections.lists.ty_mutable_list;
+
+        import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+		import org.ppl.core.reflection.java.se_Java_reflection_constants;
+		import org.ppl.core.reflection.introspection.java.se_Java_introspection;
+		import org.ppl.core.reflection.introspection.java.se_Java_method_introspection;
+//		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.java.se_object_type_Java_helper;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.parser.se_object_type_parser;
+
+ 		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.input.fa_PPL_command_input_argument;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.input.fa_PPL_command_input_argument_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.input.ty_PPL_command_input_argument;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.input.ty_PPL_command_input_argument_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.output.fa_PPL_command_output_argument;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.output.fa_PPL_command_output_argument_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.output.ty_PPL_command_output_argument;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.arguments.output.ty_PPL_command_output_argument_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.fa_PPL_command;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.fa_PPL_command_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.ty_PPL_command;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.ty_PPL_command_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.ty_TFS_path;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.factory.path.ty_factory_path;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+        
+		import org.ppl.core.reflection.java.annotation.PPLCommand;
+		import org.ppl.core.reflection.java.annotation.PPLCommandInputArgument;
+		import org.ppl.core.reflection.java.annotation.PPLObjectReference;
+	end java_header
+
+	java
+
+		public static void forEachFunctionInTFSPath (
+		    ty_TFS_path i_TFS_path,
+		    Consumer<ty_PPL_command> i_consumer )
+			throws ClassNotFoundException, NoSuchFieldException {
+
+            Class<?> interface_class = se_Java_reflection_class_loader.getClassOrThrow (
+                i_TFS_path.getValue().getJavaString() );
+			forEachFunctionInClass ( i_TFS_path, interface_class,  i_consumer );
+        }
+
+		public static void forEachFunctionInClass (
+		    ty_TFS_path i_TFS_path,
+		    Class i_class,
+		    Consumer<ty_PPL_command> i_consumer )
+			throws ClassNotFoundException, NoSuchFieldException {
+
+			forEachFunctionMethodInClass ( i_class, method -> {
+				ty_PPL_command command;
+				try {
+					command = _get_command_from_method ( i_TFS_path, method );
+				} catch ( Exception e ) {
+					throw new RuntimeException ( e );
+				}
+				i_consumer.accept ( command );
+			} );
+		}
+
+		public static void forEachCreatorInFactoryPath (
+		    ty_factory_path i_factory_path,
+		    Consumer<ty_PPL_command> i_consumer )
+			throws ClassNotFoundException, NoSuchFieldException {
+
+            Class<?> interface_class = se_Java_reflection_class_loader.getClassOrThrow (
+                i_factory_path.getValue().getJavaString() );
+			forEachCreatorInClass ( i_factory_path, interface_class,  i_consumer );
+        }
+
+		private static void forEachCreatorInClass (
+		    ty_factory_path i_factory_id_path,
+		    Class i_class,
+		    Consumer<ty_PPL_command> i_consumer )
+			throws ClassNotFoundException, NoSuchFieldException {
+
+			forEachFactoryCreatorMethodInClass ( i_class, method -> {
+				ty_PPL_command command;
+				try {
+					command = _get_command_from_method ( i_factory_id_path, method );
+				} catch ( Exception e ) {
+					throw new RuntimeException ( e );
+				}
+				i_consumer.accept ( command );
+			} );
+		}
+
+		public static void forEachFunctionMethodInClass ( Class i_class, Consumer<Method> i_consumer ) {
+
+			for ( Method method : i_class.getMethods() ) {
+				
+                // avoid getting the command method more than once,
+                // for example in case of a redefined command in a child-type
+                // see following link for explanation
+                // http://stas-blogspot.blogspot.com/2010/03/java-bridge-methods-explained.html
+				if ( method.isBridge() ) continue;
+
+                PPLCommand annotation = method.getAnnotation ( PPLCommand.class );
+				if ( annotation != null && ! annotation.isCreator() ) {
+    				i_consumer.accept ( method );
+				}
+			}
+		}
+
+		private static void forEachFactoryCreatorMethodInClass ( Class i_class, Consumer<Method> i_consumer ) {
+
+			for ( Method method : i_class.getMethods() ) {
+			    // if ( method.isBridge() ) continue;
+
+                PPLCommand annotation = method.getAnnotation ( PPLCommand.class );
+				if ( annotation != null && annotation.isCreator() ) {
+    				i_consumer.accept ( method );
+				}
+			}
+		}
+
+
+		public static ty_PPL_command _require_command_for_TFS_id_path (
+		    ty_TFS_path i_TFS_id_path,
+		    ty_PPL_command_id i_command_id )
+			throws ClassNotFoundException, NoSuchMethodException, NoSuchFieldException {
+
+            Class<?> clazz = se_Java_reflection_class_loader.getClassOrThrow (
+                i_TFS_id_path.getValue().getJavaString() );
+
+            Method method = se_Java_method_introspection.getPublicMethodByName ( clazz, i_command_id.getValue().getJavaString() );
+
+            return _get_command_from_method ( i_TFS_id_path, i_command_id, method );
+		}
+
+
+		private static ty_PPL_command _get_command_from_method (
+		    ty_TFS_path i_TFS_id_path,
+		    Method i_command_method )
+		    throws ClassNotFoundException, NoSuchFieldException {
+
+		    return _get_command_from_method (
+		        i_TFS_id_path,
+		        fa_PPL_command_id.create ( new fa_string ( i_command_method.getName() ) ),
+		        i_command_method );
+		}
+
+
+		private static ty_PPL_command _get_command_from_method (
+		    ty_TFS_path i_TFS_id_path,
+		    ty_PPL_command_id i_command_id,
+		    Method i_command_method )
+		    throws ClassNotFoundException, NoSuchFieldException {
+
+            PPLCommand annotation = _require_command_annotation ( i_command_method );
+
+		    return fa_PPL_command.create (
+		        i_TFS_id_path,
+		        i_command_id,
+		        get_command_method_input_arguments ( i_command_method ),
+		        get_command_method_output_arguments ( i_command_method ),
+		        se_Java_introspection.annotationCodeToPPLString ( annotation.inCheckCode() ),
+		        se_Java_introspection.annotationCodeToPPLString ( annotation.outCheckCode() ),
+		        se_Java_method_introspection.isMethodDeprecated ( i_command_method ) );
+		}
+
+
+		private static ty_list<ty_PPL_command_input_argument> get_command_method_input_arguments ( Method i_method )
+		    throws ClassNotFoundException {
+
+		    ty_mutable_list<ty_PPL_command_input_argument> r = se_TFS_function_info.create_mutable_input_argument_list();
+
+            Parameter[] parameters = i_method.getParameters();
+            for ( Parameter parameter : parameters ) {
+
+                PPLCommandInputArgument annotation = _get_command_input_argument_annotation ( parameter );
+
+                // annotation is null for inputs that represent the type of a generic parameter in a creator, e.g.
+                // PPLObjectType t_element
+                if ( annotation == null ) continue;
+                
+                PPLObjectReference objectReferenceAnnotation = annotation.objectReference();
+
+                r.append ( fa_PPL_command_input_argument.create (
+                    fa_PPL_command_input_argument_id.create ( new fa_string ( objectReferenceAnnotation.id() ) ),
+                    // se_object_type_Java_helper.annotatedType_to_PPL_object_type (
+                    //    parameter.getAnnotatedType(), objectReferenceAnnotation ),
+    		        // se_object_type_Java_helper.objectReferenceAnnotation_to_object_type (
+    		        //    objectReferenceAnnotation ),
+                    se_object_type_parser.objectReferenceAnnotation_to_object_type ( objectReferenceAnnotation ),
+                    se_Java_introspection.annotationCodeToPPLString ( objectReferenceAnnotation.checkCode() ),
+                    se_Java_introspection.annotationCodeToPPLString ( objectReferenceAnnotation.defaultCode() ) ) );
+            }
+
+            return r.make_immutable_or_null();
+		}
+
+
+		private static ty_list<ty_PPL_command_output_argument> get_command_method_output_arguments ( Method i_method )
+		    throws ClassNotFoundException, NoSuchFieldException {
+
+		    Class<?> return_class = i_method.getReturnType();
+
+		    if ( return_class.getName().equals ( "void" ) ) return null;
+
+		    ty_mutable_list<ty_PPL_command_output_argument> r = se_TFS_function_info.create_mutable_output_argument_list();
+
+            PPLCommand annotation = _require_command_annotation ( i_method );
+            boolean is_single_output_argument = annotation.outputArguments().length == 1;
+            
+            for ( PPLObjectReference objectReference : annotation.outputArguments() ) {
+                String id_string = objectReference.id();
+                ty_PPL_command_output_argument_id id =
+                    fa_PPL_command_output_argument_id.create ( new fa_string ( id_string ) );
+
+                AnnotatedType annotatedType =
+                    is_single_output_argument ?
+                    i_method.getAnnotatedReturnType() :
+                    return_class.getField (
+                        se_Java_reflection_constants.outputArgumentPrefix + id_string )
+                        .getAnnotatedType();
+                ty_object_type object_type =
+                    se_object_type_parser.objectReferenceAnnotation_to_object_type ( objectReference );
+
+                ty_string check_code = se_Java_introspection.annotationCodeToPPLString (
+                    objectReference.checkCode() );
+
+                r.append ( fa_PPL_command_output_argument.create ( id, object_type, check_code ) );
+            }
+
+            return r.make_immutable_or_null();
+		}
+
+
+		private static PPLCommand _require_command_annotation ( Method i_command_method ) {
+
+			PPLCommand annotation =
+				(PPLCommand) i_command_method.getAnnotation ( PPLCommand.class );
+			assert annotation != null;
+
+			return annotation;
+		}
+
+		private static PPLCommandInputArgument _get_command_input_argument_annotation ( Parameter i_parameter ) {
+
+			return (PPLCommandInputArgument) i_parameter.getAnnotation ( PPLCommandInputArgument.class );
+		}
+
+	end java
+
+.

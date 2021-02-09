@@ -1,0 +1,15 @@
+type unchecked_type_assignment_program_error
+
+	inherit program_error
+		redefine
+			att info default: "Type incompatibility in an unchecked assignment."
+		.
+	.
+    
+    att java_exception java_exception or null
+
+	attributes type:string or null
+	    source_type
+	    target_type
+    .
+.

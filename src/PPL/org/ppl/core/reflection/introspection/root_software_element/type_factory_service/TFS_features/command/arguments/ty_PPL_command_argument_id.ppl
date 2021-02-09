@@ -1,0 +1,5 @@
+type PPL_command_argument_id
+
+    inherit PPL_TFS_feature_id
+
+.

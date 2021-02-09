@@ -1,0 +1,5 @@
+template wl // Write Line
+
+	OS.out.write_line 
+	
+.

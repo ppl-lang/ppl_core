@@ -1,0 +1,60 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service signed_int_32_constants
+
+	attributes type:signed_int_32
+
+		min_value
+			default
+			    variable r signed_int_32
+                java
+                    v_r = new fa_signed_int_32(Integer.MIN_VALUE);
+                end java
+                assert r is not null
+                return r
+            .
+        .
+
+		max_value = 2147483647
+
+		max_value_unsigned_16 = 32767
+
+		zero
+			default
+			    variable r signed_int_32
+                java
+                    v_r = new fa_signed_int_32(0);
+                end java
+                assert r is not null
+                return r
+            .
+        .
+
+		one
+			default
+			    variable r signed_int_32
+                java
+                    v_r = new fa_signed_int_32(1);
+                end java
+                assert r is not null
+                return r
+            .
+        .
+
+		minus_one
+			default
+			    variable r signed_int_32
+                java
+                    v_r = new fa_signed_int_32(-1);
+                end java
+                assert r is not null
+                return r
+            .
+        .
+	.
+.

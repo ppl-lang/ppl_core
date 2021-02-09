@@ -1,0 +1,172 @@
+service type_attributes_info
+
+	java_header
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.info.se_TFS_attribute_info_java_helper;
+	end java_header
+
+	function for_each_attribute_in_type ( type_path, consumer object_consumer<PPL_attribute> )
+
+        java
+            Class interface_class = se_PPL_type_Java_introspection.javaInterfaceForTypePath ( i_type_path );
+
+            se_TFS_attribute_info_java_helper._for_each_attribute_of_class (
+                i_type_path,
+                interface_class, 
+                attribute -> { i_consumer.consume ( attribute ); } );
+        end java
+	.
+
+    function attributes ( type_path ) -> list<PPL_attribute> or null
+
+        const r = mutable_list<PPL_attribute>.create
+        
+        for_each_attribute_in_type ( type_path, consumer = { attribute ->
+            r.append ( attribute )
+        } )
+        
+        r.sort_by_key ( key_getter = { attribute => attribute.order_in_source_code }, descending = no ) 
+        
+        return r.make_immutable_or_null
+    .
+    
+    // TD try_get_attribute
+ 
+	function get_attribute_or_throw ( type_path, attribute_id PPL_attribute_id ) -> PPL_attribute
+
+		script
+		    variable r PPL_attribute
+		    java
+		    	v_r = se_TFS_attribute_info_java_helper._require_attribute_for_TFS_id_path (
+		    	    i_type_path, i_attribute_id );
+		    end java
+		    assert r is not null
+		    return r
+		.
+		test
+		    test type_path = type_path.create ( "org.ppl.core.error.ty_error" ) \
+		        attribute_id = PPL_attribute_id.create ( "info" )
+            verify result.id.value =v "info"
+            verify result.type.to_string =v "string"
+            verify result.is_variable =v no
+            verify result.is_obsolete =v no
+            verify result.check_code is null
+            verify result.default_value_code is null
+
+		    test type_path = type_path.create ( "org.ppl.core.error.ty_error" ) \
+		        attribute_id = PPL_attribute_id.create ( "date_time" )
+            verify result.id.value =v "date_time"
+            verify result.type.to_string =v "date_time or null"
+            verify result.is_variable =v no
+            verify result.is_obsolete =v no
+            verify result.check_code is null
+            const default_value_code = result.default_value_code?.trim_whitespace
+            verify default_value_code is not null
+            verify default_value_code =v "fa_date_time.now"
+
+		    test type_path = type_path.create ( "foo.bar" ) \
+		        attribute_id = PPL_attribute_id.create ( "info" )
+            verify_error
+		.
+	.
+
+///
+ 	function require_sorted_attribute_list
+		in type_id_path type_path
+
+		out result list<PPL_attribute> or null
+
+		script
+			const r = mutable_list<PPL_attribute>.create
+
+			for_each_attribute_in_type (
+				type_id_path = i_type_id_path
+				consumer = { -> r.append ( i_object ) } )
+
+			r.sort ( { object_1.id.value.compare_to_ignore_case ( object_2.id.value ) } )
+			result = r.make_immutable_or_null
+		.
+		test
+			const today = fa_local_date.today
+			test se_object_reflection.type_path_of_object ( today )
+			verify result.size =v 3
+			
+			test se_common_type_paths.non_error
+			verify result is null
+			
+			test type_path.create ( "foo.ty_bar" )
+			verify_error
+		.
+	.
+
+
+	function require_sorted_attribute_map
+		in type_id_path type_path
+
+		out result map<key:PPL_attribute_id, value:PPL_attribute> or null
+
+		script
+			const r = mutable_map<key:PPL_attribute_id, value:PPL_attribute>.create_sorted_by_key
+
+			for_each_attribute_in_type (
+				type_id_path = i_type_id_path
+				consumer = { r.add ( key = i_object.id, value = i_object ) } )
+
+			result = r.make_immutable_or_null
+		.
+		test
+			const today = fa_local_date.today
+			test se_object_reflection.type_path_of_object ( today )
+			verify result.size =v 3
+			verify result.contains_key ( PPL_attribute_id.create ( "day" ) )
+			verify result.contains_key ( PPL_attribute_id.create ( "month" ) )
+			verify result.contains_key ( PPL_attribute_id.create ( "year" ) )
+			
+			test se_common_type_paths.non_error
+			verify result is null
+			
+			test type_path.create ( "foo.ty_bar" )
+			verify_error
+		.
+	.
+
+	function require_sorted_attribute_id_string_list
+		in type_id_path type_path
+
+		out result indexed_list<string> or null
+
+		script
+			const r = mutable_indexed_list<string>.create
+
+			java
+				Class interface_class = se_PPL_type_Java_introspection.javaInterfaceForTypePath ( i_type_id_path );
+
+				se_TFS_attribute_info_java_helper._for_each_attribute_getter_of_class (
+					interface_class,
+					(getterMethod, annotation) -> {
+						c_r.append ( new fa_string ( annotation.objectReference().id() ) );
+					} );
+			end java
+
+			r.sort ( { object_1.compare_to_ignore_case(object_2) } )
+			result = r.make_immutable_or_null
+
+		.
+		test
+			const today = fa_local_date.today
+			test se_object_reflection.type_path_of_object ( today )
+			verify result.size =v 3
+			verify result.get(1) =v "day"
+			verify result.get(2) =v "month"
+			verify result.get(3) =v "year"
+
+			test se_common_type_paths.non_error
+			verify result is null
+
+			test type_path.create ( "foo.ty_bar" )
+			verify_error
+		.
+	.
+.///
+.

@@ -1,0 +1,53 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory mutable_map_with_nulls type:mutable_map
+	
+    java_header
+        import java.util.ArrayList;
+        import java.util.Collections;
+        import java.util.HashMap;
+        import java.util.List;
+        import java.util.LinkedHashMap;
+        import java.util.Map;
+        import java.util.Map.Entry;
+        import java.util.stream.Stream;
+        import java.util.TreeMap;
+        
+        import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+        import org.ppl.core.collections.iterators.finite_iterator.implementations.fa_Java_Spliterator_wrapper_iterator_with_size;
+        import org.ppl.core.collections.java.se_immutable_Java_collection_checker;
+        import org.ppl.core.collections.maps.key_value.fa_key_value_pair;
+        import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+        import org.ppl.core.stream.fa_stream;
+    end java_header
+
+    java
+        private Map < t_key, t_value > a_java_map;
+
+        public fa_mutable_map_with_nulls ( Map<t_key, t_value> i_java_map, ty_object_type i_key_type, ty_object_type i_value_type ) {
+			if ( i_java_map == null ) throw new IllegalArgumentException ( "Input for fa_mutable_map_with_nulls constructor cannot be null." );
+
+            a_java_map = i_java_map;
+			t_key = i_key_type;
+			t_value = i_value_type;
+        }
+    end java
+
+    att maintain_added_order yes_no private:yes
+
+%fa_mutable_or_immutable_map_commands < zero_pos_32 >
+
+%fa_map_with_nulls_commands
+
+%fa_mutable_map_commands < \
+    immutable_map_factory: map_with_nulls \
+    value_list_factory: list_with_nulls >
+
+%fa_mutable_map_creators
+.

@@ -1,0 +1,50 @@
+service JavaFX_config
+
+	java_header
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+	end java_header
+
+    att PATH_TO_FX_OS_variable_name string = "PATH_TO_FX"
+    att PATH_TO_FX_JMODS_OS_variable_name string = "PATH_TO_FX_JMODS"
+    
+    function path_to_JavaFX -> string or null
+        return se_OS_environment_variables.get_string_value_or_null ( PATH_TO_FX_OS_variable_name )
+    .
+
+    function path_to_JavaFX_JMODS -> string or null
+        return se_OS_environment_variables.get_string_value_or_null ( PATH_TO_FX_JMODS_OS_variable_name )
+    .
+    
+    function use_GUI_in_project -> yes_no
+        return path_to_JavaFX #r null
+    .
+
+    function check_JavaFX_available -> OS_config_error or null
+    
+        if is_JavaFX_available then
+            return null
+        else
+            return OS_config_error.create ( info = '''JavaFX is not available.
+The operation cannot be executed.
+Please run 'ppl check' for further information.''' )
+        .
+    .
+    
+    functions access:private
+
+        function is_JavaFX_available -> yes_no
+        
+            variable is_available yes_no
+            java
+                try {
+                    Class.forName ( "javafx.application.Application" );
+                    v_is_available = fa_yes_no.of ( true );
+                } catch ( ClassNotFoundException e ) {
+                    v_is_available = fa_yes_no.of ( false );
+                }
+            end java
+            assert is_available is not null
+            return is_available
+        .
+    .
+.

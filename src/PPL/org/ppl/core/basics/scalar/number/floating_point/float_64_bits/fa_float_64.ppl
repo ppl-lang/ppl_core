@@ -1,0 +1,181 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory float_64
+
+	java_header
+		import java.lang.Double;
+		import java.lang.NumberFormatException;
+		import java.text.DecimalFormat;
+
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.java.se_java_utilities;
+		import org.ppl.core.error.java.se_Java_exception;
+	end java_header
+
+	java
+		private double a_java_value ;
+
+		public double getJavaDouble() { return a_java_value; }
+
+		public fa_float_64 ( double i_java_value ) {
+			a_java_value = i_java_value ;
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_float_64 ) ) return false;
+			
+			double other_double = ((ty_float_64) other).getJavaDouble();
+			return a_java_value == other_double;
+		}
+		
+		@Override
+		public int hashCode() {
+			return Double.valueOf ( a_java_value ).hashCode();
+		}
+
+		public int compareTo ( ty_float_64 other ) {
+			if ( this == other ) return 0;
+			return Double.compare ( a_java_value, other.getJavaDouble() );
+		}
+
+	end java
+	
+%fa_number_functions<a_java_value>
+
+	function to_string native:yes
+        java
+            return new fa_string ( String.valueOf ( a_java_value ) );
+        end java
+    .
+	
+	// has_compare_to
+
+	function is_equal_to native:yes
+        java
+            return equals ( i_other ) ? fa_yes_no.a_yes : fa_yes_no.a_no;
+        end java
+    .
+
+	function compare_to native:yes
+        java
+            return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+        end java
+    .
+
+	function min native:yes
+        java
+            return ( a_java_value <= i_other.getJavaDouble() ) ? this : i_other;
+        end java
+    .
+
+	function max native:yes
+        java
+            return ( a_java_value >= i_other.getJavaDouble() ) ? this : i_other;
+        end java
+    .
+
+	function is_between native:yes
+        java
+            return fa_yes_no.of ( a_java_value >= i_min.getJavaDouble() && a_java_value <= i_max.getJavaDouble() );
+        end java
+    .
+
+	function hash_code native:yes
+        java
+            return new fa_signed_int_32 ( hashCode() );
+        end java
+    .
+
+	// arithmetics
+
+	function add native:yes
+        java
+            return new fa_float_64 ( a_java_value + i_operand.getJavaDouble() );
+        end java
+    .
+
+	function subtract native:yes
+        java
+            return new fa_float_64 ( a_java_value - i_operand.getJavaDouble() );
+        end java
+    .
+
+	function multiply native:yes
+        java
+            return new fa_float_64 ( a_java_value * i_operand.getJavaDouble() );
+        end java
+    .
+
+	function divide native:yes
+        java
+            return new fa_float_64 ( a_java_value / i_operand.getJavaDouble() );
+        end java
+    .
+
+	function unary_minus native:yes
+        java
+            return new fa_float_64 ( -a_java_value );
+        end java
+    .
+
+	function abs native:yes
+        java
+            return a_java_value >= 0.0 ? this : new fa_float_64 ( -a_java_value );
+        end java
+    .
+    
+    creator try_parse ( string ) -> float_64 or parse_object_error<float_64>
+
+        variable r float_64
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                double java_value = Double.parseDouble ( i_string.getJavaString() );
+                v_r = new fa_float_64 ( java_value );
+            } catch ( NumberFormatException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return parse_object_error<float_64>.create (
+                info = """'{{i_string}}' is not a valid floating point number.
+Reason: {{exception.to_string}}"""
+                cause = exception
+                data = string )
+        .
+
+        assert r is not null
+        return r
+    .
+	
+%parse_or_throw_creator<float_64>
+
+	creator create_from_int_32 ( int_32 signed_integer_32 ) -> float_64
+        java
+            double java_value = i_int_32.getJavaInt();
+            c_this.a_java_value = java_value;
+        end java
+        return this
+    .
+
+	creator create_from_int_64 ( int_64 signed_int_64 ) -> float_64
+        java
+            double java_value = i_int_64.getJavaLong();
+            c_this.a_java_value = java_value;
+        end java
+        return this
+    .
+.

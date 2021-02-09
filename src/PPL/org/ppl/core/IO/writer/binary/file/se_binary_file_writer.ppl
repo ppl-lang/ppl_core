@@ -1,0 +1,104 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service binary_file_writer
+
+	java_header
+		import java.io.BufferedOutputStream;
+		import java.io.FileOutputStream;
+		import java.io.ObjectOutputStream;
+
+		import java.util.zip.ZipOutputStream;
+		import java.util.zip.ZipEntry;
+
+		import org.ppl.core.error.java.fa_java_exception;
+	end java_header
+
+/// TD see se_binary_file_reader.try_read_all_bytes	
+	function try_write_to_new_file -> file_write_error or null
+	    in byte_array
+		%new_file_input_argument
+.///
+	
+// TD file_error -> file_write_error
+
+	function store_object_to_new_file -> file_error or null
+		in object non_null
+		%new_file_input_argument
+		in store_in_zip_format yes_no
+
+        return object_to_file ( object, file, store_in_zip_format )
+    .
+
+	function store_object_to_existing_file -> file_error or null
+		in object non_null
+		%existing_file_input_argument
+		in store_in_zip_format yes_no
+
+        return object_to_file ( object, file, store_in_zip_format )
+    .
+
+	function store_object_to_new_or_existing_file -> file_error or null
+		in object non_null
+		%new_or_existing_file_input_argument
+		in store_in_zip_format yes_no
+
+        return object_to_file ( object, file, store_in_zip_format )
+    .
+
+	function object_to_file private:yes ( object non_null, file, store_in_zip_format yes_no ) -> file_error or null
+
+        var java_exception java_exception or null = null
+        java
+/*
+            try	(
+                FileOutputStream file_output_stream = new FileOutputStream ( i_file.getJavaFile() );
+                BufferedOutputStream buffered_output_stream = new BufferedOutputStream ( file_output_stream );
+                ObjectOutputStream object_output_stream = new ObjectOutputStream ( buffered_output_stream ); ) {
+                
+                object_output_stream.writeObject ( i_object );
+            
+            } catch ( Exception e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+*/
+            if ( i_store_in_zip_format.getJavaBoolean() ) {
+                try	(
+                        FileOutputStream file_output_stream = new FileOutputStream ( i_file.getJavaFile() );
+                        ZipOutputStream zip_output_stream = new ZipOutputStream ( file_output_stream );
+                        BufferedOutputStream buffered_output_stream = new BufferedOutputStream ( zip_output_stream );
+                        ObjectOutputStream object_output_stream = new ObjectOutputStream ( buffered_output_stream );
+                    ) {
+                        zip_output_stream.putNextEntry ( new ZipEntry ( "object" ) );
+                        object_output_stream.writeObject ( i_object ) ;
+                } catch ( Exception e ) {
+                    v_java_exception = new fa_java_exception ( e );
+                }
+            } else {
+                try	(
+                        FileOutputStream file_output_stream = new FileOutputStream ( i_file.getJavaFile() );
+                        BufferedOutputStream buffered_output_stream = new BufferedOutputStream ( file_output_stream );
+                        ObjectOutputStream object_output_stream = new ObjectOutputStream ( buffered_output_stream );
+                    ) {
+                        object_output_stream.writeObject ( i_object ) ;
+                } catch ( Exception e ) {
+                    v_java_exception = new fa_java_exception ( e );
+                }
+            }
+        end java
+        
+        if java_exception is null then
+            return null
+        else
+            return fa_file_error.create (
+                info = """Object could not be stored to file '{{i_file.to_string}}'. The following error occurred:
+{{java_exception.to_string}}"""
+                java_exception,
+                resource = i_file )
+        .
+    .
+.

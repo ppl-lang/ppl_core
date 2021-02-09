@@ -1,0 +1,192 @@
+service TFS_attribute_info_java_helper
+
+	java_header
+		import java.lang.reflect.Method;
+		import java.lang.reflect.InvocationTargetException;
+		import java.util.function.BiConsumer;
+		import java.util.function.Consumer;
+
+		import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.basics.scalar.yes_no.ty_yes_no;
+		import org.ppl.core.reflection.java.annotation.PPLAttributeGetter;
+		import org.ppl.core.reflection.java.annotation.PPLObjectReference;
+        import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+		import org.ppl.core.reflection.java.se_Java_reflection_constants;
+		import org.ppl.core.reflection.introspection.java.se_Java_introspection;
+		import org.ppl.core.reflection.introspection.java.se_Java_method_introspection;
+//		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.java.se_object_type_Java_helper;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.parser.se_object_type_parser;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.ty_PPL_attribute;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.fa_PPL_attribute;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.ty_PPL_attribute_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.attribute.fa_PPL_attribute_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.ty_TFS_path;
+	end java_header
+
+	java
+
+		private static String _Java_attribute_getter_method_prefix = "get";
+
+		private static String _capitalized_attribute_id ( String i_attribute_id ) {
+			return i_attribute_id.substring(0,1).toUpperCase() + i_attribute_id.substring(1);
+		}
+
+		private static String _Java_method_name_for_attribute_getter ( String i_attribute_id ) {
+			return _Java_attribute_getter_method_prefix + _capitalized_attribute_id ( i_attribute_id );
+		}
+
+		private static Method _require_class_attribute_getter_method ( Class<?> i_class, String i_attribute_id )
+			throws NoSuchMethodException {
+
+			String methodName = _Java_method_name_for_attribute_getter ( i_attribute_id );
+			return i_class.getMethod ( methodName, se_Java_reflection_constants.emptyClassArray );
+		}
+
+		private static PPLAttributeGetter _require_attribute_getter_annotation (
+		    Method i_attribute_getter_method ) {
+
+			PPLAttributeGetter annotation = 
+				(PPLAttributeGetter) i_attribute_getter_method.getAnnotation ( PPLAttributeGetter.class );
+			assert annotation != null;
+
+			return annotation;
+		}
+
+		private static ty_PPL_attribute _require_attribute_from_getter_method (
+		    ty_TFS_path i_TFS_id_path,
+		    Method i_attribute_getter_method )
+			throws ClassNotFoundException {
+
+            PPLAttributeGetter annotation = _require_attribute_getter_annotation ( i_attribute_getter_method );
+            PPLObjectReference objectReferenceAnnotation = annotation.objectReference();
+
+		    return fa_PPL_attribute.create (
+		        i_TFS_id_path,
+		        fa_PPL_attribute_id.create ( new fa_string ( objectReferenceAnnotation.id() ) ),
+		        se_object_type_parser.objectReferenceAnnotation_to_object_type ( objectReferenceAnnotation ),
+		        annotation.isVariable() ? fa_yes_no.a_yes : fa_yes_no.a_no,
+		        se_Java_method_introspection.isMethodDeprecated ( i_attribute_getter_method ),
+		        new fa_zero_pos_32 ( annotation.srcOrder() ),
+		        se_Java_introspection.annotationCodeToPPLString ( objectReferenceAnnotation.checkCode() ),
+		        se_Java_introspection.annotationCodeToPPLString ( objectReferenceAnnotation.defaultCode() ) );
+		}
+
+		//  throws Exception
+		private static void _for_each_attribute_getter_of_class (
+		    Class<?> i_class, BiConsumer<Method, PPLAttributeGetter> i_consumer ) {
+
+            // Java 'getMethods' doc:
+            // The elements in the returned array are not sorted and are not in any particular order. 
+			for ( Method method : i_class.getMethods() ) {
+				
+				if ( method.isBridge() ) {
+					// avoid getting the attribute getter method more than once,
+					// for example in case of a redefined attribute object_type in a child-type
+					// see following link for explanation
+					// http://stas-blogspot.blogspot.com/2010/03/java-bridge-methods-explained.html
+					continue;
+				}
+
+				PPLAttributeGetter annotation = 
+					(PPLAttributeGetter) method.getAnnotation ( PPLAttributeGetter.class );
+				if ( annotation == null ) {
+					continue;
+				}
+
+				i_consumer.accept ( method, annotation );
+			}
+		}
+
+/*
+		//  throws Exception
+		private static void _for_each_get_method_of_class (
+		    Class<?> i_class, Consumer<Method> i_consumer ) {
+
+            // Java 'getMethods' doc:
+            // The elements in the returned array are not sorted and are not in any particular order. 
+			for ( Method method : i_class.getMethods() ) {
+				
+				if ( method.isBridge() ) {
+					// avoid getting the attribute getter method more than once,
+					// for example in case of a redefined attribute object_type in a child-type
+					// see following link for explanation
+					// http://stas-blogspot.blogspot.com/2010/03/java-bridge-methods-explained.html
+					continue;
+				}
+
+                String methodName = method.getName();
+                if ( ! methodName.startsWith ( "get" ) || methodName.length() == 3 ) continue;
+                
+                if ( method.getParameterCount() != 0 ) continue;
+
+				i_consumer.accept ( method );
+			}
+		}
+*/
+
+		public static void _for_each_attribute_of_class (
+		    ty_TFS_path i_TFS_id_path,
+		    Class<?> i_class,
+		    Consumer<ty_PPL_attribute> i_consumer )
+			throws ClassNotFoundException {
+
+			_for_each_attribute_getter_of_class ( i_class, ( method, annotation ) -> {
+				ty_PPL_attribute attribute;
+				try {
+					attribute = _require_attribute_from_getter_method ( i_TFS_id_path, method );
+				} catch ( ClassNotFoundException e ) {
+					throw new RuntimeException ( e );
+				}
+				i_consumer.accept ( attribute );
+			} );
+		}
+
+/*
+		public static void _for_each_attribute_of_class (
+		    ty_TFS_path i_TFS_id_path,
+		    Class<?> i_class,
+		    Consumer<ty_PPL_attribute> i_consumer )
+			throws ClassNotFoundException {
+
+			_for_each_get_method_of_class ( i_class, method -> {
+				ty_PPL_attribute attribute;
+				try {
+					attribute = _require_attribute_from_getter_method ( i_TFS_id_path, method );
+				} catch ( ClassNotFoundException e ) {
+					throw new RuntimeException ( e );
+				}
+				i_consumer.accept ( attribute );
+			} );
+		}
+*/
+
+		public static ty_PPL_attribute _require_attribute_for_TFS_id_path (
+		    ty_TFS_path i_TFS_id_path,
+		    ty_PPL_attribute_id i_attribute_id )
+			throws ClassNotFoundException, NoSuchMethodException {
+		  
+		        Class<?> clazz = se_Java_reflection_class_loader.getClassOrThrow (
+		            i_TFS_id_path.getValue().getJavaString() );
+
+                Method getterMethod = _require_class_attribute_getter_method (
+                    clazz, i_attribute_id.getValue().getJavaString() );
+
+                return _require_attribute_from_getter_method ( i_TFS_id_path, getterMethod );
+		}
+
+		// i_object is null in case of static class member
+		public static ty_non_null _require_class_attribute_value (
+		    Class<?> i_class, ty_non_null i_object, String i_attribute_id )
+			throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+
+			Method getterMethod = _require_class_attribute_getter_method ( i_class, i_attribute_id );
+			return (ty_non_null) getterMethod.invoke ( i_object, se_Java_reflection_constants.emptyObjectArray ) ;
+		}
+
+	end java
+
+.

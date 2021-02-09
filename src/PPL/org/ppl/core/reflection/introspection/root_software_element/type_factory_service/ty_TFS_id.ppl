@@ -1,0 +1,5 @@
+type TFS_id
+
+    inherit RSE_id
+
+.

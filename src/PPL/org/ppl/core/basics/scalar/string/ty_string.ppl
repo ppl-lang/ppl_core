@@ -1,0 +1,190 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type string
+
+	java
+		public String getJavaString() ;
+	end java
+	
+	inherit \
+		scalar,
+		has_compare_to < string >,
+		has_min_max < string >,
+		has_hash_code,
+		indexed_list < character >
+	
+	functions // compare
+
+        is_equal_to_ignore_case ( other string ) -> yes_no
+    
+        compare_to_ignore_case ( other string ) -> comparator_result
+    .
+
+
+	functions // substring
+
+        substring -> string
+            in %less_or_equal_size_input<from>
+            in %less_or_equal_size_input<to>
+            %check_from_to_input
+        .
+    
+        substring_from ( %less_or_equal_size_input<from> ) -> string
+    
+        substring_to ( %less_or_equal_size_input<to> ) -> string
+    .
+
+
+	functions // find
+
+        find_first ( to_find string ) -> pos_32 or null
+    
+        find_last ( to_find string ) -> pos_32 or null
+    
+        find_first_from ( to_find string, %less_or_equal_size_input<from> ) -> pos_32 or null
+        
+        find_first_regex ( regex ) -> regex_match_result or null
+    
+        find_first_regex_from ( regex, %less_or_equal_size_input<from> ) -> regex_match_result or null
+    
+        // TD find_all ( to_find string ) -> list<pos_32> or null
+    .
+
+	
+	functions // check
+    
+        starts_with ( string ) -> yes_no
+        
+        ends_with ( string ) -> yes_no
+    
+        starts_with_at_position ( start string, %less_or_equal_size_input<position> ) -> yes_no
+        
+        starts_with_regex_at_position ( regex,  %less_or_equal_size_input<position> ) -> yes_no
+    
+        starts_with_regex_match_at_position ( regex,  %less_or_equal_size_input<position> ) \
+            -> regex_match_result or null
+        
+        contains ( string ) -> yes_no
+        
+        contains_character ( character ) -> yes_no
+        
+        matches_regex ( regex ) -> yes_no
+    
+        match_with_regex ( regex ) -> regex_match_result or null
+    .
+
+
+	functions // append
+
+        append ( string ) -> string
+    
+        repeat ( count pos_32 ) -> string
+        
+        pad_left ( width pos_32 check: i_object_.size <= i_width ) -> string
+        
+        pad_right ( width pos_32 check: i_object_.size <= i_width ) -> string
+    .
+	
+	
+	functions // remove
+
+        remove_from_to -> string or null
+            in %less_or_equal_size_input<from>
+            in %less_or_equal_size_input<to>
+            %check_from_to_input
+        .
+        
+        remove_from -> string or null
+            in %less_or_equal_size_input<from>
+        .
+        
+        remove_to -> string or null
+            in %less_or_equal_size_input<to>
+        .
+	
+        /// TD
+        remove_left -> string or null
+            in %less_or_equal_size_input<count>
+        .
+        
+        remove_right -> string or null
+            in %less_or_equal_size_input<count>
+        .
+        .///
+        
+        remove_first -> string
+            in_check %check_size_greater_than_1<i_object_>
+        .
+    
+        remove_last -> string
+            in_check %check_size_greater_than_1<i_object_>
+        .
+    
+        remove_all_substrings ( to_remove string ) -> string or null
+    
+        remove_all_character ( to_remove character ) -> string or null
+    
+        remove_all_regex ( to_remove regex ) -> string or null
+    
+        remove_all_CR_or_LF_at_end -> string or null
+        
+        remove_last_CR_LF -> string or null
+        
+        trim_whitespace -> string or null
+    
+        // trim_left_indent -> string or null
+    
+        truncate ( width pos_32 ) -> string
+    .
+	
+	
+	functions // replace
+
+        replace_from_to -> string
+            in %less_or_equal_size_input<from>
+            in %less_or_equal_size_input<to>
+            in replace_by string
+            %check_from_to_input
+        .
+        
+        replace_or_remove_from_to -> string or null
+            in %less_or_equal_size_input<from>
+            in %less_or_equal_size_input<to>
+            in replace_by string or null
+            %check_from_to_input
+        .
+        
+        replace_first ( to_replace string, replace_by string ) -> string
+
+        replace_all ( to_replace string, replace_by string ) -> string
+    
+        replace_all_character ( to_replace character, replace_by character ) -> string
+    
+        replace_first_regex ( to_replace regex, replace_by string ) -> string
+        
+        replace_all_regex ( to_replace regex, replace_by string ) -> string
+    .
+	
+	
+	functions // split
+
+        split_by_new_line         -> indexed_list<string or null>
+        split ( split_by string ) -> indexed_list<string or null>
+        split_by_regex ( regex )  -> indexed_list<string or null>
+        
+        split_by_regex_to_set ( regex, allow_doubles yes_no ) -> set<string> or invalid_data_error<string>
+    .
+	
+	
+	functions // transform
+
+        to_lower_case -> string
+        to_upper_case -> string
+        to_first_upper_case -> string
+    .
+.

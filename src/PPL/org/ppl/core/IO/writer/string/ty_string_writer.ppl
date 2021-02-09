@@ -1,0 +1,17 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type string_writer
+
+	inherit string_or_binary_writer
+
+	function try_write ( string ) -> IO_error or null
+
+	function try_write_line ( string ) -> IO_error or null
+
+	function try_write_new_line -> IO_error or null
+.

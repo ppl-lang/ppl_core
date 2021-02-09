@@ -1,0 +1,22 @@
+template fa_mutable_list_with_nulls_commands
+
+    function first
+    
+        variable r t_element
+        java
+            v_r = a_java_list.get ( 0 );
+        end java
+        assert r may be null
+        return r
+    .
+
+    function last
+
+        variable r t_element
+        java
+            v_r = a_java_list.get ( a_java_list.size() - 1 ) ;
+        end java
+        assert r may be null
+        return r
+    .
+.

@@ -1,0 +1,60 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory system_out_test_message_handler type:test_message_handler
+
+	command handle_test_error
+		script
+			se_OS.out.write_new_line
+			se_OS.out.write_line ( string = i_test_error.to_long_string )
+		end
+	end
+
+	command handle_info_message
+		script
+			se_OS.out.write_line ( string = i_message )
+		end
+	end
+
+	command testing_finished
+		script
+			///
+			se_OS.out.write_line ( string = se_string_constants.quantity_noun ( &
+				quantity = i_RSEs_tested_count &
+				noun = "object has" &
+				plural_noun = "objects have" &
+				uppercase_no = yes ) & " been tested.")
+			end ///
+			
+			se_OS.out.write_new_line
+			se_OS.out.write_line ( string = """Objects tested: {{i_RSEs_tested_count.to_string}}""" )
+			if i_RSEs_tested_count =v 0 then
+				exit script
+			end if
+
+			if i_test_error_count =v 0 then
+				se_OS.out.write_line ( string = '''
+BRAVO AND CONGRATULATIONS!
+All tests passed without errors.
+''' )
+				
+			else
+				///
+				se_OS.out.write_line ( string = """
+Sorry, {{se_string_constants.quantity_noun ( quantity = i_test_error_count; noun = "test error" )}} detected.
+""" )
+				end ///
+				se_OS.out.write_line ( string = """
+Sorry, {{i_test_error_count.to_string}} test error(s) detected.
+""" )
+			end if
+		end
+	end
+
+	creator create kind:in_all end
+	
+end

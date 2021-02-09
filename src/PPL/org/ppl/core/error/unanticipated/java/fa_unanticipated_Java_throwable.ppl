@@ -1,0 +1,20 @@
+factory unanticipated_Java_throwable java: "extends RuntimeException"
+
+    function to_string
+        return Java_throwable.to_string
+    .
+
+    function to_long_string
+        return Java_throwable.to_long_string
+    .
+    
+    creator create kind:in_all
+    
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+	    Java_throwable ) -> unanticipated_Java_throwable
+
+        return create ( info = Java_throwable.to_string, source_code_location, script_state, Java_throwable )
+    .
+.

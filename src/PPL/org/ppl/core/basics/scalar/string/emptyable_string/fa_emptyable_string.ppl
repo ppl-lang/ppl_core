@@ -1,0 +1,94 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory emptyable_string
+
+	java_header
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+	end java_header
+
+	java
+		private String a_java_value;
+
+		// public String getJavaString() { return a_java_value; }
+
+		private fa_emptyable_string ( String i_java_value ) {
+			a_java_value = i_java_value;
+		}
+		
+		public static fa_emptyable_string create ( String i_java_value ) {
+
+			if ( i_java_value == null ) {
+				throw new IllegalArgumentException ("Input for fa_emptyable_string constructor cannot be null.");
+			}
+
+			if ( i_java_value.isEmpty() ) {
+				return a_empty_string;
+			}
+			
+			return new fa_emptyable_string ( i_java_value );
+		}
+
+		public static fa_emptyable_string a_empty_string = new fa_emptyable_string ( "" );
+	end java
+
+	function is_empty native:yes
+        java
+            return fa_yes_no.of ( a_java_value.isEmpty() );
+        end java
+	.
+	
+	function to_string
+	
+		if is_empty then
+			throw "An emptyable string which is empty (contains no characters) cannot be converted to a (non-empty) string."
+		.
+		
+		variable r string
+		java
+			v_r = new fa_string ( a_java_value );
+		end java
+		assert r is not null
+		return r
+	.
+
+	function to_string_or_null
+	
+		if is_empty then
+			return null
+        .
+        
+		variable r string
+        java
+            v_r = new fa_string ( a_java_value );
+        end java
+		assert r is not null
+		return r
+	.
+
+	function to_string_or_empty_symbol
+	
+		if is_empty then
+            return i_empty_symbol
+        .
+
+		variable r string
+        java
+            v_r = new fa_string ( a_java_value );
+        end java
+		assert r is not null
+		return r
+	.
+	
+	creator create_from_string ( string ) -> emptyable_string
+
+        java
+            c_this.a_java_value = i_string.getJavaString();
+        end java
+        return this
+	.
+.

@@ -1,0 +1,4 @@
+enum type type_parameter_assignment_kind
+
+    default, only, child_of, parent_of, wildcard
+.

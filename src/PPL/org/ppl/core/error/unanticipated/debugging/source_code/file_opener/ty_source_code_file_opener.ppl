@@ -1,0 +1,5 @@
+type source_code_file_opener
+    
+    function open ( source_code_file file, line_number positive_32 or null )
+    
+.

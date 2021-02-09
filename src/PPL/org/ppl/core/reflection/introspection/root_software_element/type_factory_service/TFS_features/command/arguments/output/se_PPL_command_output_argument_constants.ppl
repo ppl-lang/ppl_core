@@ -1,0 +1,5 @@
+service PPL_command_output_argument_constants
+    
+    att id_prefix string = "o_"
+    
+.

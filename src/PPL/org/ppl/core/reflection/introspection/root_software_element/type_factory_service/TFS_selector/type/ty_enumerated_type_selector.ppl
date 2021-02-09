@@ -1,0 +1,6 @@
+type enumerated_type_selector
+
+	inherit type_selector
+
+.
+

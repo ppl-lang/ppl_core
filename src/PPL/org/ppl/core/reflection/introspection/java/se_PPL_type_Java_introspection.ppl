@@ -1,0 +1,138 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service PPL_type_Java_introspection
+
+	java_header
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type.path.fa_type_path;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type.path.ty_type_path;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type.se_type_constants;
+		import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+	end java_header
+	
+	java
+		private static String typeIdPrefix = se_type_constants.getId_prefix().getJavaString();
+
+		private static String typeIdStart = "." + typeIdPrefix;
+		
+		private static String typeStaticsIdPrefix = "ts_";
+
+		// get type_path
+
+            public static ty_type_path typePathOfClass ( Class<?> clazz ) {
+
+                return fa_type_path.create ( new fa_string ( typePathStringOfClass ( clazz ) ) );
+            }
+    
+            private static String typePathStringOfClass ( Class<?> clazz ) {
+            
+                Class<?> java_interface;
+                if ( clazz.isInterface() ) {
+                    java_interface = clazz;
+                } else {
+                    java_interface = JavaInterfaceOfPPLFactoryClass ( clazz );
+                }
+    
+                return java_interface.getName();
+            }
+
+            private static Class<?> JavaInterfaceOfPPLFactoryClass ( Class<?> clazz ) {
+                /*
+                    the input class must be a class that represents a PPL factory
+                    the return value is the interface (returned as Class) of the type implemented by the PPL factory
+                    Java doc of Class.getInterfaces() says:
+                        If this object represents a class, the return value is an array containing objects representing all interfaces implemented by the class. The order of the interface objects in the array corresponds to the order of the interface names in the implements clause of the declaration of the class represented by this object.
+                */
+    
+                return clazz.getInterfaces()[0];
+            }
+    
+            /*
+            public static ty_type_path Java_type_to_type_id_path ( Type type ) {
+            
+                String name = type.getTypeName();
+                int index = name.indexOf('<'); // e.g. List<String>
+                if ( index != -1 ) {
+                    name = name.substring ( 0, index );
+                }
+                return fa_type_path.create ( new fa_string ( name ) );
+            }
+            */
+
+		// Interface class of type path
+
+            public static Class<?> javaInterfaceForTypePath ( ty_type_path type_path )
+                throws ClassNotFoundException {
+    
+                return javaInterfaceForTypePath ( type_path.getValue().getJavaString() );
+            }
+    
+            private static Class<?> javaInterfaceForTypePath ( String type_path )
+                throws ClassNotFoundException {
+    
+                return se_Java_reflection_class_loader.getClassOrThrow ( type_path );
+            }
+    
+		// Static class of type path
+
+            public static Class<?> staticClassForTypePath ( ty_type_path i_type_path )
+                throws ClassNotFoundException {
+    
+                return se_Java_reflection_class_loader.getClassOrThrow (
+                    staticFullClassNameForTypePath ( i_type_path.getValue().getJavaString() ) );
+            }
+    
+            private static String staticFullClassNameForTypePath ( String type_path ) {
+    
+                int ty_index = type_path.lastIndexOf ( typeIdStart );
+                return type_path.substring ( 0, ty_index + 1 ) + 
+                    typeStaticsIdPrefix + 
+                    type_path.substring ( ty_index + 4 );
+            }
+            
+        public static boolean areTypePathsCompatible ( ty_type_path source, ty_type_path target )
+            throws ClassNotFoundException {
+
+            Class<?> source_class = javaInterfaceForTypePath ( source );
+            Class<?> target_class = javaInterfaceForTypePath ( target );
+
+            return target_class.isAssignableFrom ( source_class );
+        }
+	end java
+
+
+ 	att id_prefix_for_type_statics string
+ 		default
+ 		    variable r string
+            java
+                v_r = new fa_string ( typeStaticsIdPrefix );
+            end java
+            assert r is not null
+            return r
+ 		.
+ 	.
+
+
+	function static_full_class_name_for_type_path ( type_path ) -> string
+
+		script
+		    variable r string
+			java
+				v_r = new fa_string ( staticFullClassNameForTypePath ( i_type_path.getValue().getJavaString() ) );
+			end java
+			assert r is not null
+			return r
+		.
+        test
+            test se_common_type_paths.string
+            verify result =v se_common_type_paths.string.value.replace_all (
+                to_replace = ".ty_string"
+                replace_by = ".ts_string" )
+        .
+	.
+
+.

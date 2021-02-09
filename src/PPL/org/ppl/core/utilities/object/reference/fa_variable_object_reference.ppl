@@ -1,0 +1,9 @@
+factory variable_object_reference type:variable_object_reference
+
+    command set
+        a_object = i_new_object
+    .
+
+    creator create kind:in_all
+
+.

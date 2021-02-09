@@ -1,0 +1,54 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type absolute_or_relative_directory_or_file_path
+
+	java_header
+		import java.nio.file.Path;
+	end java_header
+
+	java
+		public Path getJavaPath();
+	end java
+
+	inherit string_value
+		redefine
+			att value
+				and_check
+				    const path_error = \
+				        se_directory_or_file_path.check_is_valid_absolute_or_relative_path ( i_value )
+                    if path_error is not null then
+                        check no \
+                            message: path_error.info \
+                            id: invalid_directory_or_file_path \
+                            data: i_value
+                    .
+                .
+            .
+        .
+    .
+
+	inherit has_hash_code
+
+	functions
+	    
+	    name -> directory_or_file_name
+
+	    /// TD
+            root_name -> directory_name
+            root_path -> absolute_or_relative_directory_path
+	    .///
+	    
+	    to_normalized_path -> string
+
+        to_current_OS_path -> string
+
+        to_Unix_path -> string
+
+        to_Windows_path -> string
+    .
+.

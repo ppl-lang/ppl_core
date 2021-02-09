@@ -1,0 +1,174 @@
+service text_file_line_reader
+
+	java_header
+		import java.io.IOException;
+		import java.nio.file.Files;
+		import java.nio.charset.Charset;
+        import java.util.stream.Stream;
+
+		import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+		import org.ppl.core.stream.fa_stream;
+	end java_header
+	
+	function try_get_line_stream -> stream<string or null> or file_error
+		in file file
+		%supported_character_set_input_argument
+		
+		if not i_file.exists then
+		    return file_inexistent_error.create_for_file ( i_file )
+        .
+		
+        variable r stream<string or null> or null = null
+        variable java_exception java_exception or null = null
+        java
+            try {
+                Stream<String> stream_1 = Files.lines (
+                    i_file.getPath().getJavaPath(),
+                    Charset.forName ( i_character_set.to_string().getJavaString() ) );
+                Stream<ty_string> stream_2 = stream_1.map ( s -> s.isEmpty() ? null : new fa_string ( s ) );
+                v_r = new fa_stream<ty_string> ( stream_2, se_common_object_types.getString_or_null() );
+            } catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+
+        if java_exception is null then
+            assert r is not null
+            return r
+        else
+            return fa_file_read_error.create (
+                info = """Error reading content of file '{{i_file.to_string}}'."""
+                java_exception,
+                resource = i_file )
+        .
+	.
+	
+	function try_for_each_line -> file_error or null
+		in file file
+		in consumer object_consumer<string or null>
+		%supported_character_set_input_argument
+		
+        const stream = try_get_line_stream ( file, character_set ) on_error: return_error
+        stream.for_each ( i_consumer )
+        stream.close
+        return null
+    .
+
+	function try_for_each_line_with_counter -> file_error or null
+		in file file
+		in consumer two_objects_consumer<object_1:string or null, object_2:pos_64>
+		%supported_character_set_input_argument
+		
+        const stream = try_get_line_stream ( file, character_set ) on_error: return_error
+        stream.for_each_with_counter ( i_consumer )
+        stream.close
+        return null
+    .
+
+	function try_try_for_each_line_with_counter<consumer_error child_of:anticipated_error> -> anticipated_error or null
+		in file file
+        in consumer trying_two_objects_consumer<object_1:string or null, object_2:pos_64, error:consumer_error>
+		%supported_character_set_input_argument
+
+        const stream = try_get_line_stream ( file, character_set ) on_error: return_error
+        
+        stream.try_for_each_with_counter<consumer_error> ( i_consumer ) on_error: return_error
+        
+        stream.close
+        return null
+    .
+
+/// TD?
+	function for_each_line_or_throw
+		%existing_file_input_argument
+		in consumer object_consumer<string or null>
+		%supported_character_set_input_argument
+		
+        const stream = try_get_line_stream ( file, character_set ) on_error: throw_error
+        stream.for_each ( i_consumer )
+        stream.close
+    .
+.///
+    
+    function try_read_lines -> indexed_list<string or null> or null or file_error
+		in file file
+		%supported_character_set_input_argument
+		
+        const stream = try_get_line_stream ( file, character_set ) on_error: return_error
+        const r = stream.to_indexed_list_or_null
+        stream.close
+        return r
+    .
+
+    function try_read_string_lines_from_non_empty_file -> indexed_list<string> or file_error
+		in file file
+		%supported_character_set_input_argument
+		
+		const r = mutable_indexed_list<string>.create
+		try_for_each_line ( file, consumer = { line ->
+		    if line is not null then
+		        r.append ( line )
+            .
+		},
+		character_set ) on_error: return_error
+		
+		if r.is_empty then
+		    return file_empty_error.create (
+		        info = """File {{i_file.to_string}} is empty or contains only empty lines."""
+		        resource = i_file )
+        else
+            return r.make_immutable
+        .
+    .
+
+    function try_read_mutable_lines -> mutable_indexed_list<string or null> or file_error
+		in file file
+		%supported_character_set_input_argument
+		
+        const stream = try_get_line_stream ( file, character_set ) on_error: return_error
+        const r = stream.to_mutable_indexed_list
+        stream.close
+        return r
+    .
+
+	function try_read_nth_line -> string or null or IO_error
+		in file file
+		in n pos_64
+		%supported_character_set_input_argument
+		
+		if not i_file.exists then
+		    return file_inexistent_error.create_for_file ( i_file )
+        .
+		
+		variable error IO_error
+		use resource const reader = text_file_reader.create ( file, character_set ) on_error:return_error
+            repeat forever counter:line_number
+                case type of reader.try_read_line
+
+                    when emptyable_string es
+                        if line_number =v n then
+                            return es.to_string_or_null
+                        .
+
+                    when null
+                        const info = \
+                            """Line number {{n}} cannot be read from file '{{i_file.to_string}}', because """ & \
+                            if line_number =v 1L \
+                                then "the file is empty." \
+                                else """the file contains only {{line_number - 1L}} lines."""
+                        error = IO_resource_error.create ( info, resource = i_file )
+                        exit repeat
+
+                    when IO_error e
+                        error = e
+                        exit repeat
+                .
+            .
+        .
+        
+        assert error is not null
+        return error
+    .
+
+.

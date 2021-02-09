@@ -1,0 +1,8 @@
+type non_null \
+    child_types: non_error, error \
+    factories: none
+
+    inherit any
+
+    function to_string -> string
+.

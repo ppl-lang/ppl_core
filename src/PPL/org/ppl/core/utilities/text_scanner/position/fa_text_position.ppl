@@ -1,0 +1,17 @@
+factory text_position
+
+    function to_string
+        
+        const r = mutable_string.create
+        
+        r.append ( """line {{a_line_number}}""" )
+        
+        if a_column_number is not null then
+            r.append ( """, column {{a_column_number}}""" )
+        .
+        
+        return r.to_string
+    .
+    
+    creator create kind:in_all
+.

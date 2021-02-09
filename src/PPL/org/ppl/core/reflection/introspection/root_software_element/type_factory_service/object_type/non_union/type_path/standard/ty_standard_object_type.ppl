@@ -1,0 +1,9 @@
+type standard_object_type \
+    child_types: none
+
+    inherit type_path_object_type
+        redefine
+            function type_selector -> standard_type_selector
+        .
+    . 
+.

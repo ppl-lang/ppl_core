@@ -1,0 +1,8 @@
+type invalid_output_argument_program_error
+
+	inherit check_program_error
+
+	att id PPL_command_output_argument_id
+	
+	att invalid_value any
+.

@@ -1,0 +1,177 @@
+factory duration
+
+    java_header
+        import java.time.Duration;
+        
+        import org.ppl.core.basics.scalar.number.integer.integer_64_bits.zero_positive_64.fa_zero_pos_64;
+    end java_header
+
+    java
+        private Duration a_Java_duration;
+        
+        public Duration getJavaDuration() { return a_Java_duration; }
+        
+        public fa_duration ( Duration Java_duration ) {
+            this.a_Java_duration = Java_duration;
+        }
+    end java
+    
+    // to
+    
+    function to_milli_seconds native:yes
+        java
+            return new fa_zero_pos_64 ( a_Java_duration.toMillis() );
+        end java
+    .
+    
+    function to_seconds native:yes
+        java
+            return new fa_zero_pos_64 ( a_Java_duration.toSeconds() );
+        end java
+    .
+    
+    function to_minutes native:yes
+        java
+            return new fa_zero_pos_64 ( a_Java_duration.toMinutes() );
+        end java
+    .
+    
+    function to_hours native:yes
+        java
+            return new fa_zero_pos_64 ( a_Java_duration.toHours() );
+        end java
+    .
+    
+    function to_days native:yes
+        java
+            return new fa_zero_pos_64 ( a_Java_duration.toDays() );
+        end java
+    .
+    
+    function to_string native:yes
+        java
+            return new fa_string ( a_Java_duration.toString() );
+        end java
+    .
+    
+    // plus
+    
+    function plus native:yes
+        java
+            return new fa_duration ( a_Java_duration.plus ( i_duration.getJavaDuration() ) );
+        end java
+    .
+    
+    function plus_milli_seconds native:yes
+        java
+            return new fa_duration ( a_Java_duration.plusMillis ( i_milli_seconds.getJavaLong() ) );
+        end java
+    .
+    
+    function plus_seconds native:yes
+        java
+            return new fa_duration ( a_Java_duration.plusSeconds ( i_seconds.getJavaLong() ) );
+        end java
+    .
+    
+    function plus_minutes native:yes
+        java
+            return new fa_duration ( a_Java_duration.plusMinutes ( i_minutes.getJavaLong() ) );
+        end java
+    .
+    
+    function plus_hours native:yes
+        java
+            return new fa_duration ( a_Java_duration.plusHours ( i_hours.getJavaLong() ) );
+        end java
+    .
+    
+    function plus_days native:yes
+        java
+            return new fa_duration ( a_Java_duration.plusDays ( i_days.getJavaLong() ) );
+        end java
+    .
+    
+    // minus
+    
+    function minus native:yes
+        java
+            return new fa_duration ( a_Java_duration.minus ( i_duration.getJavaDuration() ) );
+        end java
+    .
+    
+    function minus_milli_seconds native:yes
+        java
+            return new fa_duration ( a_Java_duration.minusMillis ( i_milli_seconds.getJavaLong() ) );
+        end java
+    .
+    
+    function minus_seconds native:yes
+        java
+            return new fa_duration ( a_Java_duration.minusSeconds ( i_seconds.getJavaLong() ) );
+        end java
+    .
+    
+    function minus_minutes native:yes
+        java
+            return new fa_duration ( a_Java_duration.minusMinutes ( i_minutes.getJavaLong() ) );
+        end java
+    .
+    
+    function minus_hours native:yes
+        java
+            return new fa_duration ( a_Java_duration.minusHours ( i_hours.getJavaLong() ) );
+        end java
+    .
+    
+    function minus_days native:yes
+        java
+            return new fa_duration ( a_Java_duration.minusDays ( i_days.getJavaLong() ) );
+        end java
+    .
+    
+    
+    // creators
+
+    creator create -> duration
+        java
+            c_this.a_Java_duration = Duration.ZERO;
+        end java
+        return this
+    .
+    
+    creator create_milli_seconds ( milli_seconds pos_64 ) -> duration
+        java
+            c_this.a_Java_duration = Duration.ofMillis ( i_milli_seconds.getJavaLong() );
+        end java
+        return this
+    .
+    
+    creator create_seconds ( seconds pos_64 ) -> duration
+        java
+            c_this.a_Java_duration = Duration.ofSeconds ( i_seconds.getJavaLong() );
+        end java
+        return this
+    .
+    
+    creator create_minutes ( minutes pos_64 ) -> duration
+        java
+            c_this.a_Java_duration = Duration.ofMinutes ( i_minutes.getJavaLong() );
+        end java
+        return this
+    .
+
+    creator create_hours ( hours pos_64 ) -> duration
+        java
+            c_this.a_Java_duration = Duration.ofHours ( i_hours.getJavaLong() );
+        end java
+        return this
+    .
+
+    creator create_days ( days pos_64 ) -> duration
+        java
+            c_this.a_Java_duration = Duration.ofDays ( i_days.getJavaLong() );
+        end java
+        return this
+    .
+.

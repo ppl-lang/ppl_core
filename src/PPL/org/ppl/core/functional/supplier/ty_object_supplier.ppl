@@ -1,0 +1,5 @@
+type object_supplier<object>
+
+	function get -> object
+
+.

@@ -1,0 +1,370 @@
+/// Notes
+
+    See chapter "New URI scheme for naming stored modules, classes, and resources"
+    at https://openjdk.java.net/jeps/220
+    for information about how to retrieve information from a FileSystem
+    
+    root paths:
+        modules/
+        packages/
+    
+    examples:
+    FileSystem fileSystem = FileSystems.newFileSystem ( URI.create ( "jrt:/" ), new HashMap<String, String>() );
+    Path path = fileSystem.getPath ( "modules/{modulName}/{packageName}/{className}.class" );
+    ...
+    pathToModule = Paths.get ( URI.create ( "jrt:/modules/{module_name}" ) ); // e.g. "jrt:/modules/java.base"
+    Files.list ( pathToModule ).forEach ( System.out::println );
+    Files.walkFileTree ( walkPath, new SimpleFileVisitor<Path>() { ... }
+    
+    Note:
+        The FileSystem works only for resources (classes) stored in a module file.
+        It does not work for resources (classes) stored in .jar files.
+        => different result in development mode (with build/lib/*.jar) than in
+           distribution mode (all classes stored in a module file)
+           
+        This service uses a composedModuleFinder that works in development and distribution mode.
+.///
+	    
+service PPL_module_info
+
+    java_header
+        import java.lang.module.ModuleFinder;
+        import java.lang.module.ModuleReader;
+        import java.lang.module.ModuleReference;
+
+        import java.nio.file.Path;
+        import java.nio.file.Paths;
+
+        import org.ppl.core.basics.scalar.string.fa_string;
+        import org.ppl.core.directories_and_files.directory.se_current_application_directories;
+        import org.ppl.core.error.java.se_Java_exception;
+        import org.ppl.core.reflection.introspection.library.id.fa_library_path;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.ty_TFS_path;
+        import org.ppl.core.reflection.se_reflection_directory_constants;
+        
+    end java_header
+
+    java
+        // get ModuleFinder that works in development mode, as well as in distribution mode
+        private static ModuleFinder composedModuleFinder = createComposedModuleFinder();
+
+        private static ModuleFinder createComposedModuleFinder() {
+        
+            // In distribution mode, PPL and Java modules are merged in the 'lib/modules' file
+            ModuleFinder systemModuleFinder = ModuleFinder.ofSystem();
+            
+            // In development mode, PPL modules are in .jar files located in the 'build/lib' directory
+            Path pathTo_build_lib = Paths.get (
+                se_current_application_directories.Java_lib_directory_path().getValue().getJavaString() );
+            if ( ! pathTo_build_lib.toFile().exists() ) {
+                return systemModuleFinder;
+            }
+
+            ModuleFinder build_lib_jar_moduleFinder = ModuleFinder.of ( pathTo_build_lib );
+            
+            return ModuleFinder.compose ( systemModuleFinder, build_lib_jar_moduleFinder );
+        }
+        
+        private static boolean isJavaModule ( String moduleName ) {
+        
+            return moduleName.startsWith ( "java." ) ||
+                moduleName.startsWith ( "jdk." ) ||
+                moduleName.startsWith ( "javafx." ) ||
+                moduleName.startsWith ( "jrt." );
+        }
+
+        private static ModuleReference moduleReferenceForId ( ty_module_id id ) {
+            
+            return composedModuleFinder.find ( id.getValue().getJavaString() ).get();
+        }
+        
+    end java
+    
+    
+    // module ids
+    
+    // TD? use cache
+    function module_ids -> set<module_id>
+    
+        script
+            const r = mutable_set<module_id>.create
+            java
+                for ( ModuleReference moduleReference : composedModuleFinder.findAll() ) {
+                    c_r.add ( fa_module_id.create ( new fa_string ( moduleReference.descriptor().name() ) ) );
+                }
+            end java
+            return r.make_immutable
+        .
+        tests
+            verify module_ids.contains ( se_ppl_core_constants.module_id )
+            verify module_ids.contains ( module_id.create ( "java.base" ) )
+        .
+    .
+    
+    // TD? use cache
+    function non_Java_JDK_module_ids -> set<module_id>
+    
+        script
+            const r = mutable_set<module_id>.create
+            java
+                for ( ModuleReference moduleReference : composedModuleFinder.findAll() ) {
+                    String moduleName = moduleReference.descriptor().name();
+                    if ( ! isJavaModule ( moduleName ) ) {
+                        c_r.add ( fa_module_id.create ( new fa_string ( moduleName ) ) );
+                    }
+                }
+            end java
+            return r.make_immutable
+        .
+        tests
+            verify non_Java_JDK_module_ids.contains ( se_ppl_core_constants.module_id )
+            verify not non_Java_JDK_module_ids.contains ( module_id.create ( "java.base" ) )
+        .
+    .
+    
+///
+    function is_existing_module_id ( module_id ) -> yes_no = \
+        is_existing_module_id_string ( module_id.value )
+.///
+    
+    function is_existing_module_id_string native:yes ( module_id string ) -> yes_no
+        java
+            boolean exists = composedModuleFinder.find ( i_module_id.getJavaString() ).isPresent();
+            return fa_yes_no.of ( exists );
+        end java
+    .
+    
+    
+    // libraries
+    
+    function for_each_library_in_module ( module_id, consumer object_consumer<library_path> )
+        java
+            ModuleReference moduleReference = moduleReferenceForId ( i_module_id );
+
+            for ( String packageName : moduleReference.descriptor().packages() ) {
+                i_consumer.consume ( fa_library_path.create ( new fa_string ( packageName ) ) );
+            }
+        end java
+    .
+    
+    
+    // TFSs
+
+    function for_each_TFS_path_in_module ( module_id, consumer object_consumer<TFS_path> )
+    
+        for_each_resource_in_module ( module_id, consumer = { resource_path ->
+            if resource_path_to_TFS_path ( resource_path ) as TFS_path is not null then
+                consumer.consume ( TFS_path )
+            .
+        } )
+    .
+		    
+    function for_each_TFS_path_in_jar_file -> IO_resource_error or null
+        %existing_file_input_argument_2<jar_file>
+        in consumer object_consumer<TFS_path>
+
+        const name = i_jar_file.name.remove_extension
+        assert name is not null
+        const module_id = virtual_module_id.create ( name.value )
+        
+        variable exception Java_exception_runtime_error or null = null
+        java
+            ModuleFinder moduleFinder = ModuleFinder.of ( i_jar_file.getJavaFile().toPath() );
+            ModuleReader moduleReader = null;
+            try {
+                ModuleReference moduleReference = moduleFinder.find ( c_module_id.getValue().getJavaString() ).get();
+                moduleReader = moduleReference.open();
+                
+                moduleReader.list().forEach ( resource -> {
+                    ty_TFS_path TFS_path = resource_path_to_TFS_path ( new fa_string ( resource ) );
+                    if ( TFS_path != null ) {
+                        i_consumer.consume ( TFS_path );
+                    } 
+                } );
+                
+            } catch ( Exception e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+            finally {
+                if ( moduleReader != null ) {
+                    moduleReader.close();
+                }
+            }
+        end java
+        assert exception may be null
+        if exception is not null then
+            return fa_IO_resource_error.create (
+                info = """Error reading module '{{module_id}}' in jar file '{{i_jar_file.to_string}}'."""
+                cause = exception
+                resource = i_jar_file )
+        .
+        
+        return null
+    .
+		    
+    function for_each_type_path ( consumer object_consumer<type_path> )
+
+        for_each_resource_in_non_Java_JDK_modules ( consumer = { resource_path ->
+            
+            if resource_path_to_type_path ( resource_path ) as type_path is not null then
+                consumer.consume ( type_path )
+            .
+        } )
+    .
+
+    function for_each_factory_path ( consumer object_consumer<factory_path> )
+
+        for_each_resource_in_non_Java_JDK_modules ( consumer = { resource_path ->
+            
+            if resource_path_to_factory_path ( resource_path ) as factory_path is not null then
+                consumer.consume ( factory_path )
+            .
+        } )
+    .
+
+    function for_each_service_path ( consumer object_consumer<service_path> )
+
+        for_each_resource_in_non_Java_JDK_modules ( consumer = { resource_path ->
+            
+            if resource_path_to_service_path ( resource_path ) as service_path is not null then
+                consumer.consume ( service_path )
+            .
+        } )
+    .
+
+
+    // resource
+
+    function for_each_resource_in_non_Java_JDK_modules ( consumer object_consumer<string> )
+    
+        repeat for each module_id in non_Java_JDK_module_ids
+            for_each_resource_in_module ( module_id, consumer )
+        .
+    .
+    
+    function for_each_resource_in_module ( module_id, consumer object_consumer<string> )
+    
+        java
+            ModuleReference moduleReference = moduleReferenceForId ( i_module_id );
+            ModuleReader moduleReader = moduleReference.open();
+            
+            moduleReader.list().forEach ( resource -> { i_consumer.consume ( new fa_string ( resource ) ); } );
+            
+            moduleReader.close();
+        end java
+    .
+    
+    functions access:private
+    
+        function resource_path_to_TFS_path ( resource_path string ) -> TFS_path or null
+    
+            const TFS_path = resource_path_to_TFS_path_string ( resource_path ) on_null: return null
+            const id_prefix = TFS_id_prefix_of_TFS_path ( TFS_path ) on_null: return null
+    
+            case value of id_prefix
+                when se_type_constants.id_prefix
+                    return type_path.create ( TFS_path )
+                when se_factory_constants.id_prefix
+                    return factory_path.create ( TFS_path )
+                when se_service_constants.id_prefix
+                    return service_path.create ( TFS_path )
+                otherwise
+                    // ignore all others (e.g. ts_ files and Java files)
+                    return null
+            .
+        .
+    
+        function resource_path_to_type_path ( resource_path string ) -> type_path or null
+        
+            const TFS_path = resource_path_to_TFS_path_string ( resource_path ) on_null: return null
+            const id_prefix = TFS_id_prefix_of_TFS_path ( TFS_path ) on_null: return null
+            
+            if id_prefix #v se_type_constants.id_prefix then
+                return null
+            .
+            
+            return type_path.create ( TFS_path )
+        .
+    
+        function resource_path_to_factory_path ( resource_path string ) -> factory_path or null
+        
+            const TFS_path = resource_path_to_TFS_path_string ( resource_path ) on_null: return null
+            const id_prefix = TFS_id_prefix_of_TFS_path ( TFS_path ) on_null: return null
+            
+            if id_prefix #v se_factory_constants.id_prefix then
+                return null
+            .
+            
+            return factory_path.create ( TFS_path )
+        .
+    
+        function resource_path_to_service_path ( resource_path string ) -> service_path or null
+        
+            const TFS_path = resource_path_to_TFS_path_string ( resource_path ) on_null: return null
+            const id_prefix = TFS_id_prefix_of_TFS_path ( TFS_path ) on_null: return null
+            
+            if id_prefix #v se_service_constants.id_prefix then
+                return null
+            .
+            
+            return service_path.create ( TFS_path )
+        .
+    
+        function TFS_id_prefix_of_TFS_path ( TFS_path string ) -> string or null
+
+            const last_dot_position = i_TFS_path.find_last ( "." ) on_null:return null
+
+            if last_dot_position =v i_TFS_path.size then
+                return null
+            .
+    
+            const TFS_id = i_TFS_path.substring_from ( last_dot_position + 1 )
+            if TFS_id.contains ( "$" ) then
+                // it is an embedded class
+                return null
+            .
+    
+            if TFS_id.size <# 4
+                // doesn't start with prefix pp_
+                return null
+            .
+    
+            return TFS_id.substring_to ( 3 )
+        .
+    
+        function resource_path_to_TFS_path_string ( resource_path string ) -> string or null
+    
+            if not i_resource_path.ends_with ( ".class" ) then
+                return null
+            .
+    
+            const class_stripped = i_resource_path.substring_to ( i_resource_path.size - 6 )
+    
+            return class_stripped.replace_all_character (
+                to_replace = '/'
+                replace_by = '.' )
+        .
+    .
+    
+    tests
+        const t = module_id.create ( "java.base" )
+        t.to_string
+
+        ///
+        OS.out.write_line ( module_ids.to_long_string )
+        OS.out.write_line ( non_Java_JDK_module_ids.to_long_string )
+
+        for_each_resource_in_module ( module_id = se_ppl_core_constants.module_id, consumer = { resource ->
+            OS.out.write_line ( resource )
+        } )
+        
+        for_each_resource_in_non_Java_JDK_modules ( consumer = { resource ->
+            OS.out.write_line ( resource )
+        } )
+        
+        for_each_library_in_module ( module_id = se_ppl_core_constants.module_id, consumer = { library_path ->
+            OS.out.write_line ( library_path.to_string )
+        } )
+        .///
+    .
+.

@@ -1,0 +1,6 @@
+type non_union_object_type \
+    child_types: type_path_object_type, type_parameter_object_type \
+    factories: none
+
+    inherit object_type
+.

@@ -1,0 +1,6 @@
+type null_pointer_program_error
+
+    inherit program_error
+    
+    att java_exception java_exception
+.

@@ -1,0 +1,100 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service events
+
+	java_header
+        import java.util.ArrayList;
+        
+		import org.ppl.core.basics.base_types.ty_non_null;
+		
+		import org.ppl.core.events.*;
+		import org.ppl.core.events.event_source.*;
+		import org.ppl.core.events.event_script.*;
+
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		import org.ppl.core.collections.lists.indexed_list.ty_mutable_indexed_list;
+		import org.ppl.core.collections.lists.indexed_list.fa_mutable_indexed_list;
+		
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+        
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.service.path.fa_service_path;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.TFS_features.command.fa_PPL_command_id;
+//        import org.ppl.core.reflection.introspection.identifier.fa_PPL_identifier;
+	end java_header
+
+	java
+		public static class _java_event_handler_entry {
+		
+			public String a_event_id;
+			public ty_event_handler a_event_handler;
+
+			public _java_event_handler_entry ( String i_event_id, ty_event_handler i_event_handler ) {
+				this.a_event_id = i_event_id;
+				this.a_event_handler = i_event_handler;
+			}
+		}
+
+		// helper for generate_event instruction
+
+		public static void _co_generate_event ( String i_event_id, ty_event i_event, java.util.ArrayList<_java_event_handler_entry> i_event_handler_list ) {
+			for (java.util.Iterator<_java_event_handler_entry> i = i_event_handler_list.iterator(); i.hasNext();) {
+				_java_event_handler_entry v_entry = i.next();
+				if (v_entry.a_event_id.equals(i_event_id)) {
+					v_entry.a_event_handler.getEvent_script().execute(i_event);
+				}
+			}
+		}
+
+		// helpers for on_event instruction
+
+		public static ty_object_event_source _co_object_event_source ( ty_non_null i_expression ) {
+
+			return fa_object_event_source.create(i_expression);
+		}
+
+		public static ty_service_event_source _co_service_event_source ( String i_service_id_path ) {
+
+			// ty_service_proxy v_service_proxy = se_reflection.service_proxy_by_prefixed_id_path_string ( new fa_string(i_service_id_path) );
+			// ty_service_base v_service = se_reflection.service_by_prefixed_id_path_string ( new fa_string(i_service_id_path) );
+			// return fa_service_event_source.create ( v_service );
+            
+            return fa_service_event_source.create ( fa_service_path.create ( new fa_string ( i_service_id_path ) ) );
+		}
+
+		public static ty_object_command_event_script _co_object_command_event_script ( ty_non_null i_event_script_object, String i_command_id ) {
+
+			return fa_object_command_event_script.create ( i_event_script_object, fa_PPL_command_id.create(new fa_string(i_command_id)) );
+		}
+
+		public static ty_service_script_event_script _co_service_script_event_script ( String i_service_id_path, String i_script_id ) {
+
+			return fa_service_script_event_script.create (
+                fa_service_path.create ( new fa_string ( i_service_id_path ) ),
+                new fa_string ( i_script_id ) );
+		}
+
+		public static ty_event_handler _co_on_event ( ty_event_source i_event_source, ty_event_script i_event_script, String[] i_event_id_list, ArrayList<_java_event_handler_entry> i_event_handler_list ) {
+
+			// ty_mutable_indexed_string_list v_event_id_list = fa_mutable_indexed_string_list.create();
+			// ty_mutable_indexed_list<string> v_event_id_list = fa_mutable_indexed_list<string>.create();
+			ty_mutable_indexed_list<ty_string> v_event_id_list = fa_mutable_indexed_list.<ty_string>create(se_common_object_types.getString());
+
+			ty_event_handler o_event_handler = fa_event_handler.create ( i_event_source, v_event_id_list, i_event_script );
+
+			for (int i=0; i < i_event_id_list.length; i++) {
+				String v_event_id = i_event_id_list[i];
+				v_event_id_list.append(new fa_string(v_event_id));
+				i_event_handler_list.add(new _java_event_handler_entry(v_event_id, o_event_handler));
+			}
+
+			return o_event_handler;
+		}
+	end java
+
+end service

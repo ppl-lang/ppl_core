@@ -1,0 +1,5 @@
+type unanticipated_error_handler
+
+   function handle_error ( error unanticipated_error )
+
+.

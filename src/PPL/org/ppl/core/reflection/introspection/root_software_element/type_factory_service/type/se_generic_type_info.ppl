@@ -1,0 +1,52 @@
+service generic_type_info
+
+    java_header
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+
+        import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.java.se_type_parameter_Java_helper;
+    end java_header
+
+	function is_generic_type_path ( type_path ) -> yes_no
+
+		script
+		    variable r yes_no
+			java
+			    Class<?> clazz = se_PPL_type_Java_introspection.javaInterfaceForTypePath ( i_type_path );
+				v_r = fa_yes_no.of ( se_type_parameter_Java_helper.class_has_type_parameters ( clazz ) );
+			end java
+			assert r is not null
+			return r
+		.
+		test
+		    test se_common_type_paths.string
+		    verify not result
+
+		    test se_common_type_paths.indexed_list
+		    verify result
+		.
+	.
+
+	function get_generic_parameter_id_list ( type_path ) -> indexed_list<type_parameter_id> or null
+
+		script
+		    variable r indexed_list<type_parameter_id> or null
+			java
+			    Class<?> clazz = se_PPL_type_Java_introspection.javaInterfaceForTypePath ( i_type_path );
+			    v_r = se_type_parameter_Java_helper.type_parameter_ids_of_class ( clazz );
+            end java
+			assert r may be null
+			return r
+		.
+		test
+		    test se_common_type_paths.string
+		    verify result is null
+
+		    test se_common_type_paths.indexed_list
+		    verify result is not null
+		    verify result.size =v 1
+		    verify result.get(1).value =v "element"
+		.
+	.
+	
+.

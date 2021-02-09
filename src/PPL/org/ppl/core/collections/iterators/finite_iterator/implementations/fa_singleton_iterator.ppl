@@ -1,0 +1,36 @@
+factory singleton_iterator type:finite_iterator_with_size
+	
+    attributes access:private
+        att object t_element
+        variable att exhausted yes_no
+    .
+
+    function next
+        if not a_exhausted then
+            a_exhausted = yes
+            return object_reference<t_element>.create ( object )
+        else
+            return null
+        .
+    .
+
+    function size = 1L
+
+    creator create ( object t_element ) -> finite_iterator_with_size<t_element>
+        
+        this.object = i_object
+        this.exhausted = no
+        
+        return this
+    .
+
+	tests
+	    const it = singleton_iterator<string>.create ( "foo" )
+
+	    const e = it.next
+	    verify e is not null
+	    verify e.object =v "foo"
+
+	    verify it.next is null
+	.
+.

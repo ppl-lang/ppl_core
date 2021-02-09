@@ -1,0 +1,16 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template result_or_file_error_void_output
+
+	param result_type end
+
+	%result_or_error_void_output < &
+		result_type:{result_type} &
+		error_type: file_error >
+	
+end

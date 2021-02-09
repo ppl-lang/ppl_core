@@ -1,0 +1,28 @@
+service service_function_executor
+
+    java_header
+        import org.ppl.core.collections.java.se_Java_collection_converter;
+        import org.ppl.core.reflection.execution.java.se_dynamic_Java_execution;
+        
+        import org.ppl.core.basics.base_types.ty_any;
+        import org.ppl.core.basics.base_types.ty_non_null;
+    end java_header
+    
+    // returns null if function has no output
+    function execute -> any
+        in service_path service_path
+        in function_id PPL_command_id
+		in input_arguments list<any> or null
+		
+		variable r any
+        java
+            v_r = (ty_any) se_dynamic_Java_execution.invokeStaticClassMethod ( 
+                i_service_path.getValue().getJavaString(),
+                i_function_id.getValue().getJavaString(),
+                se_Java_collection_converter.PPL_list_to_Java_Object_Array ( i_input_arguments ) );
+        end java
+        assert r may be null
+
+        return r
+    .
+.

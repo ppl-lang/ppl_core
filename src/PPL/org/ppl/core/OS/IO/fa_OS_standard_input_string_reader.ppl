@@ -1,0 +1,24 @@
+factory OS_standard_input_string_reader type:string_reader
+
+	java_header
+		import org.ppl.core.IO.reader.string.java.fa_Java_BufferedReader_string_reader;
+	end java_header
+
+    att delegate string_reader access:private
+
+	functions
+        try_read_character = a_delegate.try_read_character
+        try_read_line      = a_delegate.try_read_line
+        try_read_all       = a_delegate.try_read_all
+        try_close          = a_delegate.try_close
+    .
+
+	creator create -> string_reader
+
+        java
+            c_this.a_delegate = new fa_Java_BufferedReader_string_reader ( System.in );
+        end java
+        
+        return this
+    .
+.

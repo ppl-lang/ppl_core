@@ -1,0 +1,5 @@
+type service_id
+
+    inherit TFS_id
+
+.

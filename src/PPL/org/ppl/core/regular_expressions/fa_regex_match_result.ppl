@@ -1,0 +1,238 @@
+factory regex_match_result
+
+    java_header
+        import java.util.regex.MatchResult;
+
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.positive_32.fa_pos_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+		import org.ppl.core.basics.scalar.string.fa_string;
+    end java_header
+
+    java
+        private MatchResult a_java_value;
+        
+        public MatchResult getJavaMatchResult() { return a_java_value; }
+
+		public fa_regex_match_result ( MatchResult i_java_value ) {
+			if (i_java_value == null) {
+				throw new IllegalArgumentException ("Input for fa_regex_match_result constructor cannot be null.");
+			}
+
+			a_java_value = i_java_value;
+		}
+    end java
+    
+    function to_string = found
+
+    function to_long_string
+    
+        const r = mutable_string.create
+        
+        r.append_line ( """Found ({{start_index}} to {{end_index}}): "{{found}}"""" )
+        
+        repeat from i = 1 to group_count
+            if group_found(i) as found is not null then
+                const start = group_start_index(i)
+                assert start is not null
+                const end = group_end_index(i)
+                assert end is not null
+                r.append_line ( """Group {{i}} ({{start}} to {{end}}): "{{found}}"""" )
+            else
+                r.append_line ( """Group {{i}}: null""" )
+            .
+        .
+        
+        return r.to_string
+    .
+    
+	functions native:yes
+
+        found
+            java
+                return new fa_string ( a_java_value.group() );
+            end java
+        .
+        
+        start_index 
+            java
+                return new fa_pos_32 ( a_java_value.start() + 1 );
+            end java
+        .
+    
+        end_index 
+            java
+                return new fa_pos_32 ( a_java_value.end() );
+            end java
+        .
+    
+        group_count 
+            java
+                return new fa_zero_pos_32 ( a_java_value.groupCount() );
+            end java
+        .
+    .
+
+    function group_start_index
+
+        variable r pos_32 or null
+        java
+            /*
+            int r = a_java_value.start ( i_group_index.getJavaInt() );
+            if ( r != -1 ) {
+                v_r = new fa_pos_32 ( r + 1 );
+            } else {
+                v_r = null;
+            } */
+            
+            String group = a_java_value.group ( i_group_index.getJavaInt() );
+            if ( group == null || group.length() == 0 ) {
+                v_r = null;
+            } else {
+                int r = a_java_value.start ( i_group_index.getJavaInt() );
+                v_r = new fa_pos_32 ( r + 1 );
+            }
+        end java
+        assert r may be null
+        return r
+    .
+
+    function group_end_index 
+
+        variable r pos_32 or null
+        java
+            /*
+            int r = a_java_value.end ( i_group_index.getJavaInt() );
+            if ( r != -1 ) {
+                v_r = new fa_pos_32 ( r );
+            } else {
+                v_r = null;
+            } */
+
+            String group = a_java_value.group ( i_group_index.getJavaInt() );
+            if ( group == null || group.length() == 0 ) {
+                v_r = null;
+            } else {
+                int r = a_java_value.end ( i_group_index.getJavaInt() );
+                v_r = new fa_pos_32 ( r );
+            }
+        end java
+        assert r may be null
+        return r
+    .
+
+    function group_found 
+
+        variable r string or null
+        java
+            String r = a_java_value.group ( i_group_index.getJavaInt() );
+            if ( r != null && r.length() > 0 ) {
+                v_r = new fa_string ( r );
+            } else {
+                v_r = null;
+            }
+        end java
+        assert r may be null
+        return r
+    .
+    
+    tests
+        var r = "ab12 ".match_with_regex ( regex.create ( '''(\w\w)(\d+)(\s*)''' ) )
+        verify r is not null
+        verify r.found =v "ab12 "
+        verify r.start_index =v 1
+        verify r.end_index =v 5
+        verify r.group_count =v 3
+        
+        variable found_1 = r.group_found ( 1 )
+        verify found_1 is not null
+        verify found_1 =v "ab" 
+        variable start_1 = r.group_start_index ( 1 )
+        verify start_1 is not null
+        verify start_1 =v 1 
+        variable end_1 = r.group_end_index ( 1 )
+        verify end_1 is not null
+        verify end_1 =v 2 
+        
+        variable found_2 = r.group_found ( 2 )
+        verify found_2 is not null
+        verify found_2 =v "12" 
+        variable start_2 = r.group_start_index ( 2 )
+        verify start_2 is not null
+        verify start_2 =v 3
+        variable end_2 = r.group_end_index ( 2 )
+        verify end_2 is not null
+        verify end_2 =v 4
+        
+        variable found_3 = r.group_found ( 3 )
+        verify found_3 is not null
+        verify found_3 =v " "
+        variable start_3 = r.group_start_index ( 3 )
+        verify start_3 is not null
+        verify start_3 =v 5
+        variable end_3 = r.group_end_index ( 3 )
+        verify end_3 is not null
+        verify end_3 =v 5
+
+        r = "ab ".match_with_regex ( regex.create ( '''(\w\w)(\d)?(\s*)''' ) )
+        verify r is not null
+        verify r.found =v "ab "
+
+        verify r.group_count =v 3
+        
+        found_1 = r.group_found ( 1 )
+        verify found_1 is not null
+        verify found_1 =v "ab" 
+        start_1 = r.group_start_index ( 1 )
+        verify start_1 is not null
+        verify start_1 =v 1 
+        end_1 = r.group_end_index ( 1 )
+        verify end_1 is not null
+        verify end_1 =v 2 
+        
+        verify r.group_found ( 2 ) is null 
+        verify r.group_start_index ( 2 ) is null 
+        verify r.group_end_index ( 2 ) is null
+        
+        found_3 = r.group_found ( 3 )
+        verify found_3 is not null
+        verify found_3 =v " "
+        start_3 = r.group_start_index ( 3 )
+        verify start_3 is not null
+        verify start_3 =v 3
+        end_3 = r.group_end_index ( 3 )
+        verify end_3 is not null
+        verify end_3 =v 3
+
+        // (\d)? is the same as (\d?)
+        
+        r = "ab ".match_with_regex ( regex.create ( '''(\w\w)(\d?)(\s*)''' ) )
+        verify r is not null
+        verify r.found =v "ab "
+
+        verify r.group_count =v 3
+        
+        found_1 = r.group_found ( 1 )
+        verify found_1 is not null
+        verify found_1 =v "ab" 
+        start_1 = r.group_start_index ( 1 )
+        verify start_1 is not null
+        verify start_1 =v 1 
+        end_1 = r.group_end_index ( 1 )
+        verify end_1 is not null
+        verify end_1 =v 2 
+        
+        verify r.group_found ( 2 ) is null 
+        verify r.group_start_index ( 2 ) is null 
+        verify r.group_end_index ( 2 ) is null
+        
+        found_3 = r.group_found ( 3 )
+        verify found_3 is not null
+        verify found_3 =v " "
+        start_3 = r.group_start_index ( 3 )
+        verify start_3 is not null
+        verify start_3 =v 3
+        end_3 = r.group_end_index ( 3 )
+        verify end_3 is not null
+        verify end_3 =v 3
+    .
+.

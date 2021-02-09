@@ -1,0 +1,398 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory mutable_string type:mutable_string
+
+	java_header
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+		import org.ppl.core.basics.scalar.string.emptyable_string.fa_emptyable_string;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+	end java_header
+
+	java
+		private StringBuffer a_java_value;
+
+		public StringBuffer getJavaStringBuffer() { return a_java_value; }
+		
+		private boolean isEmpty() {
+            return a_java_value.length() == 0;
+		}
+
+		// throws if is empty
+		private char lastChar() {
+            return a_java_value.charAt ( a_java_value.length() - 1 );
+		}
+
+		// throws if is empty
+		private void removeLastChar() {
+            a_java_value.deleteCharAt ( a_java_value.length() - 1 );
+		}
+	end java
+	
+	function is_empty native:yes
+        java
+            return fa_yes_no.of ( isEmpty() );
+        end java
+	.
+
+	function size native:yes
+        java
+            return new fa_zero_pos_32 ( a_java_value.length() );
+        end java
+	.
+	
+	// append
+
+	function append
+        java
+            a_java_value.append ( i_string.to_string().getJavaString() ) ;
+        end java
+        return this
+	.
+	
+	function append_line
+        append ( i_string )
+        return append_new_line
+	.
+	
+	function append_new_line = append ( se_string_constants.current_OS_new_line )
+
+	function append_character
+        java
+            a_java_value.append ( i_character.getJavaChar() ) ;
+        end java
+        return this
+	.
+
+	function append_mutable
+        java
+            a_java_value.append ( i_mutable_string.getJavaStringBuffer() ) ;
+        end java
+        return this
+	.
+	
+	function append_scalar_or_scalar_value
+        append ( i_scalar_or_scalar_value.to_string )
+        return this
+	.
+
+	function append_if_not_null
+        if i_string is not null then
+            append ( i_string )
+        .
+        return this
+	.
+	
+	function append_scalar_or_scalar_value_if_not_null
+        if i_object is not null then
+            append ( i_object.to_string )
+        .
+        return this
+	.
+
+	function prepend
+		script
+			java
+				a_java_value.insert ( 0, i_string.to_string().getJavaString() ) ;
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abc" )
+
+            test "12"
+            verify v_result.to_string =v "12abc"
+		.
+	.
+	
+	function insert_before
+		script
+			java
+				a_java_value.insert ( i_index.getJavaInt() - 1, i_string.to_string().getJavaString() ) ;
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abc" )
+
+            test index = 2 string = "12"
+            verify v_result.to_string =v "a12bc"
+		.
+	.
+	
+	// remove
+	
+	function remove_from_to
+		script
+			java
+				a_java_value.delete ( i_from.getJavaInt() - 1, i_to.getJavaInt() );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test from = 2; to = 4
+            verify v_result.to_string =v "ae"
+		.
+	.
+	
+	function remove_from
+		script
+			java
+				a_java_value.delete ( i_from.getJavaInt() - 1, a_java_value.length() );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test from = 3
+            verify v_result.to_string =v "ab"
+		.
+	.
+	
+	function remove_to
+		script
+			java
+				a_java_value.delete ( 0, i_to.getJavaInt() );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test to = 3
+            verify v_result.to_string =v "de"
+		.
+	.
+	
+	function remove_first
+		script
+			java
+				a_java_value.deleteCharAt ( 0 );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test
+            verify v_result.to_string =v "bcde"
+		.
+	.
+	
+	function remove_first_n
+		script
+			java
+				a_java_value.delete ( 0, i_n.getJavaInt() );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test n = 3
+            verify v_result.to_string =v "de"
+		.
+	.
+	
+	function remove_last
+		script
+			java
+				a_java_value.deleteCharAt ( a_java_value.length() - 1 );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test
+            verify v_result.to_string =v "abcd"
+		.
+	.
+	
+	function remove_last_n
+		script
+			java
+				a_java_value.delete ( a_java_value.length() - i_n.getJavaInt(), a_java_value.length() );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test n = 3
+            verify v_result.to_string =v "ab"
+		.
+	.
+	
+	function remove_last_new_line
+		script
+			java
+			    if ( ! isEmpty() && lastChar() == '\n' ) {
+			        removeLastChar();
+                }
+			    
+			    if ( ! isEmpty() && lastChar() == '\r' ) {
+			        removeLastChar();
+                }
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abc\r\n" )
+
+            test
+            verify v_result.to_string =v "abc"
+		.
+	.
+	
+	function remove_last_new_lines
+		script
+			java
+			    while ( ! isEmpty() &&
+			        ( lastChar() == '\n' || lastChar() == '\r' ) ) {
+			        removeLastChar();
+                }
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abc\r\n\n\r\n" )
+
+            test
+            verify v_result.to_string =v "abc"
+		.
+	.
+	
+    function ensure_ends_with_one_new_line
+        script
+            remove_last_new_lines
+            append_new_line
+            return this
+        end
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abc\r\n\n\r\n" )
+
+            test
+            verify v_result.to_string =v '''abc
+'''
+		.
+    .
+    
+	function remove_all
+        java
+            a_java_value.delete ( 0, a_java_value.length() ) ;
+        end java
+        return this
+	.
+	
+	// replace
+	
+	function replace_from_to
+		script
+			java
+				a_java_value.replace ( i_from.getJavaInt() - 1, i_to.getJavaInt(), i_replace_by.getJavaString() );
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+
+            test from = 2; to = 4; replace_by = "1234"
+            verify v_result.to_string =v "a1234e"
+		.
+	.
+
+	function replace_first
+		script
+			java
+				String to_replace = i_to_replace.getJavaString();
+				int index = a_java_value.indexOf ( to_replace );
+				if ( index != -1 ) {
+					a_java_value.replace ( index, index + to_replace.length(), i_replace_by.getJavaString() );
+				}
+			end java
+			return this
+		.
+		tests
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+            test to_replace = "bc", replace_by = "123"
+            verify v_result.to_string =v "a123de"
+
+            v_test_object_ = fa_mutable_string.create_with ( "abcde" )
+            test to_replace = "12", replace_by = "123"
+            verify v_result.to_string =v "abcde"
+		.
+	.
+
+	// convert
+
+	function to_string
+	
+        if is_empty then
+            error "An empty mutable string cannot be converted to a (non-empty) string"
+        .
+    
+        variable r string    
+        java
+            v_r = new fa_string ( a_java_value.toString() ) ;
+        end java
+        assert r is not null
+        return r
+	.
+	
+	function to_string_or_null
+	
+        if is_empty then
+            return null
+        .
+        
+        variable r string    
+        java
+            v_r = new fa_string ( a_java_value.toString() ) ;
+        end java
+        assert r is not null
+        return r
+	.
+
+	function to_emptyable_string native:yes
+        java
+            return fa_emptyable_string.create ( a_java_value.toString() );
+        end java
+	.
+	
+///
+	creator create ( initial_value string or null default:null ) -> mutable_string
+	
+        java
+            if ( i_initial_value == null ) {
+                c_this.a_java_value = new StringBuffer() ;
+            } else {
+                c_this.a_java_value = new StringBuffer ( i_initial_value.getJavaString() );
+            }
+        end java
+        return this
+	.
+.///
+
+	creator create -> mutable_string
+	
+        java
+            c_this.a_java_value = new StringBuffer() ;
+        end java
+        return this
+	.
+
+	creator create_with ( initial_value string or null ) -> mutable_string
+	
+	    const r = create
+	    r.append_if_not_null ( i_initial_value )
+	    return r
+    .
+.

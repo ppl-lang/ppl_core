@@ -1,0 +1,22 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service Java_introspection
+
+	java_header
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+	end java_header
+	
+	java
+	
+		public static ty_string annotationCodeToPPLString ( String annotationCode ) {
+		
+    		return annotationCode.isEmpty() ? null : new fa_string ( annotationCode );
+        }
+	end java
+.

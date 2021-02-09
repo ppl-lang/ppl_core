@@ -1,0 +1,100 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory signed_int_64
+
+	java_header
+		import java.lang.Long;
+		import java.lang.NumberFormatException;
+		import java.text.DecimalFormat;
+
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.ty_signed_int_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+
+		import org.ppl.core.error.unanticipated.program_error.arithmetic_overflow.ty_arithmetic_overflow_program_error;
+		import org.ppl.core.error.unanticipated.program_error.java.se_PEC;
+
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.java.se_java_utilities;
+		import org.ppl.core.error.java.se_Java_exception;
+	end java_header
+
+	java
+		private long javaLong ;
+
+		public long getJavaLong() { return javaLong; }
+
+		public fa_signed_int_64 ( long i_java_value ) {
+			javaLong = i_java_value;
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_signed_int_64 ) ) return false;
+			
+			return javaLong == ((ty_signed_int_64) other).getJavaLong();
+		}
+		
+		@Override
+		public int hashCode() {
+			return Long.hashCode ( javaLong );
+		}
+
+		public int compareTo ( ty_signed_int_64 other ) {
+			if ( this == other ) return 0;
+			return Long.compare ( javaLong, other.getJavaLong() );
+		}
+		
+		// used by fa_java_code_generator
+		public static ty_signed_int_64 create_from_signed_integer_32 ( ty_signed_int_32 i_signed_integer_32 ) {
+			return i_signed_integer_32 == null ? null : new fa_signed_int_64 ( i_signed_integer_32.getJavaInt() );
+		}
+
+		private ty_arithmetic_overflow_program_error co_arithmetic_overflow_error ( String i_command_id, long i_value_1, long i_value_2 ) {
+
+            return se_PEC.arithmetic_overflow (
+                this.getClass(),
+                i_command_id,
+                0, null,
+                String.valueOf ( i_value_1 ),
+                String.valueOf ( i_value_2 ) );
+		}
+	end java
+	
+%fa_int_64_commands < \
+    type_id: signed_int_64 \
+    unary_minus_result_factory_id: signed_int_64 \
+    abs_result_factory_id: signed_int_64 >
+
+
+	test
+///
+		let i1 = create_from_valid_string ( "1" )
+		let i100 = create_from_valid_string ( "100" )
+		verify (i100 + i1).to_string =v "101"
+		verify (i100 - i1).to_string =v "99"
+		verify (i100 * i100).to_string =v "10000"
+		verify (i100 / i1).to_string =v "100"
+
+        const imax = se_signed_int_64_constants.max_value
+        try
+            const imax2 = imax + imax
+            verify no
+        on_error
+            verify yes
+        .
+.///
+		
+		// TD more tests
+		
+	end
+	
+.

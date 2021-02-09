@@ -1,0 +1,9 @@
+type invalid_object_program_error
+
+	inherit check_program_error
+		redefine
+			att info default: "Invalid object values (object_check violation)."
+		.
+	.
+
+.

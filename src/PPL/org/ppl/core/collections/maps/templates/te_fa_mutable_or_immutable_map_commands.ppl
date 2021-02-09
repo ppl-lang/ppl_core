@@ -1,0 +1,161 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_mutable_or_immutable_map_commands
+
+	param size_factory
+
+    functions native:yes
+
+        iterator
+            java
+                return new fa_Java_Spliterator_wrapper_iterator_with_size<t_value> (
+                    a_java_map.values().spliterator(), a_java_map.size(), t_value );
+            end java
+        .
+    
+        size
+            java
+                return new fa_{size_factory} ( a_java_map.size() );
+            end java
+        .
+        
+        contains_key
+            java
+                return fa_yes_no.of ( a_java_map.containsKey ( i_key ) );
+            end java
+        .
+        
+        element_type
+            java
+                return t_value;
+            end java
+        .
+        
+        key_type
+            java
+                return t_key;
+            end java
+        .
+        
+        value_type
+            java
+                return t_value;
+            end java
+        .
+        
+        get_or_default
+            java
+                return a_java_map.getOrDefault ( i_key, i_default);
+            end java
+        .
+
+        get_or_null
+            java
+                return a_java_map.get ( i_key ) ;
+            end java
+        .
+    .
+
+    function try_get
+    
+        if contains_key ( i_key ) then
+            return get ( i_key )
+        else
+            return key_not_contained_in_map_error.create (
+                info = """Key '{{i_key}}' is not contained in map"""
+                data = i_key )
+        .
+    .
+
+    function key_stream native:yes
+        java
+            // TD in case of a mutable map: should create a copy of a_java_map.keySet()
+            return new fa_stream<t_key> ( Collections.unmodifiableSet ( a_java_map.keySet() ).stream(), t_key );
+        end java
+    .
+
+    function sorted_key_stream
+        
+        // return key_stream.sort_by_key ( key_getter = { return object.value } )
+        const comparator object_comparator<scalar_or_scalar_value> = \
+            { object_1.to_string.compare_to ( object_2.to_string ) }
+        return key_stream.sort ( comparator )
+    .
+
+    function value_stream native:yes
+        java
+            // TD in case of a mutable map: should create a copy of a_java_map.values()
+            return new fa_stream<t_value> (
+                Collections.unmodifiableCollection ( a_java_map.values() ).stream(), t_value );
+        end java
+    .
+
+    function key_value_stream native:yes
+        java
+            // TD in case of a mutable map: should create a copy of a_java_map.entrySet()
+            Stream<Map.Entry<t_key,t_value>> stream_1 = Collections.unmodifiableSet ( a_java_map.entrySet() ).stream();
+
+            Stream<ty_key_value_pair<? extends t_key, ? extends t_value>> stream_2 =
+                stream_1.map ( entry ->
+                    fa_key_value_pair.<t_key, t_value>create ( entry.getKey(), entry.getValue(), t_key, t_value ) );
+
+            return new fa_stream<ty_key_value_pair<? extends t_key, ? extends t_value>> (
+                stream_2,
+                key_value_object_type() );
+        end java
+    .
+    
+    function key_value_object_type access:private -> generified_object_type
+    
+        return generified_object_type.create (
+            type_path = se_common_type_paths.key_value_pair
+            type_parameters = se_generic_object_reflection.get_generic_parameter_map_or_throw ( this ) )
+    .
+    
+    function key_iterator native:yes
+        java
+            return new fa_Java_Spliterator_wrapper_iterator_with_size<t_key> (
+                a_java_map.keySet().spliterator(), a_java_map.size(), t_key );
+        end java
+    .
+
+    function key_value_iterator
+        
+        const r finite_iterator_with_size<key_value_pair<key:t_key value:t_value>> = \
+            key_value_stream.iterator type_check:no
+        return r
+    .
+
+    function to_string = """Map with {{size}} {{if size #v 1 then "elements" else "element" end if}}"""
+
+    function to_long_string
+    
+        const r = fa_mutable_string.create
+        
+        r.append ( "[" )
+        
+        repeat for each key_object in key_iterator is_last:is_last
+            r.append ( key_object.to_string )
+
+            r.append ( ": " )
+
+            const value = get ( key_object )
+            assert value may be null
+            // r.append ( se_object.to_long_string_or_null_string ( value ) )
+            r.append ( se_object.to_string_or_null_string ( value ) )
+
+            if not is_last then
+                r.append ( ", " )
+            .
+        .
+        
+        r.append ( "]" )
+        
+        return r.to_string
+    .
+.

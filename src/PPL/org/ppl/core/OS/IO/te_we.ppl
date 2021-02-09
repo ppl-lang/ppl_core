@@ -1,0 +1,8 @@
+template we // Write Expression
+
+	param expression
+	
+	OS.out.write ( '''{expression}: ''' )
+	OS.out.write_line ( se_object.to_string_or_null_string ( {expression} ) )
+	
+.

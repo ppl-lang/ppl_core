@@ -1,0 +1,235 @@
+service Java_collection_converter
+
+	java_header
+		import java.util.ArrayList;
+		import java.util.List;
+		import java.util.Map;
+		
+		import org.ppl.core.basics.base_types.ty_any;
+		import org.ppl.core.basics.scalar.ty_scalar_or_scalar_value;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		import org.ppl.core.collections.java.se_immutable_Java_collection_checker;
+		import org.ppl.core.collections.lists.ty_list;
+		import org.ppl.core.collections.lists.ty_mutable_list;
+		import org.ppl.core.collections.lists.fa_mutable_list;
+		import org.ppl.core.collections.lists.fa_mutable_list_with_nulls;
+		import org.ppl.core.collections.lists.indexed_list.ty_mutable_indexed_list;
+		import org.ppl.core.collections.lists.indexed_list.fa_mutable_indexed_list;
+		import org.ppl.core.collections.lists.indexed_list.fa_mutable_indexed_list_with_nulls;
+		import org.ppl.core.collections.maps.fa_mutable_map;
+		import org.ppl.core.collections.maps.fa_mutable_map_with_nulls;
+		import org.ppl.core.collections.maps.ty_map;
+		import org.ppl.core.collections.maps.ty_mutable_map;
+		import org.ppl.core.collections.ty_collection;
+		import org.ppl.core.reflection.execution.java.se_dynamic_Java_execution;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+	end java_header
+	
+	java
+		// PPL to Java
+		
+		public static <T extends ty_any> List<T> try_PPL_collection_to_Java_List ( ty_collection<T> PPL_collection ) {
+			if ( PPL_collection == null ) throw new IllegalArgumentException ( "Input cannot be null." );
+		
+			if ( PPL_collection instanceof ty_list ) {
+				return try_PPL_to_Java_List ( (ty_list<T>) PPL_collection );
+
+			} else if ( PPL_collection instanceof ty_map ) {
+				ty_list<T> PPL_list = ((ty_map<?,T>) PPL_collection).value_stream().to_list_or_null();
+				return try_PPL_to_Java_List ( PPL_list );
+				
+			} else {
+				throw new RuntimeException ( "Unsupported PPL collection" );
+			}
+		}
+
+		private static <T extends ty_any> List<T> try_PPL_to_Java_List ( ty_list<T> PPL_list ) {
+			if ( PPL_list == null ) throw new IllegalArgumentException ( "Input cannot be null." );
+
+            try {
+                @SuppressWarnings("unchecked")
+                List<T> r = (List<T>) se_dynamic_Java_execution.invokeObjectMethod_i0_o1 ( PPL_list, "getJavaList", List.class );
+                return r;
+            } catch ( Throwable t ) {
+                return null;
+            }
+		}
+
+		private static <K extends ty_scalar_or_scalar_value, V extends ty_any> Map<K,V> try_PPL_to_Java_Map ( ty_map<K,V> PPL_map ) {
+			if ( PPL_map == null ) throw new IllegalArgumentException ( "Input cannot be null." );
+
+            try {
+                @SuppressWarnings("unchecked")
+                Map<K,V> r = (Map<K,V>) se_dynamic_Java_execution.invokeObjectMethod_i0_o1 ( PPL_map, "getJavaMap", Map.class );
+                return r;
+            } catch ( Throwable t ) {
+                return null;
+            }
+		}
+
+		public static Object[] PPL_list_to_Java_Object_Array ( ty_list<? extends ty_any> PPL_list ) {
+		    
+		    if ( PPL_list == null ) return null;
+		    
+            List<Object> list = new ArrayList<Object>();
+		    se_Java_collection_utilities.forEachElementInList ( PPL_list, e -> list.add ( e ) );
+		    
+		    Object[] r = new Object[list.size()];
+		    return list.toArray ( r );
+		}
+		
+// TD		public static Map<String, Object> PPL_string_any_map_to_Java_Map ( ty_map
+
+        /* not used
+		public static String[] PPL_string_list_to_Java_String_Array ( ty_list<? extends ty_string> PPL_string_list ) {
+		    
+		    if ( PPL_string_list == null ) return null;
+		    
+            List<String> list = new ArrayList<String>();
+		    se_Java_collection_utilities.forEachElementInList ( PPL_string_list, e -> list.add ( e != null ? e.getJavaString() : null ) );
+		    
+		    String[] r = new String[list.size()];
+		    return list.toArray ( r );
+		}
+        */
+
+		// Java to PPL
+		
+    	public static ty_indexed_list<ty_string> Java_string_array_to_PPL_list ( String[] string_array ) {
+
+            if ( string_array.length == 0 ) return null;
+
+            ty_mutable_indexed_list<ty_string> r =
+                fa_mutable_indexed_list_with_nulls.create(se_common_object_types.getString_or_null());
+            for ( String argument : string_array ) {
+                if ( ! argument.isEmpty() ) {
+                    r.append ( new fa_string ( argument ) );
+                } else {
+                    r.append ( null );
+                }
+            }
+
+            return r.make_immutable();
+        }
+		
+	end java
+
+	tests
+		// test PPL_to_Java_List
+		
+		const PPL_list = [ "a", null, "c" ]
+		verify PPL_list.size =v 3
+			
+		var e1, e2, e3 string
+		var size positive_32
+		java
+			List<? extends ty_any> java_list = try_PPL_to_Java_List ( c_PPL_list );
+			v_e1 = (ty_string) java_list.get ( 0 );
+			v_e2 = (ty_string) java_list.get ( 1 );
+			v_e3 = (ty_string) java_list.get ( 2 );
+			v_size = new fa_pos_32 ( java_list.size() );
+		end java
+
+		// TD  should not be necessary 
+		assert e1 is not null
+		assert e2 is null
+		assert e3 is not null
+		assert size is not null
+		
+		verify e1 is not null
+		verify e1 =v "a"
+
+		verify e2 is null
+
+		verify e3 is not null
+		verify e3 =v "c"
+
+		verify size is not null
+		verify size =v 3
+		
+		
+		// test PPL_to_Java_Map
+		
+		const PPL_map = [ "a":"1", "b":null, "c":"3" ]
+		verify PPL_map.size =v 3
+
+		// var e1, e2, e3 string
+		// var size positive_32
+		java
+			Map<? extends ty_string, ? extends ty_any> java_map = try_PPL_to_Java_Map ( c_PPL_map );
+			v_e1 = (ty_string) java_map.get ( new fa_string ( "a" ) );
+			v_e2 = (ty_string) java_map.get ( new fa_string ( "b" ) );
+			v_e3 = (ty_string) java_map.get ( new fa_string ( "c" ) );
+			v_size = new fa_pos_32 ( java_map.size() );
+		end java
+		verify e1 is not null
+		verify e1 =v "1"
+
+		verify e2 is null
+
+		verify e3 is not null
+		verify e3 =v "3"
+
+		verify size is not null
+		verify size =v 3
+		
+		
+		// test get_Java_List_of_PPL_collection
+		const PPL_string_list = indexed_list<string>.create_singleton ( "qwe" )
+		verify PPL_string_list.size =v 1
+			
+		var e string
+		java
+			List<? extends ty_string> java_list_2 = try_PPL_collection_to_Java_List ( c_PPL_string_list );
+			v_e = java_list_2.get ( 0 );
+			v_size = new fa_pos_32 ( java_list_2.size() );
+		end java
+		assert e is not null
+		
+		verify e is not null
+		verify e =v "qwe"
+		verify size =v 1
+
+		const PPL_positive_32_map = map<key:string, value:positive_32>.create_singleton ( key = "asd" value = 123 )
+		verify PPL_positive_32_map.size =v 1
+		var v positive_32
+		java
+			List<? extends ty_pos_32> java_list_3 = try_PPL_collection_to_Java_List ( c_PPL_positive_32_map );
+			v_v = java_list_3.get ( 0 );
+			v_size = new fa_pos_32 ( java_list_3.size() );
+		end java
+		assert v is not null
+		verify v is not null
+		verify v =v 123
+		verify size is not null
+		verify size =v 1
+		
+///
+		// Java to PPL
+		
+		variable PPL_list_2 mutable_indexed_list<string or null>
+		java
+		    List<ty_string> l = new ArrayList<ty_string>();
+		    l.add ( new fa_string ( "1" ) );
+		    l.add ( null );
+		    l.add ( new fa_string ( "3" ) );
+		    v_PPL_list_2 = Java_List_to_mutable_indexed_PPL_list_with_nulls ( l );
+        end java
+        assert PPL_list_2 is not null
+        
+		verify PPL_list_2.size =v 3
+
+		const s1 = PPL_list_2.get(1)
+		verify s1 is not null
+		verify s1 =v "1"
+		
+		const s2 = PPL_list_2.get(2)
+		verify s2 is null
+
+		const s3 = PPL_list_2.get(3)
+		verify s3 is not null
+		verify s3 =v "3"
+.///
+	.
+.

@@ -1,0 +1,29 @@
+service type_function_info
+
+	function for_each_function_in_type ( type_path, consumer object_consumer<PPL_command> )
+
+        se_TFS_function_info.for_each_command_in_TFS (
+            TFS_path = i_type_path
+            consumer )
+    .
+
+	function sorted_functions_in_type ( type_path ) -> list<PPL_command> or null
+
+        const r = mutable_list<PPL_command>.create
+
+        for_each_function_in_type (
+            type_path
+            consumer = { -> r.append ( i_object ) } )
+
+        r.sort ( { object_1.id.value.compare_to_ignore_case ( object_2.id.value ) } )
+        
+        return r.make_immutable_or_null
+	.
+
+	function try_get_function ( type_path, function_id PPL_command_id ) -> PPL_command or reflection_error
+	    
+	    return se_TFS_function_info.try_get_command (
+	        TFS_path = i_type_path
+		    command_id = function_id )
+    .
+.

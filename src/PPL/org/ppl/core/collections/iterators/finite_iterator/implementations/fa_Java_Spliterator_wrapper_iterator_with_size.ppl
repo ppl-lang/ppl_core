@@ -1,0 +1,64 @@
+factory Java_Spliterator_wrapper_iterator_with_size type:finite_iterator_with_size
+
+    java_header
+        import java.util.Objects;
+		import java.util.Spliterator;
+		
+		import org.ppl.core.basics.scalar.number.integer.integer_64_bits.zero_positive_64.fa_zero_pos_64;
+		import org.ppl.core.utilities.object.reference.fa_object_reference;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+    end java_header
+
+    java
+        private class ObjectReference<T> {
+            t_element object;
+            ObjectReference ( t_element i_object ) { object = i_object; } 
+        }
+
+        private Spliterator<t_element> a_JavaSpliterator = null;
+
+        private long a_size;
+
+        private final ObjectReference<t_element> ref = new ObjectReference<t_element>(null);
+
+        public fa_Java_Spliterator_wrapper_iterator_with_size ( Spliterator<t_element> i_spliterator, long i_size, ty_object_type i_element_type ) {
+		    Objects.requireNonNull ( i_spliterator );
+		    Objects.requireNonNull ( i_element_type );
+            
+            a_JavaSpliterator = i_spliterator;
+            a_size = i_size;
+            t_element = i_element_type;
+        }
+        
+        public fa_Java_Spliterator_wrapper_iterator_with_size ( Spliterator<t_element> i_spliterator, ty_object_type i_element_type ) {
+		    Objects.requireNonNull ( i_spliterator );
+		    Objects.requireNonNull ( i_element_type );
+            if ( ! i_spliterator.hasCharacteristics ( Spliterator.SIZED ) ) throw new IllegalArgumentException ( "i_spliterator must be SIZED" ); 
+            
+            a_JavaSpliterator = i_spliterator;
+
+            // doesn't work reliably !!!
+            a_size = i_spliterator.getExactSizeIfKnown();
+
+            t_element = i_element_type;
+        }
+    end java
+    
+    function next native:yes
+        java
+            if ( a_JavaSpliterator.tryAdvance ( v -> ref.object = v ) ) {
+                return fa_object_reference.create ( ref.object, t_element );
+            } else {
+                return null;
+            }
+        end java
+    .
+    
+    function size native:yes
+        java
+            // doesn't work reliably !!!
+            // return new fa_zero_pos_64 ( a_JavaSpliterator.getExactSizeIfKnown() );
+            return new fa_zero_pos_64 ( a_size );
+        end java
+    .
+.

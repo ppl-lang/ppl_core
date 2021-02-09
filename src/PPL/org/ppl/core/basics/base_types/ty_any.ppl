@@ -1,0 +1,4 @@
+type any \
+    child_types: non_null, null \
+    factories: none
+.

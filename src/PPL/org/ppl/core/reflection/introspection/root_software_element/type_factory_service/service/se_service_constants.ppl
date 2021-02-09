@@ -1,0 +1,5 @@
+service service_constants
+    
+    att id_prefix string default:"se_"
+    
+.

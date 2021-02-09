@@ -1,0 +1,15 @@
+record type OS_command_config
+
+    attributes
+    
+        command_tokens list<child_of: string or null>
+        
+        environment_variables map<key:string, value:string or null> or null default:null
+        
+        working_directory directory or null default:null
+        
+        att input_redirect OS_input_redirect   default: OS_input_redirect_inherit.create
+        att output_redirect OS_output_redirect default: OS_output_redirect_inherit.create
+        att error_redirect OS_output_redirect  default: OS_output_redirect_inherit.create
+    .
+.

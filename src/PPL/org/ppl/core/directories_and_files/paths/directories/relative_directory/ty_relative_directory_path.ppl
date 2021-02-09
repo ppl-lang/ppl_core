@@ -1,0 +1,65 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type relative_directory_path
+
+	inherit absolute_or_relative_directory_path
+		redefine
+            function parent -> relative_directory_path or null
+
+			function append_name      -> relative_directory_path
+			function append_path      -> relative_directory_path
+			function append_file_name -> relative_file_path
+			function append_file_path -> relative_file_path
+
+            function rename -> relative_directory_path
+        .
+    .
+	
+	inherit relative_directory_or_file_path
+
+	inherit has_compare_to<relative_directory_path>
+	
+	functions
+	
+	    // TD remove ( replaced by to_directory_path)
+        make_absolute ( root directory_path ) -> directory_path
+
+        // TD remove or rename to to_directory_path_in_working_directory
+        make_absolute_to_working_directory -> directory_path
+
+        to_directory_path -> directory_path
+            in root_directory_path directory_path default:se_OS_directories.current_working_directory_path
+        .
+        
+        to_directory -> directory
+            in root_directory_path directory_path default:se_OS_directories.current_working_directory_path
+        .
+    
+        try_to_existing_directory -> directory or directory_inexistent_error
+            in root_directory_path directory_path default:se_OS_directories.current_working_directory_path
+        .
+    
+        /// TD
+            is_ancestor_of ( other relative_directory_path ) -> yes_no
+            is_parent_of ( other relative_directory_path ) -> yes_no
+
+    	    is_descendant_of ( other relative_directory_path ) -> yes_no
+    	    is_child_of ( other relative_directory_path ) -> yes_no
+
+            starts_with ( path relative_directory_path ) -> yes_no
+
+            has_common_ancestor_with ( other directory_path ) -> yes_no
+            get_common_ancestor_or_null ( other relative_directory_path ) -> directory_path -> or null
+
+            // prepend
+            prepend_name ( name directory_name ) -> relative_directory_path
+            prepend_names ( names list<directory_name> ) -> relative_directory_path
+            prepend_path ( path relative_directory_path ) -> relative_directory_path
+        .///
+	.
+.

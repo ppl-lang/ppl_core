@@ -1,0 +1,22 @@
+type object_type \
+    child_types: non_union_object_type, union_object_type \
+    factories: none
+
+    inherit has_equal_to < object_type >, has_to_long_string
+    
+    functions
+        
+        check_compatible_to_other -> object_type_incompatibility_error or null
+            in other object_type
+            in config object_type_compatibility_config
+        .
+            
+        is_nullable -> yes_no
+        
+        to_nullable -> object_type
+        
+        to_non_nullable -> object_type
+            
+        uses_type_parameters -> yes_no
+    .
+.

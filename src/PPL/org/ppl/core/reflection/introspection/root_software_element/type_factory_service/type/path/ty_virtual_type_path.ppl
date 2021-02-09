@@ -1,0 +1,11 @@
+type virtual_type_path
+
+    inherit TFS_path
+        redefine
+           	function id -> type_id
+        .
+    .
+    
+    inherit has_equal_to<virtual_type_path>
+
+.

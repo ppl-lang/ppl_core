@@ -1,0 +1,5 @@
+type has_finite_iterator < element >
+
+	function iterator -> finite_iterator <t_element>
+	
+.

@@ -1,0 +1,340 @@
+factory union_object_type
+
+    attributes kind:variable access:private
+        
+        cached_parent_object_type non_union_object_type or null default:null
+        cached_is_nullable yes_no or null default:null
+    .
+
+    function define_parent_object_type
+    
+        if a_known_parent_object_type is not null then
+            return a_known_parent_object_type
+        .
+
+        if a_cached_parent_object_type is not null then
+            return a_cached_parent_object_type
+        .
+        
+        if is_nullable then
+            a_cached_parent_object_type = se_common_object_types.any
+            return a_cached_parent_object_type
+        .
+
+        variable r non_union_object_type
+        
+        repeat for each member in a_members is_first:is_first
+            if is_first then
+                r = member
+            else
+                assert r is not null
+                r = parent_for_2_non_nulls (
+                    member_1 = r
+                    member_2 = member
+                    config )
+            .
+        .
+        assert r is not null
+        return r
+    .
+
+    function check_compatible_to_other
+
+        repeat for each member in a_members
+            const error = member.check_compatible_to_other ( i_other, i_config )
+            if error is not null then
+                return object_type_incompatibility_error.create_with_reason (
+                    reason = """A union type is compatible to another type if all members of the union type are compatible to the other type. This condition is not fulfilled for member '{{member.to_string}}'. Reason:
+{{error.info}}"""
+                    source = this
+                    target = i_other )
+            .
+        .
+        return null
+    .
+    
+    function check_other_compatible_to_me
+
+        repeat for each member in a_members
+            if i_other.check_compatible_to_other ( other = member, config ) is null then
+                return null
+            .
+        .
+        return object_type_incompatibility_error.create_with_reason (
+            reason = """Type '{{i_other.to_string}}' is not compatible to any member of type '{{this.to_string}}'."""
+            source = i_other
+            target = this )
+    .
+    
+    function is_nullable
+    
+        if a_cached_is_nullable is not null then
+            return a_cached_is_nullable
+        .
+        
+        a_cached_is_nullable = no
+        repeat for each member in a_members
+            if member.is_nullable then
+                a_cached_is_nullable = yes
+                exit repeat
+            .
+        .
+        
+        return a_cached_is_nullable
+    .
+
+    
+    function to_nullable
+    
+        if is_nullable then
+            return this
+        .
+
+        const new_members = add_member_to_members ( member = se_common_object_types.null, members = a_members )
+        return create ( members = new_members, known_parent_object_type = se_common_object_types.any )
+    .
+        
+    // TD? cache for better performance
+    function to_non_nullable
+
+        if not is_nullable then
+            return this
+        .
+        
+        const new_members = mutable_list<non_union_object_type>.create
+        repeat for each member in a_members
+            if member =v se_common_object_types.null then
+                next repeat
+            .
+            const new_member non_union_object_type = member.to_non_nullable type_check:no
+            new_members.append ( new_member )
+        .
+
+        if new_members.size =v 1 then
+            return new_members.first
+        else
+            return create ( members = new_members.make_immutable, known_parent_object_type = null )
+        .
+    .
+            
+    function uses_type_parameters
+    
+        repeat for each member in a_members
+            if member.uses_type_parameters then
+                return yes
+            .
+        .
+        return no
+    .
+    
+    function has_member
+    
+        repeat for each existing_member in a_members
+            if se_object_type_compatibility.is_compatible (
+                source = existing_member
+                target = i_member
+                i_config ) then
+                
+                return yes
+            .
+        .
+        return no
+    .
+
+///
+    function has_error_member = has_member ( member = se_common_object_types.error, i_config )
+    
+    function has_non_error_member = has_member ( member = se_common_object_types.non_error, i_config )
+.///
+    
+    function has_error_member_and_non_error_or_null_member
+        
+        variable has_error_member = no
+        variable has_non_error_or_null_member = no
+        repeat for each member in a_members
+            if is_error_member ( member, i_config ) then
+                has_error_member = yes
+                if has_non_error_or_null_member then
+                    return yes
+                .
+            else
+                has_non_error_or_null_member = yes
+                if has_error_member then
+                    return yes
+                .
+            .
+        .
+        
+        return no
+    .
+    
+    function remove_members
+
+        const new_members = mutable_list<non_union_object_type>.create
+        variable removed_count = 0
+
+        repeat for each member in a_members
+            if i_filter.is_accepted ( member ) then
+                removed_count = removed_count + 1
+            else
+                new_members.append ( member )
+            .
+        .
+
+        if removed_count =v 0 then
+            return result = this, members_removed_count = 0
+        .
+
+        case value of new_members.size
+            when 0
+                return result = null, members_removed_count = removed_count
+            when 1
+                return result = new_members.first, members_removed_count = removed_count
+            otherwise
+                return result = create ( members = new_members.make_immutable, known_parent_object_type = null ),
+                    members_removed_count = removed_count
+        .
+    .
+
+    function remove_error_members
+    
+        remove_members ( filter = { member => is_error_member ( member, i_config ) } ) (
+            const r = result
+            const removed_count = members_removed_count )
+            
+        return result = r, members_removed_count = removed_count
+    .
+    
+    function retain_error_members
+    
+        remove_members ( filter = { member => not is_error_member ( member, i_config ) } ) (
+            const r = result
+            const removed_count = members_removed_count )
+            
+        return result = r, members_removed_count = removed_count
+    .
+    
+///
+    function remove_non_error_members
+    
+        remove_members ( filter = { member => is_non_error_member ( member, i_config ) } ) (
+            const r = result
+            const removed_count = members_removed_count )
+            
+        return result = r, members_removed_count = removed_count
+    .
+.///
+
+	function to_string = to_string_ ( no )
+
+	function to_long_string = to_string_ ( yes )
+
+	function is_equal_to
+
+		if this =r i_other then
+			return yes
+		.
+		
+		case type of i_other
+			when union_object_type o then
+
+			    if a_members.size #v o.members.size then
+			        return no
+                .
+                
+				repeat for each this_member in a_members
+				    variable found = no
+				    repeat for each other_member in o.members
+				        if this_member =v other_member then
+				            found = yes
+				            exit repeat
+                        .
+                    .
+                    if not found then
+                        return no
+                    .
+                .
+                return yes
+
+			otherwise
+				return no
+		.
+	.
+
+	functions access:private
+	
+        function to_string_ ( long_version yes_no ) -> string
+        
+            const r = mutable_string.create
+        
+            repeat for each member in a_members is_first:is_first
+                if not is_first then
+                    r.append ( " or " )
+                .
+                if i_long_version then
+                    r.append ( member.to_long_string )
+                else
+                    r.append ( member.to_string )
+                .
+            .
+        
+            return r.to_string
+        .
+        
+        function add_member_to_members -> list<non_union_object_type>
+            in member non_union_object_type
+            in members list<child_of:non_union_object_type>
+        
+            const r = mutable_list<non_union_object_type>.create
+            r.append_all ( a_members )
+            r.append ( i_member )
+            return r.make_immutable
+        .
+
+        function parent_for_2_non_nulls -> non_union_object_type
+            in member_1 non_union_object_type
+            in member_2 non_union_object_type
+            in config object_type_compatibility_config
+            
+            // TD should analyze type hierarchy and return a more specific type
+            
+            if is_non_error_member ( member = member_1, config ) and \
+                is_non_error_member ( member = member_2, config ) then
+                return se_common_object_types.non_error
+            .
+                
+            if is_error_member ( member = member_1, config ) and \
+                is_error_member ( member = member_2, config ) then
+                return se_common_object_types.error
+            .
+            
+            return se_common_object_types.non_null
+        .
+
+        function is_error_member ( member non_union_object_type, config object_type_compatibility_config ) \
+            -> yes_no = \
+            se_object_type_compatibility.is_compatible_to_error ( object_type = member, i_config )
+        
+        function is_non_error_member ( member non_union_object_type, config object_type_compatibility_config ) \
+            -> yes_no = \
+            se_object_type_compatibility.is_compatible_to_non_error ( object_type = member, i_config )
+    
+    .
+
+
+    creator create kind:in_all
+    
+    creator create_nullable -> union_object_type
+        in member non_union_object_type check: \
+            i_member #v se_common_object_types.null and \
+            i_member #v se_common_object_types.any and \
+            i_member #v se_common_object_types.non_null and \
+            i_member #v se_common_object_types.none
+
+        this.members = [ member, se_common_object_types.null ]
+        this.cached_is_nullable = yes
+        this.known_parent_object_type = se_common_object_types.any
+        
+        return this
+    .
+.

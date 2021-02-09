@@ -1,0 +1,6 @@
+factory string_parser type:object_parser<string>
+
+	function try_parse = i_string
+	
+	creator create kind:in_all
+.

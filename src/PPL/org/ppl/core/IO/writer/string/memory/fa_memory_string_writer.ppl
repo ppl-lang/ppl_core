@@ -1,0 +1,46 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory memory_string_writer
+
+	att mutable_string mutable_string = fa_mutable_string.create private:yes
+
+	function try_write
+        a_mutable_string.append ( i_string )
+        return null
+    .
+
+	function try_write_line
+        a_mutable_string.append_line ( i_string )
+        return null
+    .
+
+	function try_write_new_line
+        a_mutable_string.append_new_line
+        return null
+    .
+	
+	function try_close
+        return null
+    .
+
+	function try_flush
+        return null
+    .
+	
+	function get_result
+	    return a_mutable_string.to_string_or_null
+    .
+
+	function reset
+        a_mutable_string.remove_all
+    .
+
+
+	creator create kind:in_all
+
+.

@@ -1,0 +1,61 @@
+service set_tests
+
+	tests
+		const mutable_set = mutable_ordered_set<string>.create
+		
+		mutable_set.add ( "string 1" )
+		mutable_set.add ( "string 2" )
+			
+		const set = mutable_set.make_immutable
+		verify set.size =v 2
+			
+		verify set.contains ( "string 1" )
+		verify not set.contains ( "foo" )
+
+		verify set.to_long_string =v "[# string 1, string 2]"
+			
+		repeat for each element in set is_first:is_first
+			if is_first then
+				verify element =v "string 1"
+			else
+				verify element =v "string 2"
+			.
+		.
+
+		const ms = mutable_ordered_set<string>.create
+		
+		// add
+		
+		ms.add ( "s1" )
+		// ms.add ( null ) // compiler error
+		
+		ms.add_if_not_contained ( "s1" )
+		verify ms.to_long_string =v "[# s1]"
+		ms.add_if_not_contained ( "s2" )
+		verify ms.to_long_string =v "[# s1, s2]"
+		
+		ms.add_or_replace ( "s1" )
+		verify ms.to_long_string =v "[# s1, s2]"
+		ms.add_or_replace ( "s3" )
+		verify ms.to_long_string =v "[# s1, s2, s3]"
+			
+		// remove
+
+		ms.remove ( "s2" )
+		verify ms.to_long_string =v "[# s1, s3]"
+
+		ms.remove_if_contained ( "foo" )
+		ms.remove_if_contained ( "s1" )
+		verify ms.to_long_string =v "[# s3]"
+
+		ms.remove_all
+		verify ms.is_empty
+		
+		// replace
+			
+		ms.add ( "s1" )
+		ms.replace ( to_replace = "s1", replace_by = "s0" )
+		verify ms.to_long_string =v "[# s0]"
+	.
+	
+.

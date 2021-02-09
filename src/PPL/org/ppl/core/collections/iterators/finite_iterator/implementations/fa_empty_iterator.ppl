@@ -1,0 +1,9 @@
+factory empty_iterator type:finite_iterator_with_size
+
+    function next = null
+    
+    function size = 0L
+
+    creator create kind:in_all
+
+.

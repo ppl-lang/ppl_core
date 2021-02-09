@@ -1,0 +1,24 @@
+type signed_integer
+
+	java_header
+		import java.math.BigInteger;
+	end java_header
+
+	java
+		public BigInteger getJavaBigInteger();
+	end java
+
+	inherit \
+		integer_number,
+		has_compare_to<signed_integer>,
+		has_min_max<signed_integer>,
+		has_hash_code
+		
+    %ty_arithmetic_functions<signed_integer>
+    
+///    
+    function is_zero -> yes_no
+    function is_zero_or_positive -> yes_no
+    function is_zero_or_negative -> yes_no
+.///
+.

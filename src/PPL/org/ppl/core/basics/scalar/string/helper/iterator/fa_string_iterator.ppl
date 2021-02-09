@@ -1,0 +1,59 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+// TD rename to string_character_iterator
+factory string_iterator type:finite_iterator_with_size<character>
+
+	java_header
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+	end java_header
+
+	java
+		public ty_object_type t_element() {
+			return se_common_object_types.getCharacter();
+		}
+	end java
+
+	attributes private:yes
+		att string string
+		variable att next_index positive_32
+	.
+
+	function next
+	
+		if a_next_index <= a_string.size then
+			const r = object_reference<character>.create ( a_string.get ( a_next_index ) )
+			a_next_index = a_next_index + 1
+			return r
+		else
+			return null
+		.
+	.
+
+	function size = a_string.size.to_zero_pos_64
+	
+
+	creator create ( string ) -> finite_iterator_with_size<character>
+
+        this.string = i_string
+        this.next_index = 1
+        
+        return this
+	.
+
+	tests
+		const it = create ( "abc123" )
+		verify it.size =v 6L
+		
+		const ms = mutable_string.create
+		repeat for each char in it
+			ms.append ( char.to_string )
+		.
+		verify ms.to_string =v "abc123"
+	.
+.

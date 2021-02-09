@@ -1,0 +1,173 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service empty_file_utilities
+
+	java_header
+		import java.io.*;
+
+		import org.ppl.core.directories_and_files.names.file.extension.se_file_name_extension;
+		import org.ppl.core.java.se_java_IO;
+		import org.ppl.core.error.java.se_Java_exception;
+	end java_header
+	
+	function try_create_new_empty_temporary_file -> file or directory_or_file_error
+		in directory default:se_OS_directories.temporary_files_directory
+		in file_name_extension default: fa_file_name_extension.create ( "tmp" )
+		in delete_file_on_exit yes_no
+
+		script
+			variable file_path string
+			variable exception Java_exception_runtime_error or null = null
+			java
+				try {
+					File file = File.createTempFile ( 
+						"ppl",
+						se_file_name_extension.getSeparator().getJavaString() + i_file_name_extension.getValue().getJavaString(),
+						i_directory.getJavaFile() );
+
+					v_file_path = new fa_string ( file.getCanonicalPath() );
+
+					if ( i_delete_file_on_exit.getJavaBoolean() ) {
+						file.deleteOnExit();
+					}
+				} catch ( Exception e ) {
+					v_exception = se_Java_exception.to_runtime_error ( e );
+				}
+			end java
+			assert exception may be null
+
+			if exception is null then
+			    assert file_path is not null
+				return file.create ( fa_file_path.create ( file_path ) )
+			else
+				return directory_or_file_error.create (
+					info = """A new temporary file could not be created in directory {{i_directory.to_string}}."""
+					cause = exception
+					resource = i_directory )
+			.
+		.
+		tests
+            test delete_file_on_exit = yes
+            const file file = result type_check:no
+            verify file.exists
+            const extension = file.path.name.extension
+            verify extension is not null
+            verify extension.value =v "tmp"
+        .
+    .
+
+	
+/// TD remove
+    commands obsolete:yes
+    
+        command create_new_empty_file_obsolete private:yes
+            %new_file_input_argument
+    
+            %file_error_output_argument
+            %file_exists_or_error_output
+    
+            script
+                var java_exception java_exception = void
+                var success yes_no = no
+    
+                java
+                    try	{
+                        v_success = i_file.getJavaFile().createNewFile() ? fa_yes_no.a_yes : fa_yes_no.a_no;
+                    }
+                    catch ( Exception e ) {
+                        v_java_exception = new fa_java_exception ( e );
+                    }
+                end java
+                
+                if v_java_exception #r void or not v_success then
+                    o_error = fa_file_error.create ( &
+                        info = """File '{{i_file.to_string}} could not be created'. The following error occured:
+    {{v_java_exception?.to_string if_null:"unknown"}}""" &
+                        java_exception = v_java_exception &
+                        resource = i_file )
+                end if
+            end
+        end
+    
+        command empty_existing_file_obsolete private:yes
+            %existing_file_input_argument
+    
+            %file_error_output_argument
+            %file_exists_or_error_output
+    
+            script
+                var java_exception java_exception = void
+    
+                java
+                    PrintWriter writer = null;
+                    try	{
+                        writer = new PrintWriter ( i_file.getJavaFile() );
+                        writer.print ( "" );
+                    }
+                    catch ( Exception e ) {
+                        v_java_exception = new fa_java_exception ( e );
+                    }
+                    finally {
+                        se_java_IO.close_writer ( writer );
+                    }
+                end java
+                
+                if v_java_exception #r void then
+                    o_error = fa_file_error.create ( &
+                        info = """File '{{i_file.to_string}} could not be emptied'. The following error occured:
+    {{v_java_exception.to_string}}""" &
+                        java_exception = v_java_exception &
+                        resource = i_file )
+                end if
+            end
+        end
+    
+        command empty_new_or_existing_file_obsolete private:yes
+            %new_or_existing_file_input_argument
+    
+            %file_error_output_argument
+            %file_exists_or_error_output
+    
+            script
+                if i_file.exists then
+                    o_error = empty_existing_file_obsolete ( &
+                        file = i_file )
+                else
+                    o_error = create_new_empty_file_obsolete ( &
+                        file = i_file )
+                end if
+            end
+            test
+                script
+                    // new file
+                    const file file = co_create_new_empty_temporary_file_obsolete.result ( delete_file_on_exit = yes )
+                    c_file.try_delete
+                    verify not c_file.exists
+                    test file = c_file
+                    verify v_error =r void
+                    verify c_file.exists
+    
+                    // existing file
+                    se_text_file_writer.write_to_existing_file ( &
+                        string = "qwe" &
+                        file = c_file )
+                    var content string = se_text_file_reader.try_read_content ( file ) type_check:no
+                    verify v_content compare =v "qwe"
+    
+                    test file = c_file
+                    verify v_error =r void
+    
+                    v_content = se_text_file_reader.try_read_content ( file ) type_check:no
+                    verify v_content =r void
+                end
+            end
+        end
+    .
+.///
+
+.

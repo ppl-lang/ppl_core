@@ -1,0 +1,75 @@
+service Java_method_introspection
+    
+	java_header
+		import java.lang.reflect.Method;
+
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.basics.scalar.yes_no.ty_yes_no;
+	end java_header
+	
+    java
+		public static ty_yes_no isMethodDeprecated ( Method method ) {
+
+			Deprecated annotation = (Deprecated) method.getAnnotation ( Deprecated.class );
+			return annotation != null ? fa_yes_no.a_yes : fa_yes_no.a_no;
+		}
+
+		public static Method getPublicMethodByName ( Class clazz, String methodName )
+			throws NoSuchMethodException {
+
+			Method[] methods = clazz.getMethods();
+			for (int i=0; i < methods.length; i++) {
+				if (methods[i].getName().equals(methodName)) {
+					return methods[i];
+				}
+			}
+			
+			throw new NoSuchMethodException ( "Method '" + methodName + "' doesn't exist in class '" + clazz + "'" );
+		}
+
+        /*
+		private static Method getPrivateMethodByName ( Class clazz, String methodName )
+			throws NoSuchMethodException {
+
+			Method[] methods = clazz.getDeclaredMethods();
+			for (int i=0; i < methods.length; i++) {
+				if (methods[i].getName().equals(methodName)) {
+					return methods[i];
+				}
+			}
+
+			throw new NoSuchMethodException ( "Method '" + methodName + "' doesn't exist in class '" + clazz + "'" );
+		}
+        */
+    end java
+    
+
+    att check_method_suffix string = "_check"
+    att in_check_method_suffix string = "_in_check"
+
+    att default_value_method_suffix string = "_default"
+    
+
+    function input_argument_check_method_name -> string    
+        in command_id PPL_command_id
+        in input_argument_id PPL_command_input_argument_id
+        
+        // e.g. co_create_i_name_check
+        return """{{i_command_id.to_prefixed_string}}_{{i_input_argument_id.to_prefixed_string}}{{a_check_method_suffix}}"""
+    .
+
+    function in_check_method_name -> string    
+        in command_id PPL_command_id
+        
+        // e.g. co_create_in_check
+        return """{{i_command_id.to_prefixed_string}}{{a_in_check_method_suffix}}"""
+    .
+
+    function input_argument_default_value_method_name -> string    
+        in command_id PPL_command_id
+        in input_argument_id PPL_command_input_argument_id
+        
+        // e.g. co_create_i_name_default
+        return """{{i_command_id.to_prefixed_string}}_{{i_input_argument_id.to_prefixed_string}}{{a_default_value_method_suffix}}"""
+    .
+.

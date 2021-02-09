@@ -1,0 +1,42 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory service_script_event_script type:service_script_event_script
+
+	java_header
+		import org.ppl.core.reflection.introspection.java.se_Java_method_introspection;
+		import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+	end java_header
+
+	java
+		private java.lang.reflect.Method _a_event_script_method;
+		private java.lang.reflect.Method _a_execute_event_script_method;
+	end java
+
+	command execute
+		script
+			java
+				// TD see remarks in fa_object_command_event_script for better performance
+				if (_a_event_script_method == null) {
+					// Class v_class = Class.forName(a_RSE.getValue().getJavaString());
+					Class<?> v_class = se_Java_reflection_class_loader.getClassOrThrow (
+					    a_RSE.getValue().getJavaString() );
+
+					_a_event_script_method = se_Java_method_introspection.getPublicMethodByName ( v_class, a_script_id.getJavaString() );
+
+					_a_execute_event_script_method = se_Java_method_introspection.getPublicMethodByName ( v_class, "_co_execute_event_script" );
+				}
+				//_a_event_script_method.invoke(null, i_event_object );
+				//_a_class._invoke_event_script (_a_event_script_method, i_event_object );
+				_a_execute_event_script_method.invoke(null, _a_event_script_method, i_event_object );
+			end java
+		end script
+	end command
+	
+	creator create kind:in_all end
+
+end factory

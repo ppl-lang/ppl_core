@@ -1,0 +1,7 @@
+factory file_read_error
+
+    function to_string = a_info
+    
+    creator create kind:in_all
+    
+.

@@ -1,0 +1,41 @@
+service OS_config
+
+	java_header
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_64_bits.zero_positive_64.fa_zero_pos_64;
+	end java_header
+
+    functions
+
+        PPL_version -> string = "2021-02-09"
+    
+        OS_name -> string = se_java_config.get_non_null_system_property ( "os.name" )
+    
+        OS_version -> string = se_java_config.get_non_null_system_property ( "os.version" )
+    
+        OS_is_Windows -> yes_no = OS_name.to_lower_case.contains ( "windows" )
+    
+        user_name -> string = se_java_config.get_non_null_system_property ( "user.name" )
+    .
+
+	functions native:yes
+
+        number_of_available_processors -> zero_pos_32
+            java
+                return new fa_zero_pos_32 ( Runtime.getRuntime().availableProcessors() ) ;
+            end java
+        .
+    
+        total_memory_bytes -> zero_pos_64
+            java
+                return new fa_zero_pos_64 ( Runtime.getRuntime().totalMemory() ) ;
+            end java
+        .
+    
+        free_memory_bytes -> zero_pos_64
+            java
+                return new fa_zero_pos_64 ( Runtime.getRuntime().freeMemory() ) ;
+            end java
+        .
+    .
+.

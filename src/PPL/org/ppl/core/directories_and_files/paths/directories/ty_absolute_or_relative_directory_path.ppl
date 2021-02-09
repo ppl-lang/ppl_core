@@ -1,0 +1,41 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type absolute_or_relative_directory_path
+
+	inherit absolute_or_relative_directory_or_file_path
+		redefine
+			function name -> directory_name
+        .
+    .
+    
+    functions
+    
+        // queries
+    	names -> indexed_list<directory_name>
+        parent -> absolute_or_relative_directory_path or null
+
+        // checks
+        is_root -> yes_no
+        
+        // append
+        append_name ( name directory_name )          -> absolute_or_relative_directory_path
+        append_path ( path relative_directory_path ) -> absolute_or_relative_directory_path
+    	append_file_path ( path relative_file_path ) -> absolute_or_relative_file_path
+        append_file_name ( name file_name )          -> absolute_or_relative_file_path
+    	
+    	rename ( new_name directory_name ) -> absolute_or_relative_directory_path
+
+        /// TD
+            levels -> pos_32
+            
+            ends_with ( path relative_directory_path ) -> yes_no
+            
+            append_names ( names list<directory_name> ) -> absolute_or_relative_directory_path
+        .///
+    .
+.

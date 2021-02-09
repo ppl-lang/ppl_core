@@ -1,0 +1,78 @@
+factory PPL_command
+
+    function to_string = """'{{a_id}}' in '{{a_TFS_id_path.id}}'"""
+    
+    function signature
+    
+        if arguments_to_string as arguments is null then
+            return a_id.value
+        else
+            return """{{a_id}} {{arguments}}"""
+        .
+    .
+
+    function arguments_to_string
+    
+        const r = mutable_string.create
+        
+        if input_arguments_to_string as input is not null then
+            r.append ( """( {{input}} )""" )
+        .
+        
+        if output_arguments_to_string as output is not null then
+            r.append ( " -> " )
+            assert a_output_argument_list is not null
+            if a_output_argument_list.size =v 1 then
+                r.append ( output )
+            else
+                r.append ( """( {{output}} )""" )
+            .
+        .
+        
+        return r.to_string_or_null
+    .
+
+    function input_arguments_to_string
+    
+        if a_input_argument_list is null then
+            return null
+        .
+
+        const r = mutable_string.create
+        
+        repeat for each input_argument in input_argument_list is_first:is_first
+            if not is_first then
+                r.append ( ", " )
+            .
+            r.append ( """{{input_argument.id}} {{input_argument.type.to_string}}""" )
+        .
+        
+        return r.to_string
+    .
+        
+    function output_arguments_to_string
+    
+        if a_output_argument_list is null then
+            return null
+        .
+
+        if a_output_argument_list.size =v 1 then
+            return a_output_argument_list.first.type.to_string
+        .
+
+        const r = mutable_string.create
+
+        repeat for each output_argument in output_argument_list is_first:is_first
+            if not is_first then
+                r.append ( ", " )
+            .
+            r.append ( """{{output_argument.id}} {{output_argument.type.to_string}}""" )
+        .
+        
+        return r.to_string
+    .
+        
+
+    creator create kind:in_all
+
+.

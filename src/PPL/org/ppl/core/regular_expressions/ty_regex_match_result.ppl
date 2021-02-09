@@ -1,0 +1,24 @@
+type regex_match_result
+
+    java_header
+        import java.util.regex.MatchResult;
+    end java_header
+
+    java
+        public MatchResult getJavaMatchResult();
+    end java
+    
+    inherit has_to_long_string
+
+	functions
+
+        found -> string
+        start_index -> pos_32 
+        end_index   -> pos_32 
+    
+        group_count -> zero_pos_32 
+        group_start_index ( group_index pos_32 check:group_index <= object_.group_count ) -> pos_32 or null
+        group_end_index   ( group_index pos_32 check:group_index <= object_.group_count ) -> pos_32 or null
+        group_found       ( group_index pos_32 check:group_index <= object_.group_count ) -> string or null
+    .
+.

@@ -1,0 +1,4 @@
+service ppl_core_constants
+
+    att module_id module_id = fa_module_id.create ( "org.ppl.core" )
+.

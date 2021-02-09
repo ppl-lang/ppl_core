@@ -1,0 +1,88 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type directory_or_file
+
+    ///
+        Design principle:
+	        1. Functions that read an attribute cannot fail, under the condition that the object exists, e.g.
+                exists
+                is_readable, ...
+                time_last_modified, ...
+                size
+            If the assumption is wrong, then a program error is thrown.
+	    
+	        2. Functions that change the object, as well as functions that read or write data can fail.
+	        These functions might return an error, and they start with 'try_', e.g.
+                try_create
+                try_delete
+                try_rename
+                file_reader
+                file_writer
+                etc.
+    .///
+
+	java_header
+		import java.io.File;
+	end java_header
+
+	java
+		public File getJavaFile();
+	end java
+
+	inherit IO_resource, has_hash_code
+
+	att path directory_or_file_path
+	
+	function to_current_OS_path -> string
+
+	function name -> directory_or_file_name
+	
+	function exists -> yes_no
+	
+	function is_hidden -> yes_no
+	
+	function time_created -> local_date_time
+		%directory_or_file_exists_in_check
+    .
+
+	function time_last_modified -> local_date_time
+		%directory_or_file_exists_in_check
+    .
+
+	function time_last_accessed -> local_date_time
+		%directory_or_file_exists_in_check
+    .
+
+    // permissions
+
+    function is_readable   -> yes_no
+		%directory_or_file_exists_in_check
+    .
+    function is_writable   -> yes_no
+		%directory_or_file_exists_in_check
+    .
+    function is_executable -> yes_no
+		%directory_or_file_exists_in_check
+    .
+
+	function try_set_readable_permission ( permission yes_no, only_for_owner yes_no ) -> directory_or_file_error or null
+		%directory_or_file_exists_in_check
+    .
+	function try_set_writable_permission ( permission yes_no, only_for_owner yes_no ) -> directory_or_file_error or null
+		%directory_or_file_exists_in_check
+    .
+	function try_set_executable_permission ( permission yes_no, only_for_owner yes_no ) -> directory_or_file_error or null
+		%directory_or_file_exists_in_check
+    .
+	
+	/// TD when URI and URL are in ppl_core
+        function to_URI -> URI
+        function to_URL -> URL
+	.///
+
+.

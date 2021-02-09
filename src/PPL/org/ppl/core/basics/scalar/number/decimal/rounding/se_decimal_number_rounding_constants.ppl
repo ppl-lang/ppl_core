@@ -1,0 +1,32 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service decimal_number_rounding_constants
+
+	attributes type:decimal_number_rounding_config
+
+		half_up_0_decimals default:fa_decimal_number_rounding_config.create (
+			decimal_digits = 0
+			mode = ty_decimal_number_rounding_mode.half_up )
+
+		half_up_1_decimal default:fa_decimal_number_rounding_config.create (
+			decimal_digits = 1
+			mode = ty_decimal_number_rounding_mode.half_up )
+
+		half_up_2_decimals default:fa_decimal_number_rounding_config.create (
+			decimal_digits = 2
+			mode = ty_decimal_number_rounding_mode.half_up )
+
+		half_up_3_decimals default:fa_decimal_number_rounding_config.create (
+			decimal_digits = 3
+			mode = ty_decimal_number_rounding_mode.half_up )
+
+		half_up_4_decimals default:fa_decimal_number_rounding_config.create (
+			decimal_digits = 4
+			mode = ty_decimal_number_rounding_mode.half_up )
+    .
+.

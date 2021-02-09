@@ -1,0 +1,11 @@
+type text_scanner_with_line_column
+
+    inherit text_scanner
+    
+    functions
+        current_text_position -> text_position
+        current_line   -> pos_64
+        current_column -> pos_64
+        text_at_current_line -> string or null
+    .
+.

@@ -1,0 +1,79 @@
+factory library_path
+
+    function to_string = a_value
+
+	function id
+	    // foo.bar.zar -> zar
+        const last_separator_index = a_value.find_last ( se_PPL_identifier_constants.id_separator )
+        if last_separator_index is null then
+            return library_id.create ( a_value )
+        else
+            return library_id.create ( a_value.substring_from ( last_separator_index + 1 ) )
+        .
+    .
+    
+	function parent_path
+	    // foo.bar.zar -> foo.bar
+        const last_separator_index = a_value.find_last ( se_PPL_identifier_constants.id_separator )
+        if last_separator_index is null then
+            return null
+        else
+            return create ( a_value.substring_to ( last_separator_index - 1 ) )
+        .
+	.
+
+    creator create kind:in_all
+
+	creator create_from_id ( id library_id ) -> library_path
+        this.value = i_id.value
+        return this
+	.
+
+	creator create_from_relative_directory ( directory relative_directory_path ) -> library_path or invalid_data_error<relative_directory_path>
+
+        variable value = i_directory.value
+        if value.ends_with ( se_directory_constants.Unix_directory_separator ) or \
+            value.ends_with ( se_directory_constants.Windows_directory_separator ) then
+            value = value.remove_last
+        .
+        value = value \
+            .replace_all ( 
+                to_replace = se_directory_constants.Unix_directory_separator
+                replace_by = PPL_identifier_constants.id_separator ) \
+            .replace_all ( 
+                to_replace = se_directory_constants.Windows_directory_separator
+                replace_by = PPL_identifier_constants.id_separator )
+
+        try
+            return create ( value )
+        catch_any e
+            return invalid_data_error<relative_directory_path>.create (
+                info = """Directory '{{i_directory.value}}' is invalid because it cannot be converted to a valid PPL library path. Reason:
+{{e.info}}"""
+                data = i_directory )
+        .
+	.
+	
+	test
+		var p library_path = create_from_relative_directory ( relative_directory_path.create ( "foo/bar/zar/" ) ) type_check:no
+		verify p.value =v "foo.bar.zar"
+		verify p.id.value =v "zar"
+		const parent_path = p.parent_path
+		verify parent_path is not null
+		verify parent_path.value =v "foo.bar"
+		// verify p.id_list.to_long_string =v "[foo, bar, zar]"
+
+		p = create_from_relative_directory ( relative_directory_path.create ( "foo/" ) ) type_check:no
+		verify p.value =v "foo"
+		verify p.id.value =v "foo"
+		verify p.parent_path is null
+
+		case type of create_from_relative_directory ( relative_directory_path.create ( "foo/bar/z@ar/" ) )
+		    when library_path
+		        verify no
+            when invalid_data_error<*>
+		        verify yes
+        .
+	.
+
+.

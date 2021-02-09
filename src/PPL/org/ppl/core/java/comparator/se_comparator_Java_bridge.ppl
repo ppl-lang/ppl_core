@@ -1,0 +1,89 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service comparator_Java_bridge
+
+	java_header
+        import java.util.Comparator;
+        
+		import org.ppl.core.basics.common_extensions.object_comparison.ts_comparator_result;
+		import org.ppl.core.basics.scalar.enumerated.ty_enumerated;
+		import org.ppl.core.basics.scalar.ty_scalar_or_scalar_value;
+        import org.ppl.core.functional.comparator.ty_object_comparator;
+	end java_header
+
+	java
+		public static final ty_enumerated en_comparator_result_less = ts_comparator_result.en_1;
+		public static final ty_enumerated en_comparator_result_equal = ts_comparator_result.en_2;
+		public static final ty_enumerated en_comparator_result_greater = ts_comparator_result.en_3;
+
+		public static Comparator<ty_scalar_or_scalar_value> scalar_or_scalar_value_Java_comparator = 
+			new Comparator<ty_scalar_or_scalar_value>() {
+				public int compare ( ty_scalar_or_scalar_value o1, ty_scalar_or_scalar_value o2 ) {
+					return o1.to_string().getJavaString().compareTo(o2.to_string().getJavaString());
+				}
+		    };
+
+		public static <t_element> Comparator<t_element> PPL_to_Java_comparator ( ty_object_comparator<? super t_element> PPL_comparator ) {
+			
+			return new Comparator<t_element>() {
+				public int compare ( t_element i1, t_element i2 ) {
+					ty_enumerated PPL_result = PPL_comparator.compare ( i1, i2 );
+					if ( PPL_result == en_comparator_result_less ) {
+						return -1; 
+					} else if ( PPL_result == en_comparator_result_equal ) {
+						return 0;
+					} else { // greater
+						return 1;
+					}
+				}
+			};
+		}
+
+		public static ty_enumerated Java_to_PPL_comparator_result ( int i_java_value ) {
+
+			if ( i_java_value == 0 ) {
+				return en_comparator_result_equal;
+			} else if ( i_java_value > 0 ) {
+				return en_comparator_result_greater;
+			} else {
+				return en_comparator_result_less;
+			}
+		}
+	end java
+	
+	tests
+        var result comparator_result
+        java
+            v_result = Java_to_PPL_comparator_result ( 0 );
+        end java
+        assert result is not null
+        
+        verify result =r ty_comparator_result.equal
+
+        java
+            v_result = Java_to_PPL_comparator_result ( -1 );
+        end java
+        verify result =r ty_comparator_result.less
+
+        java
+            v_result = Java_to_PPL_comparator_result ( -100 );
+        end java
+        verify result =r ty_comparator_result.less
+
+        java
+            v_result = Java_to_PPL_comparator_result ( 1 );
+        end java
+        verify result =r ty_comparator_result.greater
+
+        java
+            v_result = Java_to_PPL_comparator_result ( 1000 );
+        end java
+        verify result =r ty_comparator_result.greater
+    .
+	
+.

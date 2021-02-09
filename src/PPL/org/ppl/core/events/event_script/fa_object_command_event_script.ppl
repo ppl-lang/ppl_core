@@ -1,0 +1,51 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory object_command_event_script type:object_command_event_script
+
+	java_header
+		import org.ppl.core.reflection.introspection.java.se_Java_method_introspection;
+	end java_header
+
+	java
+		private java.lang.reflect.Method _a_event_script_method;
+		private java.lang.reflect.Method _a_execute_event_script_method;
+	end java
+
+	command execute
+		script
+			java
+				if (_a_event_script_method == null) {
+					// TD for better performance:
+					// v_event_class = Class.forName("li_explore.frames.events.in_mouse_left_clicked_event");
+					// _a_event_script_method = a_object.getClass().getDeclaredMethod(a_command_id.suffix().to_string().getJavaString(), v_event_class);
+                    _a_event_script_method = se_Java_method_introspection.getPublicMethodByName ( a_object.getClass(), a_command_id.getValue().getJavaString() );
+					/*
+					if (_a_event_script_method == null) {
+						throw new RuntimeException ( "Method '" + a_command_id.suffix().to_string().getJavaString() + "' not found." );
+					} */
+
+					_a_execute_event_script_method = se_Java_method_introspection.getPublicMethodByName ( a_object.getClass(), "_co_execute_event_script" );
+					/*
+					if (_a_execute_event_script_method == null) {
+						throw new RuntimeException ( "Method '_co_execute_event_script' not found." );
+					} */
+				}
+				//_a_event_script_method.invoke(a_object, i_event_object );
+
+				// TD performance could be enhanced by:
+				//a_object._co_execute_event_script (_a_event_script_method, i_event_object );
+				// and omitting _a_execute_event_script_method
+				// but then _co_execute_event_script must be added to ty_any_type
+				_a_execute_event_script_method.invoke(a_object, _a_event_script_method, i_event_object );
+			end java
+		end script
+	end command
+	
+	creator create kind:in_all end
+
+end factory

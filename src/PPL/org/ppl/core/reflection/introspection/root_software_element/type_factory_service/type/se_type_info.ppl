@@ -1,0 +1,86 @@
+service type_info
+
+    java_header
+        import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+        import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+        
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+    end java_header
+    
+    // TD? cache
+    function type_paths -> set<type_path>
+    
+        script
+            const r = mutable_set<type_path>.create
+    
+            se_PPL_module_info.for_each_type_path ( consumer = { type_path ->
+                r.add ( type_path )
+            } )
+            
+            return r.make_immutable
+        .
+        tests
+            verify type_paths.contains ( se_common_type_paths.string )
+        .
+    .
+
+///
+    function is_existing_type_path ( type_path ) -> yes_no = \
+        is_existing_type_path_string ( type_path.value )
+.///
+    
+    function is_existing_type_path_string native:yes ( type_path string ) -> yes_no
+        java
+            // TD? for better performance it might be better to use a cached set of all ModuleReader.list() resources
+            // in all PPL modules. But this might not work for dynamically loaded classes at runtime
+            boolean exists = se_Java_reflection_class_loader.getClassOrNull ( i_type_path.getJavaString() ) != null;
+            return fa_yes_no.of ( exists );
+        end java
+    .
+    
+    function direct_parent_type_paths ( type_path ) -> set<type_path> or null
+
+		script
+			const r = mutable_set<type_path>.create
+			java
+			    Class<?> clazz = se_PPL_type_Java_introspection.javaInterfaceForTypePath ( i_type_path );
+			    /*
+			    for ( Type type : clazz.getGenericInterfaces() ) {
+			        c_r.append ( se_PPL_type_Java_introspection.Java_type_to_type_id_path ( type ) );
+			    }
+			    */
+			    for ( Class parent_class : clazz.getInterfaces() ) {
+			        c_r.add ( se_PPL_type_Java_introspection.typePathOfClass ( parent_class ) );
+			    }
+            end java
+            return r.make_immutable_or_null
+		.
+
+		test
+		    test se_common_type_paths.scalar
+		    verify result is not null
+		    verify result.size =v 1
+		    verify result.contains ( type_path.create (
+		        "org.ppl.core.basics.scalar.ty_scalar_or_scalar_value" ) )
+
+		    test se_common_type_paths.string
+		    verify result is not null
+		    verify result.size =v 5
+
+		    test se_common_type_paths.any
+		    verify result is null
+		.
+	.
+
+    tests
+        ///
+        const timer = simple_timer.create
+        timer.start
+        const type_paths = type_paths
+        assert type_paths.size ># 1
+        const type_paths_time = timer.stop_milliseconds
+        %we<type_paths_time>
+        // OS.out.write_line ( type_paths.to_long_string  )
+        .///
+    .
+.

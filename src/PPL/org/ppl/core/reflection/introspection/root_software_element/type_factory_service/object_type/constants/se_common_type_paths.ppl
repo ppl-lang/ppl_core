@@ -1,0 +1,47 @@
+service common_type_paths
+
+	attributes access:private
+	
+	    /// NOTE
+	        If non-existing type paths are created during refactorings then the check in  
+	        type type_path
+	        must be disabled
+        .///
+	
+        use_new_paths yes_no = yes
+        // use_new_paths yes_no = se_GUI_dialogs.ask_yes_no ( question = "Use new paths" ) if_null:no
+        // use_new_paths yes_no = file.parse_or_throw ( '''C:\PPL_is_new_version.txt''' ).exists
+    .
+
+	attributes type:type_path
+	
+	    // base_types
+		any       = type_path.create ( "org.ppl.core.basics.base_types.ty_any" )
+        non_null  = type_path.create ( "org.ppl.core.basics.base_types.ty_non_null" )
+        null      = type_path.create ( "org.ppl.core.basics.base_types.ty_null" )
+		non_error = type_path.create ( "org.ppl.core.basics.base_types.ty_non_error" )
+		error     = type_path.create ( "org.ppl.core.error.ty_error" )
+		none      = type_path.create ( "org.ppl.core.basics.base_types.ty_none" )
+			
+        // scalar
+        scalar    = type_path.create ( "org.ppl.core.basics.scalar.ty_scalar" )
+		string    = type_path.create ( "org.ppl.core.basics.scalar.string.ty_string" )
+		character = type_path.create ( "org.ppl.core.basics.scalar.character.ty_character" )
+			
+        // collection
+		indexed_list   = type_path.create ( "org.ppl.core.collections.lists.indexed_list.ty_indexed_list" )
+		key_value_pair = type_path.create ( "org.ppl.core.collections.maps.key_value.ty_key_value_pair" )
+			
+        // directory, file
+		directory_or_file_path = type_path.create (
+		    "org.ppl.core.directories_and_files.paths.ty_directory_or_file_path" )
+		directory_path = type_path.create (
+		    "org.ppl.core.directories_and_files.paths.directories.absolute_directory.ty_directory_path" )
+		file_path = type_path.create (
+		    "org.ppl.core.directories_and_files.paths.files.absolute_file.ty_file_path" )
+
+        // error
+
+		anticipated_error = type_path.create ( "org.ppl.core.error.anticipated.ty_anticipated_error" )
+    .
+.

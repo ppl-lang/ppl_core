@@ -1,0 +1,6 @@
+type finite_non_null_iterator < element child_of:non_null >
+
+	inherit iterator_base
+
+	function next -> t_element or null
+.

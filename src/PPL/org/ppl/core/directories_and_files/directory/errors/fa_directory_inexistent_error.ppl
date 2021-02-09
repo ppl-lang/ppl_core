@@ -1,0 +1,13 @@
+factory directory_inexistent_error
+
+    function to_string = a_info
+    
+    creator create kind:in_all
+
+    creator create_for_directory ( directory ) -> directory_inexistent_error
+    
+        return create (
+            info = """Directory {{i_directory.to_string}} doesn't exist."""
+            resource = i_directory )
+    .
+.

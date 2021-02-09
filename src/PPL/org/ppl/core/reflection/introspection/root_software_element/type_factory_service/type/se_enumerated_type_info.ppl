@@ -1,0 +1,52 @@
+service enumerated_type_info
+
+    java_header
+		import java.lang.reflect.Field;
+        import java.util.function.Consumer;
+
+		import org.ppl.core.basics.scalar.enumerated.ty_enumerated;
+		import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+    end java_header
+
+    java
+        public static void for_each_enumerated_in_class ( Class<?> clazz, Consumer<ty_enumerated> consumer )
+            throws IllegalAccessException {
+
+            for ( Field field : clazz.getFields() ) {
+                if ( field.getName().startsWith ( "en_" ) ) {
+                    Object value = field.get ( null );
+                    if ( value instanceof ty_enumerated ) {
+                        consumer.accept ( (ty_enumerated) value );
+                    }
+                }
+            }
+        }
+    end java
+
+	function get_enumerated_list
+		in type_id_path type_path
+
+		out result indexed_list<string> or null
+
+		script
+			const r = mutable_indexed_list<string>.create
+			java
+				Class<?> clazz = se_PPL_type_Java_introspection.staticClassForTypePath ( i_type_id_path );
+				for_each_enumerated_in_class ( clazz, enumerated -> {
+				    c_r.append ( enumerated.getValue() );
+				} );
+			end java
+            return r.make_immutable_or_null
+		.
+		test
+		    test se_common_type_paths.string
+		    verify result is null
+
+		    test type_path.create ( "org.ppl.core.basics.common_extensions.object_comparison.ty_comparator_result" )
+		    verify result is not null
+		    verify result.size =v 3
+		    verify result.to_long_string =v "[less, equal, greater]"
+		.
+	.
+
+.

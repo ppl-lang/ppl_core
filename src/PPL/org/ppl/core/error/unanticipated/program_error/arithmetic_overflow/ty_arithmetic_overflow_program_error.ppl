@@ -1,0 +1,14 @@
+type arithmetic_overflow_program_error
+
+	inherit program_error
+		redefine
+			att info default: "Arithmetic overflow error."
+		.
+	.
+
+	attributes type:string
+        value_1
+        value_2
+    .
+
+.

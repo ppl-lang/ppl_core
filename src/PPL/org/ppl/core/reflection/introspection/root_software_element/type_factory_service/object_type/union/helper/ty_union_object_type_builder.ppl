@@ -1,0 +1,29 @@
+type union_object_type_builder
+
+    att config object_type_compatibility_config
+    
+    function has_members -> yes_no
+    
+    function get_members -> indexed_list<non_union_object_type>
+    
+    ///
+        t1, t2  ->  t1, t2, t3
+        t3
+
+        t1, t2  ->  t1, t2
+        child_of_t1
+
+        t1, t2  ->  parent_of_t1, t2
+        parent_of_t1
+    .///
+    function add_object_type ( object_type ) -> union_object_type_builder
+    
+    function add_member ( member non_union_object_type ) -> union_object_type_builder
+
+    function remove_member_at_index ( index pos_32 ) -> union_object_type_builder
+    
+    function create_object_type ( known_parent_object_type non_union_object_type or null ) -> object_type
+        in_check: i_object_.has_members
+    .
+.
+ 

@@ -1,0 +1,18 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type emptyable_string
+
+	functions
+
+        is_empty -> yes_no
+        
+        to_string_or_null -> string or null
+        
+        to_string_or_empty_symbol ( empty_symbol string ) -> string
+    .
+.

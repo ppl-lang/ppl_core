@@ -1,0 +1,46 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service directory_constants
+
+	// directory_separator
+
+    attributes type:character
+        Unix_directory_separator_character = '/'
+        Windows_directory_separator_character = '\\'
+        current_OS_directory_separator_character = \
+            se_java_config.get_non_null_system_property_as_character ( "file.separator" )
+    .
+
+    attributes type:string
+        Unix_directory_separator = a_Unix_directory_separator_character.to_string
+        Windows_directory_separator = a_Windows_directory_separator_character.to_string
+        current_OS_directory_separator = a_current_OS_directory_separator_character.to_string
+    .
+	
+	// path_separator
+	
+    attributes type:character
+        Unix_path_separator_character = ':'
+        Windows_path_separator_character = ';'
+        current_OS_path_separator_character = \
+            se_java_config.get_non_null_system_property_as_character ( "path.separator" )
+    .
+
+    attributes type:string
+        Unix_path_separator = a_Unix_path_separator_character.to_string
+        Windows_path_separator = a_Windows_path_separator_character.to_string
+        current_OS_path_separator = a_current_OS_path_separator_character.to_string
+    .
+	
+	// parent_directory_token
+    attributes type:string
+        Unix_parent_directory_token = ".." & a_Unix_directory_separator 
+        Windows_parent_directory_token = ".." & a_Windows_directory_separator
+        current_OS_parent_directory_token = ".." & a_current_OS_directory_separator
+	.
+.

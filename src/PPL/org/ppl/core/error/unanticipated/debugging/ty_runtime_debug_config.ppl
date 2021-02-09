@@ -1,0 +1,23 @@
+record type runtime_debug_config
+    
+    attributes
+        unanticipated_error_handler unanticipated_error_handler \
+            default: fa_write_to_OS_error_unanticipated_error_handler.create
+            // default: fa_default_logger_unanticipated_error_handler.create
+            // default: log_to_file_unanticipated_error_handler.create
+            
+        Java_throwable_handler Java_throwable_handler \
+            default: fa_log_to_file_Java_throwable_handler.create
+            
+        source_code_file_supplier source_code_file_supplier or null \
+            default: fa_project_mode_source_code_file_supplier.create
+            
+        source_code_instruction_supplier source_code_instruction_supplier or null \
+            default: fa_default_source_code_instruction_supplier.create
+            
+        source_code_file_opener source_code_file_opener or null \
+            default: fa_OS_command_source_code_file_opener.create ( OS_command_template = '''"C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2017.1.3\bin\idea64.exe" C:\aa\work\tools\IntelliJ\projects\PPL --line [[line]] [[file]]''' )
+//            default: null
+    .
+    
+.

@@ -1,0 +1,10 @@
+type variable_object_reference < element usage:in_out >
+
+	variable att object t_element
+
+    // TD remove
+	command set
+	    in new_object t_element
+    .
+
+.

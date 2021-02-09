@@ -1,0 +1,95 @@
+service service_attributes_info
+
+	java_header
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.reflection.introspection.java.se_PPL_service_Java_introspection;
+	end java_header
+
+
+	function for_each_attribute_in_service ( service_path, consumer object_consumer<PPL_attribute> )
+
+        java
+            Class service_class = se_PPL_service_Java_introspection.classForServicePath ( i_service_path );
+
+            se_TFS_attribute_info_java_helper._for_each_attribute_of_class (
+                i_service_path,
+                service_class, 
+                attribute -> { i_consumer.consume ( attribute ); } );
+        end java
+	.
+
+    function attributes ( service_path ) -> list<PPL_attribute> or null
+
+        const r = mutable_list<PPL_attribute>.create
+        
+        for_each_attribute_in_service ( service_path, consumer = { attribute ->
+            r.append ( attribute )
+        } )
+        
+        r.sort_by_key ( key_getter = { attribute => attribute.order_in_source_code }, descending = no ) 
+        
+        return r.make_immutable_or_null
+    .
+ 
+	function get_attribute_or_throw ( service_path, attribute_id PPL_attribute_id ) -> PPL_attribute
+
+		script
+		    variable r PPL_attribute
+		    java
+		    	v_r = se_TFS_attribute_info_java_helper._require_attribute_for_TFS_id_path (
+		    	    i_service_path, i_attribute_id );
+		    end java
+		    assert r is not null
+		    return r
+		.
+    .
+
+///
+	function require_attribute
+		in service_id_path service_path
+		in attribute_id PPL_attribute_id
+
+		out result PPL_attribute
+
+		script
+		    java
+		    	o_result = se_TFS_attribute_info_java_helper._require_attribute_for_TFS_id_path ( i_service_id_path, i_attribute_id );
+		    end java
+		.
+	.
+	
+	function require_sorted_attribute_list
+		in service_id_path service_path
+
+		out result list<PPL_attribute> or null
+
+		script
+			const r = mutable_list<PPL_attribute>.create
+
+			for_each_attribute_in_service (
+				service_id_path = i_service_id_path
+				consumer = { -> r.append ( i_object ) } )
+
+			r.sort ( { object_1.id.value.compare_to_ignore_case ( object_2.id.value ) } )
+			result = r.make_immutable_or_null
+		.
+	.
+
+	function require_sorted_attribute_map
+		in service_id_path service_path
+
+		out result map<key:PPL_attribute_id, value:PPL_attribute> or null
+
+		script
+			const r = mutable_map<key:PPL_attribute_id, value:PPL_attribute>.create_sorted_by_key
+
+			for_each_attribute_in_service (
+				service_id_path = i_service_id_path
+				consumer = { r.add ( key = i_object.id, value = i_object ) } )
+
+			result = r.make_immutable_or_null
+		.
+	.
+.///
+
+.

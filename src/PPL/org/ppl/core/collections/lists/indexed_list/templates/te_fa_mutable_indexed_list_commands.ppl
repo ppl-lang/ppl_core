@@ -1,0 +1,66 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_mutable_indexed_list_commands
+
+    function insert_before
+        script
+            java
+                try {
+                    a_java_list.add ( i_index.getJavaInt() - 1, i_element ) ;
+                } catch ( UnsupportedOperationException e ) {
+                    se_immutable_Java_collection_checker.mutable_operation_violation();
+                }
+            end java
+            
+            return this
+        .
+    .
+
+    function insert_after
+        script
+            java
+                try {
+                    a_java_list.add ( i_index.getJavaInt(), i_element ) ;
+                } catch ( UnsupportedOperationException e ) {
+                    se_immutable_Java_collection_checker.mutable_operation_violation();
+                }
+            end java
+            
+            return this
+        .
+    .
+
+    function remove_at_index
+        script
+            java
+                try {
+                    a_java_list.remove ( i_index.getJavaInt() - 1 ) ;
+                } catch ( UnsupportedOperationException e ) {
+                    se_immutable_Java_collection_checker.mutable_operation_violation();
+                }
+            end java
+            
+            return this
+        .
+    .
+
+    function replace_at_index
+        script
+            java
+                try {
+                    a_java_list.set ( i_index.getJavaInt() - 1, i_new_element ) ;
+                } catch ( UnsupportedOperationException e ) {
+                    se_immutable_Java_collection_checker.mutable_operation_violation();
+                }
+            end java
+            
+            return this
+        .
+    .
+
+.

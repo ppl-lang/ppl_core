@@ -1,0 +1,10 @@
+type type_parameter_object_type \
+    child_types: none
+
+    inherit non_union_object_type
+    
+    att type_parameter type_parameter
+
+    function check_other_compatible_to_me ( other object_type, config object_type_compatibility_config ) \
+        -> object_type_incompatibility_error or null
+.

@@ -1,0 +1,9 @@
+type Java_throwable
+
+	java
+		public Throwable getJavaThrowable();
+	end java
+
+	inherit has_to_long_string
+
+.

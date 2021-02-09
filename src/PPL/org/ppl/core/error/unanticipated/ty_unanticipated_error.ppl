@@ -1,0 +1,9 @@
+type unanticipated_error
+
+    inherit error, has_to_long_string
+
+	att source_code_location bug_source_code_location
+
+	att script_state script_state or null default:null
+
+.

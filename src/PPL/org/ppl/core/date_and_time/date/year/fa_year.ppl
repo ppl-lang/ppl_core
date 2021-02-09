@@ -1,0 +1,20 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory year
+
+	%fa_positive_32_value_with_compare_to_commands
+
+	function is_leap_year = se_date_utilities.is_leap_year ( a_value )
+
+	function days_in_year = if is_leap_year \
+        then se_date_constants.days_in_leap_year \
+        else se_date_constants.days_in_non_leap_year
+
+	%scalar_value_factory_creator
+
+.

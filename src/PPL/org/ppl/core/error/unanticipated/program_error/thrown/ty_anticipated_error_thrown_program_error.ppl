@@ -1,0 +1,6 @@
+type anticipated_error_thrown_program_error
+
+    inherit explicitly_thrown_program_error
+    
+    att anticipated_error anticipated_error
+.

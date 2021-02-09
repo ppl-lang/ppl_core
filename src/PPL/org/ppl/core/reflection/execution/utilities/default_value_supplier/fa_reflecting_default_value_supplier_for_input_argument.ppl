@@ -1,0 +1,44 @@
+factory reflecting_default_value_supplier_for_input_argument type: object_supplier<any>
+
+    java_header
+        import org.ppl.core.reflection.introspection.java.se_Java_method_introspection;
+        import org.ppl.core.reflection.execution.java.se_dynamic_Java_execution;
+    end java_header
+
+    attributes access: private
+        TFS_path TFS_path
+        command_id PPL_command_id
+        input_argument_id PPL_command_input_argument_id
+    .
+    
+    function get
+    
+        const method_name = se_Java_method_introspection.input_argument_default_value_method_name (
+            command_id, input_argument_id )
+        assert method_name is not null // avoid 'not used' compiler warning
+            
+        variable r any
+        java
+            v_r = (ty_any) se_dynamic_Java_execution.invokeStaticClassMethod (
+                a_TFS_path.getValue().getJavaString(),
+                c_method_name.getJavaString(),
+                null );
+        end java
+        assert r may be null
+        return r
+    .
+    
+    // it is assumed that all input is valid
+    creator create -> object_supplier<any>
+        in TFS_path TFS_path
+        in command_id PPL_command_id
+        in input_argument_id PPL_command_input_argument_id
+        
+        this.TFS_path = i_TFS_path
+        this.command_id = i_command_id
+        this.input_argument_id = i_input_argument_id
+        
+        return this
+    .
+.
+    

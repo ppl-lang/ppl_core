@@ -1,0 +1,55 @@
+service generic_factory_info
+
+    java_header
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+
+        import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+        import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.java.se_type_parameter_Java_helper;
+    end java_header
+
+	function is_generic_factory_path ( factory_path ) -> yes_no
+
+		script
+		    variable r yes_no
+			java
+			    Class<?> clazz = se_Java_reflection_class_loader.getClassOrThrow (
+			        i_factory_path.getValue().getJavaString() );
+				v_r = fa_yes_no.of ( se_type_parameter_Java_helper.class_has_type_parameters ( clazz ) );
+			end java
+			assert r is not null
+			return r
+		.
+		tests
+		    test se_factory_constants.string_path
+		    verify not result
+
+		    test fa_factory_path.create ( "org.ppl.core.collections.lists.indexed_list.fa_indexed_list" )
+		    verify result
+		.
+	.
+
+	function get_generic_parameter_id_list ( factory_path ) -> indexed_list<type_parameter_id> or null
+
+		script
+		    variable r indexed_list<type_parameter_id> or null
+			java
+			    Class<?> clazz = se_Java_reflection_class_loader.getClassOrThrow (
+			        i_factory_path.getValue().getJavaString() );
+			    v_r = se_type_parameter_Java_helper.type_parameter_ids_of_class ( clazz );
+            end java
+			assert r may be null
+			return r
+		.
+		tests
+		    test se_factory_constants.string_path
+		    verify result is null
+
+		    test fa_factory_path.create ( "org.ppl.core.collections.lists.indexed_list.fa_indexed_list" )
+		    verify result is not null
+		    verify result.size =v 1
+		    verify result.get(1).value =v "element"
+		.
+	.
+
+.

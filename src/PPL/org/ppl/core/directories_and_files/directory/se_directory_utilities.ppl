@@ -1,0 +1,84 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service directory_utilities
+	
+    function create_path_or_delete_content ( directory ) -> directory_error or null
+
+        if not i_directory.exists then
+            return i_directory.try_create_path
+        else
+            return i_directory.try_delete_content
+        .
+    .
+
+	function try_get_existing_directory_from_absolute_or_relative_path ( path absolute_or_relative_directory_path ) \
+        -> directory or directory_inexistent_error
+
+        const directory = get_directory_from_absolute_or_relative_path ( i_path )
+
+        if check_directory_exists ( directory ) as error is null then
+            return directory
+        else
+            return error
+        .
+    .
+
+	function get_directory_from_absolute_or_relative_path ( path absolute_or_relative_directory_path ) -> directory
+
+        case type of i_path
+            when directory_path
+                return fa_directory.create ( i_path )
+            when relative_directory_path 
+                return fa_directory.create ( i_path.make_absolute_to_working_directory )
+        .
+    .
+
+
+///
+	function get_existing_directory_from_absolute_or_relative_path_string ( path string ) -> directory or IO_error
+	
+	    case type of get_directory_from_absolute_or_relative_path ( path )
+	        when directory directory
+                if directory.exists then
+                    return directory
+                else
+                    return fa_directory_inexistent_error.create (
+                        info = """Directory {{directory.path.to_current_OS_path}} doesn't exist."""
+                        resource = directory )
+                .
+            when parse_object_error<*> e
+                return e
+        .
+    .
+
+	function get_directory_from_absolute_or_relative_path_string ( path string ) -> directory or parse_object_error<*>
+	
+        if se_directory_or_file_path.is_absolute_path ( i_path ) then
+            return fa_directory.try_parse ( i_path )
+        else
+            case type of fa_relative_directory_path.try_parse ( i_path )
+                when relative_directory_path p
+                    return fa_directory.create ( p.make_absolute_to_working_directory )
+                when parse_object_error<*> e
+                    return e
+            .
+        .
+    .
+.///
+
+	function check_directory_exists ( directory ) -> directory_inexistent_error or null
+
+        if i_directory.exists then
+            return null
+        else
+            return fa_directory_inexistent_error.create (
+                info = """Directory '{{i_directory.path.to_current_OS_path}}' doesn't exist."""
+                resource = i_directory )
+        .
+    .
+.

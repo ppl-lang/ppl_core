@@ -1,0 +1,59 @@
+type mutable_ordered_set < element child_of:scalar_or_scalar_value usage:in_out >
+
+    inherit mutable_set<element>
+        redefine
+            function add -> mutable_ordered_set<t_element>
+            function add_if_not_contained -> mutable_ordered_set<t_element>
+            function add_or_replace -> mutable_ordered_set<t_element>
+
+            function remove -> mutable_ordered_set<t_element>
+            function remove_if_contained -> mutable_ordered_set<t_element>
+            function remove_all -> mutable_ordered_set<t_element>
+        
+            function replace -> mutable_ordered_set<t_element>
+        
+            function copy_to_immutable         -> ordered_set<t_element>
+            function copy_to_immutable_or_null -> ordered_set<t_element> or null
+        
+            function make_immutable            -> ordered_set<t_element>
+            function make_immutable_or_null    -> ordered_set<t_element> or null
+        .
+    .
+
+	function first -> t_element
+		%object_not_empty_in_check
+	.
+
+	function last -> t_element
+		%object_not_empty_in_check
+	.
+
+/// TD
+	function append ( element t_element ) -> mutable_list<t_element>
+
+	function append_all ( collection collection<t_element> ) -> mutable_list<t_element>
+
+	function prepend ( element t_element ) -> mutable_list<t_element>
+	
+	
+	// remove
+
+	function remove_first -> mutable_list<t_element>
+		%object_not_empty_in_check
+	.
+
+	function remove_last -> mutable_list<t_element>
+		%object_not_empty_in_check
+	.
+
+	// replace
+
+	function replace_first ( new_element t_element ) -> mutable_list<t_element>
+		%object_not_empty_in_check
+	.
+
+	function replace_last ( new_element t_element ) -> mutable_list<t_element> 
+		%object_not_empty_in_check
+	.
+.///
+.

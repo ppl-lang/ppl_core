@@ -1,0 +1,38 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type signed_int_32
+
+	java
+		public int getJavaInt();
+	end java
+	
+	inherit \
+		integer_number,
+		has_compare_to<signed_int_32>,
+		has_min_max<signed_int_32>,
+		has_hash_code
+
+%ty_arithmetic_functions<signed_int_32>
+
+%ty_integer_boolean_functions<signed_int_32>
+
+%ty_integer_shift_functions<signed_int_32>
+
+	function remainder ( operand signed_int_32 ) -> signed_int_32
+
+	function to_signed_int_64 -> signed_int_64
+	function to_float_64 -> float_64
+
+	function to_hexadecimal_string -> string
+	function to_octal_string       -> string
+	function to_binary_string      -> string
+
+	function to_character -> character
+		in_check: i_object_ >= se_signed_int_32_constants.zero and i_object_ <= se_signed_int_32_constants.max_value_unsigned_16
+    .
+.

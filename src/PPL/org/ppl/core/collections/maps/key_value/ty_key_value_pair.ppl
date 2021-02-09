@@ -1,0 +1,6 @@
+type key_value_pair < key child_of:scalar_or_scalar_value, value >
+
+	att key t_key
+	att value t_value
+	
+.

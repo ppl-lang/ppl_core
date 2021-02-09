@@ -1,0 +1,104 @@
+factory standard_object_type
+
+%fa_type_path_object_type_functions<standard_object_type>
+
+    function check_compatible_to_other
+        
+        case type of i_other
+            
+            when standard_object_type standard_object_type
+                return se_object_type_compatibility.check_type_paths_compatible (
+                    source = this, target = standard_object_type, i_config )
+                
+            when union_object_type union_object_type
+                return union_object_type.check_other_compatible_to_me ( other = this, config )
+            
+            when type_parameter_object_type type_parameter_object_type
+                return type_parameter_object_type.check_other_compatible_to_me ( other = this, i_config )
+
+            when generified_object_type generified_object_type
+
+                se_object_type_compatibility.check_type_paths_compatible (
+                    source = this, target = generified_object_type, i_config ) on_error: return_error
+                    
+                if generified_object_type.is_wildcard then
+                    return null
+                .
+                    
+                const source_type_parameter_assignments = i_config.generified_parameters_of_child_type_getter.get (
+                    child_type_path = a_type_path
+                    parent_generic_type_path = generified_object_type.type_path )
+                assert source_type_parameter_assignments is not null
+                    
+                const target_type_parameter_assignments = generified_object_type.type_parameters
+                assert target_type_parameter_assignments is not null
+                
+                return se_generified_object_type.check_type_parameters_compatible (
+                    source = this
+                    target = generified_object_type
+                    source_type_parameter_assignments,
+                    target_type_parameter_assignments,
+                    i_config )                    
+
+            when enumerated_object_type
+                return object_type_incompatibility_error.create_with_reason (
+                    reason = "A standard type is never compatible to an enumerated type."
+                    source = this
+                    target = i_other )
+        .
+    .
+
+    // TD uncomment when se_common_object_types.any and se_common_object_types.null are always used 
+    // function is_nullable = no
+    function is_nullable
+        case value of this
+            when se_common_object_types.any
+                return yes
+            when se_common_object_types.null
+                return yes
+            otherwise
+                return no
+        .
+    .
+    
+    // TD check if it's any, non_null, null, or none
+    // function to_nullable = union_object_type.create_nullable ( this )
+    function to_nullable
+        case value of this
+            when se_common_object_types.any
+                return this
+            when se_common_object_types.non_null
+                return se_common_object_types.any
+            when se_common_object_types.null
+                return this
+            when se_common_object_types.none
+                throw """Type '{{a_type_path}}' cannot be converted to a non-nullable."""
+            otherwise
+                return union_object_type.create_nullable ( this )
+        .
+    .
+        
+    // TD uncomment when se_common_object_types.any and se_common_object_types.null are always used 
+    // TD function to_non_nullable = this
+    function to_non_nullable
+        case value of this
+            when se_common_object_types.any
+                return se_common_object_types.non_null
+            when se_common_object_types.null
+                return se_common_object_types.non_null
+            otherwise
+                return this
+        .
+    .
+            
+    function uses_type_parameters = no
+    
+    function type_selector = fa_standard_type_selector.create ( a_type_path )
+
+	function to_string = type_path.id.value
+	
+	function to_long_string = type_path.value
+
+
+    creator create kind:in_all
+.

@@ -1,0 +1,70 @@
+service object_reflection
+
+    java_header
+        import org.ppl.core.basics.scalar.string.fa_string;
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+        import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+    end java_header
+
+
+	function type_of_object ( object any ) -> object_type
+		script
+		    if i_object is null then
+		        return se_common_object_types.null
+            .
+            
+			const type_path = type_path_of_object ( i_object )
+			// if se_generic_object_reflection.is_object_of_generic_type ( i_object ) then
+			if se_generic_object_reflection.is_object_of_generic_type ( i_object ) then
+				return generified_object_type.create (
+                    type_path,
+                    type_parameters = se_generic_object_reflection.get_generic_parameter_map_or_throw ( i_object ) )
+			else
+				return standard_object_type.create ( type_path )
+			.
+		.
+		
+		test
+			test "a"
+			const r standard_object_type = result type_check:no
+			verify r.type_path.value =v se_common_type_paths.string.value
+
+			test [ "a" ]
+			
+			const r2 generified_object_type = result type_check:no
+			verify r2.type_path.value =v se_common_type_paths.indexed_list.value
+			const type_parameters = r2.type_parameters
+			verify type_parameters is not null
+			verify type_parameters.size =v 1
+
+			const element_type standard_object_type = type_parameters.get (
+			    fa_type_parameter_id.create("element") ).object_type type_check:no
+			verify element_type.type_path.value =v se_common_type_paths.string.value
+		.
+	.
+
+	function type_path_of_object ( object any ) -> type_path
+		
+		script
+		    if i_object is null then
+		        return se_common_type_paths.null
+		    .
+		    
+		    variable r type_path
+            java
+                v_r = se_PPL_type_Java_introspection.typePathOfClass ( i_object.getClass() );
+            end java
+            assert r is not null
+            return r
+        .
+		
+		tests
+			test "a"
+			verify result.value =v se_common_type_paths.string.value
+
+			test [ "a" ]
+			verify result.value =v se_common_type_paths.indexed_list.value
+		.
+	.
+
+.

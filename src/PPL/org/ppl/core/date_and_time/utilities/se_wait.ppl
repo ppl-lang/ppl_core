@@ -1,0 +1,62 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service wait
+
+	java_header
+		import java.util.concurrent.TimeUnit;
+	end java_header
+
+	function wait ( duration )
+	    java
+	        TimeUnit.MILLISECONDS.sleep ( i_duration.to_milli_seconds().getJavaLong() );
+	    end java
+	.
+	
+	function wait_nano_seconds ( nano_seconds pos_64 )
+        java
+            TimeUnit.NANOSECONDS.sleep ( i_nano_seconds.getJavaLong() );
+        end java
+	.
+
+	function wait_micro_seconds ( micro_seconds pos_64 )
+        java
+            TimeUnit.MICROSECONDS.sleep ( i_micro_seconds.getJavaLong() );
+        end java
+	.
+
+	function wait_milli_seconds ( milli_seconds pos_64 )
+        java
+            TimeUnit.MILLISECONDS.sleep ( i_milli_seconds.getJavaLong() );
+        end java
+	.
+
+	function wait_seconds ( seconds pos_64 )
+        java
+            TimeUnit.SECONDS.sleep ( i_seconds.getJavaLong() );
+        end java
+	.
+
+	function wait_minutes ( minutes pos_64 )
+        java
+            TimeUnit.MINUTES.sleep ( i_minutes.getJavaLong() );
+        end java
+	.
+
+	function wait_hours ( hours pos_64 )
+        java
+            TimeUnit.HOURS.sleep ( i_hours.getJavaLong() );
+        end java
+	.
+
+	function wait_days ( days pos_64 )
+        java
+            TimeUnit.DAYS.sleep ( i_days.getJavaLong() );
+        end java
+	.
+
+.

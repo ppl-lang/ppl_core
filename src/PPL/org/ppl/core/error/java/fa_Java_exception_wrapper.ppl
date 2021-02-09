@@ -1,0 +1,47 @@
+factory Java_exception_wrapper
+
+	java_header
+	    import org.ppl.core.basics.scalar.string.fa_string;
+	end java_header
+
+	java
+		private Exception exception;
+		
+		public Exception getJavaException() { return exception; }
+
+		public fa_Java_exception_wrapper ( Exception exception ) {
+			this.exception = exception;
+		}
+
+		private fa_Java_exception_wrapper ( Throwable throwable ) {
+			this.exception = se_Java_exception.throwableToException ( throwable );
+		}
+	end java
+	
+	function message native:yes
+        java
+            String message = exception.getMessage();
+            if ( message == null ) message = "Not available";
+            return new fa_string ( message );
+        end java
+    .
+
+	function cause native:yes
+        java
+            Throwable cause = exception.getCause();
+            if ( cause == null ) return null;
+            
+            if ( cause instanceof Exception ) {
+                return new fa_Java_exception_wrapper ( (Exception) cause );
+            } else {
+                return new fa_Java_exception_wrapper ( cause );
+            }
+        end java
+    .
+
+	function to_string native:yes
+        java
+            return new fa_string ( exception.toString() );
+        end java
+    .
+.

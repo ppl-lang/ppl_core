@@ -1,0 +1,59 @@
+service reflecting_object_parser_creator
+
+    ///
+        | - string
+        | - find factory with creator try_parse ( string ) -> one output argument
+        - find factory with creator foo ( string ) -> one output argument
+        - string value
+        - scalar
+        - scalar value
+        - list<scalar>
+        - list<scalar_value>
+        - enumerated
+    .///
+    
+    function try_create_parser_for_object_type ( object_type ) -> object_parser<*> or runtime_error
+    
+        // %we<object_type>
+        // write_line ( se_object_reflection.type_of_object ( object_type ).to_string )
+    
+        case type of object_type
+            
+            when standard_object_type sot
+//                const type_path type_path = sot.type_path type_check:no
+                const type_path virtual_type_path = sot.type_path
+                if type_path.value =v se_common_type_paths.string.value then
+                    return se_string_parser.instance
+                else
+                    if try_get_parse_string_creator ( type_path ) as parser is not null then
+                        return parser
+                    .
+                .
+                
+            when generified_object_type, enumerated_object_type, union_object_type, type_parameter_object_type
+                do nothing
+        . 
+    
+        return reflection_error.create (
+            info = """A generic object parser cannot be created for object type '{{object_type.to_string}}'""" )
+    .
+    
+    functions access:private
+        
+        function try_get_parse_string_creator ( standard_object_type_path virtual_type_path ) -> object_parser<*> or null
+            
+            // factory id = type id
+            const factory_path = factory_path.create_from_library_path_and_id (
+                library_path = i_standard_object_type_path.library_path
+                id = factory_id.create ( i_standard_object_type_path.id.value ) )
+                
+            const creator_id = se_factory_creator_constants.try_parse_creator_id
+                
+            if not se_factory_creator_info.has_creator ( factory_path, creator_id ) then
+                return null
+            .
+                
+            return reflecting_object_parser_for_string_input_creator.create ( factory_path, creator_id )
+        .
+    .
+.

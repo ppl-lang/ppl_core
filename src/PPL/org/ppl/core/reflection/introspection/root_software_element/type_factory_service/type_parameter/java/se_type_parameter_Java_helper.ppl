@@ -1,0 +1,114 @@
+service type_parameter_Java_helper
+
+	java_header
+	    import java.lang.reflect.Method;
+	    import java.lang.reflect.TypeVariable;
+	    import java.util.HashMap;
+	    import java.util.Map;
+
+        import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.collections.iterators.finite_iterator.ty_finite_iterator;
+		import org.ppl.core.collections.lists.indexed_list.ty_mutable_indexed_list;
+		import org.ppl.core.collections.lists.indexed_list.ty_indexed_list;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+		import org.ppl.core.reflection.execution.java.se_dynamic_Java_execution;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.fa_type_parameter_id;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.ty_type_parameter_id;
+	    import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.type_parameter.se_type_parameter_id_constants;
+	end java_header
+	
+	java
+	    private static String a_iterator_type_parameter_id =
+	        se_type_parameter_id_constants.getIterator_element().getValue().getJavaString();
+	     
+
+        // get type parameters of object
+        
+        public static Map<String, ty_object_type> type_parameters_of_object ( ty_non_null i_object ) {
+            
+            TypeVariable<?>[] typeVariables = i_object.getClass().getTypeParameters();
+            if ( typeVariables.length == 0 ) return null;
+            
+            Map<String, ty_object_type> r = new HashMap<String, ty_object_type>(); 
+            for ( TypeVariable typeVariable : typeVariables ) {
+                String id = id_of_TypeVariable ( typeVariable );
+                ty_object_type value = try_get_type_parameter_of_object_or_throw ( i_object, id );
+                r.put ( id, value );
+            }
+            return r;
+        }
+        
+        public static ty_indexed_list<ty_type_parameter_id> type_parameter_ids_of_class ( Class<?> clazz ) {
+        
+            TypeVariable<?>[] typeVariables = clazz.getTypeParameters();
+            if ( typeVariables.length == 0 ) return null;
+            
+            ty_mutable_indexed_list<ty_type_parameter_id> list = empty_type_parameter_id_list();
+            for ( TypeVariable typeVariable : typeVariables ) {
+                list.append ( type_parameter_id_of_TypeVariable ( typeVariable ) );
+            }
+            return list.make_immutable();
+        }
+        
+        
+        // get type parameter of object
+
+        public static ty_object_type try_get_type_parameter_of_finite_iterator_or_throw ( ty_finite_iterator<?> iterator ) {
+            return try_get_type_parameter_of_object_or_throw ( iterator, a_iterator_type_parameter_id );
+        }
+
+		public static ty_object_type try_get_type_parameter_of_object_or_throw ( ty_non_null i_object, String i_type_parameter_id ) {
+
+            try {
+                return try_get_type_parameter_of_object ( i_object, i_type_parameter_id );
+            } catch ( Throwable t ) {
+                throw new RuntimeException ( t );
+            }
+        }
+
+		public static ty_object_type try_get_type_parameter_of_object ( ty_non_null i_object, String i_type_parameter_id ) throws Throwable {
+
+            // execute get$id
+            String methodName = method_name_for_type_parameter_getter ( i_type_parameter_id );
+
+            // doesn't work for closures implemented as private inner anonymous classes
+            // return (PPLObjectType) se_dynamic_Java_execution.invokeObjectMethod_i0_o1 ( i_object, methodName, PPLObjectType.class );
+
+            return (ty_object_type) se_dynamic_Java_execution.invokePrivateObjectMethod_i0_o1 ( i_object, methodName );
+        }
+
+		public static String method_name_for_type_parameter_getter ( String i_type_parameter_id ) {
+
+            return se_type_parameter_Java_constants.type_parameter_getter_prefix + i_type_parameter_id;
+        }
+        
+        
+        // type parameter id 
+
+        public static ty_type_parameter_id type_parameter_id_of_TypeVariable ( TypeVariable typeVariable ) {
+            return fa_type_parameter_id.create ( new fa_string ( id_of_TypeVariable ( typeVariable ) ) );
+        }
+        
+        public static String id_of_TypeVariable ( TypeVariable typeVariable ) {
+            // t_key -> key
+            return typeVariable.getName().substring(se_type_parameter_Java_constants.type_parameter_prefix_size);
+        }
+        
+        
+        // has type parameters?
+
+        public static boolean object_has_type_parameters ( ty_non_null object ) {
+            return class_has_type_parameters ( object.getClass() );
+        }
+
+        public static boolean class_has_type_parameters ( Class<?> clazz ) {
+            return clazz.getTypeParameters().length > 0;
+        }
+	end java
+	
+	function empty_type_parameter_id_list private:yes -> mutable_indexed_list<type_parameter_id>
+	    return mutable_indexed_list<type_parameter_id>.create
+    .
+
+.

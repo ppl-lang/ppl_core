@@ -1,0 +1,57 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_map<key child_of:scalar_or_scalar_value usage:in_out, value usage:in_out>
+	
+	inherit mutable_collection<t_value>
+
+	inherit mutable_or_immutable_map<key:t_key, value:t_value>
+	
+	function add
+		in key t_key \
+		    check: not i_object_.contains_key ( i_key ) \
+		    message: """Key '{{i_key.to_string}}' exists already in the map.""" id: key_exists_already
+		in value t_value
+		
+		out result mutable_map<key: t_key; value: t_value>
+	.
+
+	function add_if_not_contained ( key t_key, value t_value ) -> mutable_map<key: t_key, value: t_value>
+
+	function add_or_replace ( key t_key, value t_value ) -> mutable_map<key:t_key, value:t_value>
+
+	function replace
+		in key t_key \
+		    check: i_object_.contains_key ( i_key ) \
+		    message: """Key '{{i_key.to_string}}' doesn't exist.""" id: inexistant_key
+		in new_value t_value
+		
+		out result mutable_map<key:t_key, value:t_value>
+	.
+
+	function remove
+		in key type:t_key \
+		    check: i_object_.contains_key ( i_key ) \
+		    message: """Key '{{i_key.to_string}}' doesn't exist.""" id: inexistant_key
+		
+		out result mutable_map<key:t_key, value:t_value>
+	.
+
+	function remove_if_contained ( key t_key ) -> mutable_map<key:t_key, value:t_value>
+
+	function remove_all -> mutable_map<key:t_key, value:t_value>
+	
+	function copy_to_immutable -> map<key:t_key, value:t_value>
+		%object_not_empty_in_check
+	.
+
+	function make_immutable -> map<key:t_key, value:t_value>
+		%object_not_empty_in_check
+    .
+    
+	function make_immutable_or_null -> null or map<key:t_key, value:t_value>
+.

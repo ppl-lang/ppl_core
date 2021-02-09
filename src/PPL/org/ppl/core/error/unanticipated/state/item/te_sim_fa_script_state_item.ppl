@@ -1,0 +1,17 @@
+    function to_string
+        const r = fa_mutable_string.create
+        
+        r.append ( a_id.value )
+        
+        if a_object_type is not null then
+            r.append ( """ {{a_object_type.to_string}}: """ )
+        else
+            r.append ( ": " )
+        .
+        
+        r.append ( se_object.to_string_or_null_string ( a_value ) )
+
+        return r.to_string
+    .
+    
+    creator create kind:in_all

@@ -1,0 +1,50 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory regex
+
+	java_header
+		import java.util.regex.Pattern;
+	end java_header
+
+	java
+		private Pattern a_java_pattern;
+		
+		public Pattern getJavaPattern() { return a_java_pattern; }
+	end java
+
+	%string_value_factory_to_string_command
+
+	creator create kind:in_all
+
+        this.value = i_value
+
+        java
+            c_this.a_java_pattern = Pattern.compile ( i_value.getJavaString() );
+        end java
+
+        return this
+    .
+	
+	/// TD?
+	    add Pattern.DOTALL
+	    or (better)
+	    remove this creator,
+	    because MULTILINE mode can be activated with (?m) at the start of a regex, and DOTALL can be activated with (?s)
+	    see java.util.regex.Pattern
+    .///
+	creator create_with_multiline_mode ( value string ) -> regex
+		
+        this.value = i_value
+
+        java
+            c_this.a_java_pattern = Pattern.compile ( i_value.getJavaString(), Pattern.MULTILINE );
+        end java
+
+        return this
+    .
+.

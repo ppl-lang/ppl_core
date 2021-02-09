@@ -1,0 +1,49 @@
+template fa_PPL_identifier
+    
+    param id_kind
+    
+factory {id_kind}_id
+
+    function to_string = a_value
+    
+    function to_prefixed_string = """{{se_{id_kind}_constants.id_prefix}}{{a_value}}"""
+    
+    creator create kind:in_all
+    
+    creator try_parse_with_optional_prefix ( string ) -> {id_kind}_id or parse_object_error<{id_kind}_id>
+        
+        const prefix = se_{id_kind}_constants.id_prefix
+        variable id string
+        if i_string.starts_with ( prefix ) then
+            if i_string.size <= prefix.size then
+                return parse_object_error<{id_kind}_id>.create (
+                    info = """'{{i_string}}' is an invalid identifier, because nothing is defined after the prefix '{{prefix}}'."""
+                    data = i_string )
+            .
+            id = i_string.substring_from ( prefix.size + 1 )
+        else
+            id = i_string
+        .
+    
+        try
+            return create ( id )
+        catch_any e
+            return parse_object_error<{id_kind}_id>.create (
+                info = """'{{i_string}}' is an invalid {id_kind} identifier. Reason:
+{{se_unanticipated_error.get_source_error_info ( e )}}'"""
+                data = i_string )
+        .
+    .
+
+	creator parse_with_optional_prefix_or_throw ( string ) -> {id_kind}_id
+
+        case type of try_parse_with_optional_prefix ( i_string )
+            when {id_kind}_id r
+                return r
+            when parse_object_error<*> e
+                throw e.info
+        .
+    .
+
+.
+.

@@ -1,0 +1,9 @@
+type service_selector
+
+	inherit TFS_selector
+		redefine
+			att path virtual_service_path
+		.
+	.
+.
+

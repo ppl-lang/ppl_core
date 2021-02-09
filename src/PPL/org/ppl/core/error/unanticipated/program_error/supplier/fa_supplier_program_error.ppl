@@ -1,0 +1,92 @@
+factory supplier_program_error java: "extends RuntimeException"
+
+    java
+        public String getMessage() {
+            return a_info.getJavaString();
+        }
+
+        public Throwable getCause() {
+            return (RuntimeException) a_supplier_error;
+        }
+    end java
+
+    function stack_trace
+    
+        const r = mutable_indexed_list<bug_source_code_location>.create
+        add_stack_element ( list = r, element = this )
+        return r.make_immutable
+    .
+
+    function add_stack_element private:yes ( list mutable_indexed_list<bug_source_code_location>, element unanticipated_error )
+    
+        case type of element
+            when supplier_program_error s
+                add_stack_element ( list, element = s.supplier_error )
+            otherwise
+        .
+        list.append ( element.source_code_location )
+    .
+
+	function source_error
+        case type of a_supplier_error
+            when supplier_program_error child_supplier_error then
+                return child_supplier_error.source_error
+            otherwise
+                return a_supplier_error
+        .
+    .
+
+    function to_string
+        return a_info
+    .
+    
+	command to_long_string
+	
+	    return """{{source_error.to_long_string}}
+Trace:
+{{trace_to_long_string}}"""
+    .
+    
+	command trace_to_long_string private:yes -> string
+
+        const r = fa_mutable_string.create
+        
+        repeat for each location in stack_trace
+        
+            const TFS_id = location.TFS_id_path.id
+            const TFS_kind = se_TFS_id.id_to_kind_string ( TFS_id ).to_first_upper_case
+            r.append ( """> {{TFS_kind}} {{TFS_id}}.{{location.script_id}}""" )
+            
+            if location.script_line_number as line is not null then
+                r.append ( """, line {{line}}""" )
+            .
+            
+            r.append ( """ ({{location.TFS_id_path.library_path}})""" )
+            
+            if location.script_instruction as instruction is not null then
+                r.append ( ":" )
+                r.append_new_line
+                r.append ( "  " )
+                r.append ( instruction )
+            .
+            
+            r.append_new_line
+        .
+        
+        return r.to_string
+    .
+    
+    
+    creator create access:private kind:in_all
+    
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+	    supplier_error unanticipated_error ) -> supplier_program_error
+	    
+        return create (
+            info = "A program error occurred in a called script."
+            source_code_location, script_state, supplier_error )
+    .
+
+.

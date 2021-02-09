@@ -1,0 +1,86 @@
+service Java_spliterator_converter
+
+	java_header
+		import java.util.function.Consumer;
+		import java.util.Spliterator;
+		import java.util.Spliterators.AbstractSpliterator;
+        
+		import org.ppl.core.basics.base_types.ty_any;
+        import org.ppl.core.collections.iterators.finite_iterator.implementations.fa_Java_Spliterator_wrapper_iterator;
+        import org.ppl.core.collections.iterators.finite_iterator.implementations.fa_Java_Spliterator_wrapper_iterator_with_size;
+        import org.ppl.core.collections.iterators.finite_iterator.ty_finite_iterator;
+        import org.ppl.core.collections.iterators.finite_iterator.ty_finite_iterator_with_size;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.ty_object_type;
+        import org.ppl.core.utilities.object.reference.ty_object_reference;
+	end java_header
+	
+    java
+        private static class PPL_iterator_wrapper_Spliterator <T extends ty_any> extends AbstractSpliterator<T> {
+        
+            private ty_finite_iterator<T> a_PPL_iterator;
+        
+            PPL_iterator_wrapper_Spliterator ( ty_finite_iterator<T> i_PPL_iterator, int characteristics ) {
+                super ( Long.MAX_VALUE, characteristics );
+                a_PPL_iterator = i_PPL_iterator;
+            }
+            
+            PPL_iterator_wrapper_Spliterator ( ty_finite_iterator_with_size<T> i_PPL_iterator, int characteristics ) {
+                super ( i_PPL_iterator.size().getJavaLong(), characteristics );
+                a_PPL_iterator = i_PPL_iterator;
+            }
+            
+            public boolean tryAdvance ( Consumer<? super T> consumer ) {
+                
+                ty_object_reference<? extends T> ref = a_PPL_iterator.next();
+                if ( ref != null ) {
+                    consumer.accept ( ref.getObject() );
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        
+        // PPL to Java
+
+        public static <T extends ty_any> Spliterator<T> PPL_finite_iterator_with_size_to_Java_Spliterator (
+            final ty_finite_iterator_with_size<T> PPL_iterator ) {
+            
+            return new PPL_iterator_wrapper_Spliterator<T> ( PPL_iterator,
+                Spliterator.IMMUTABLE | Spliterator.SIZED | Spliterator.SUBSIZED );
+        }
+         
+/*
+        public static <T extends ty_non_null> Spliterator<T> PPL_finite_iterator_with_size_no_nulls_to_Java_Spliterator (
+            final ty_finite_iterator_with_size<T> PPL_iterator ) {
+            
+            return new PPL_iterator_wrapper_Spliterator<T> ( PPL_iterator,
+                Spliterator.IMMUTABLE | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL );
+        }
+*/
+         
+        public static <T extends ty_any> Spliterator<T> PPL_finite_iterator_to_Java_Spliterator (
+            final ty_finite_iterator<T> PPL_iterator ) {
+            
+            return new PPL_iterator_wrapper_Spliterator<T> ( PPL_iterator,
+                Spliterator.IMMUTABLE | Spliterator.SIZED | Spliterator.SUBSIZED );
+        }
+
+         
+        // Java to PPL
+
+        public static <T extends ty_any> ty_finite_iterator<T> Java_Spliterator_to_PPL_finite_iterator (
+            final Spliterator<T> i_spliterator,
+            ty_object_type i_element_type ) {
+            
+            if ( i_spliterator.hasCharacteristics ( Spliterator.SIZED ) ) {
+                // size doesn't work reliably !!!
+                return new fa_Java_Spliterator_wrapper_iterator_with_size<T> ( i_spliterator, i_element_type );
+            } else {
+                return new fa_Java_Spliterator_wrapper_iterator<T> ( i_spliterator, i_element_type );
+            }
+        }
+    end java
+
+.

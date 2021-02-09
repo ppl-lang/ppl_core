@@ -1,0 +1,105 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service string_tests
+
+	test
+		script
+			%te_sim_triple_apostrophed_string_literal_tests
+
+         // 1 apostrophe
+         verify ''''''' =v "'"
+         verify ''''a''' =v "'a"
+         verify '''a'''' =v "a'"
+         verify ''''a'''' =v "'a'"
+         verify '''a'a''' =v "a'a"
+
+         // 2 apostrophes
+         verify '''''''' =v "''"
+         verify '''''a''' =v "''a"
+         verify '''a''''' =v "a''"
+         verify '''''a''''' =v "''a''"
+         verify '''a''a''' =v "a''a"
+         verify '''name = '' ''' =v "name = '' "
+         verify '''name = ''''' =v "name = ''"
+
+         // 3 apostrophes
+         verify ''''''''' =v "'''"
+         verify "'''" & '''a''' =v "'''a"
+         verify '''a'''''' =v "a'''"
+         verify "'''" & '''a'''''' =v "'''a'''"
+         verify '''a''' & "'''" & '''a''' =v "a'''a"
+
+         // 4 apostrophes
+         verify '''''''''' =v "''''"
+         verify "''''" & '''a''' =v "''''a"
+         verify '''a''''''' =v "a''''"
+         verify "''''" & '''a''''''' =v "''''a''''"
+         verify '''a''' & "''''" & '''a''' =v "a''''a"
+
+			%te_sim_triple_quoted_string_literal_tests
+
+			// special cases
+
+			// single characters
+			verify """a""" =v "a"
+			verify """\""" =v "\\"
+			verify """"""" =v "\""
+			verify """ """ =v " "
+			verify """'""" =v "'"
+
+			// 1 quote
+			verify """"""" =v "\""
+			verify """"a""" =v "\"a"
+			verify """a"""" =v "a\""
+			verify """"a"""" =v "\"a\""
+			verify """a"a""" =v "a\"a"
+
+			// 2 quotes
+			verify """""""" =v "\"\""
+			verify """""a""" =v "\"\"a"
+			verify """a""""" =v "a\"\""
+			verify """""a""""" =v "\"\"a\"\""
+			verify """a""a""" =v "a\"\"a"
+			verify """name = "" """ =v "name = \"\" "
+			verify """name = """"" =v "name = \"\""
+
+			// 3 quotes
+			verify """"""""" =v "\"\"\""
+			verify '''"""''' & """a""" =v "\"\"\"a"
+			verify """a"""""" =v "a\"\"\""
+			verify '''"""''' & """a"""""" =v "\"\"\"a\"\"\""
+			verify """a""" & '''"""''' & """a""" =v "a\"\"\"a"
+
+			// 4 quotes
+			verify """""""""" =v "\"\"\"\""
+			verify '''""""''' & """a""" =v "\"\"\"\"a"
+			verify """a""""""" =v "a\"\"\"\""
+			verify '''""""''' & """a""""""" =v "\"\"\"\"a\"\"\"\""
+			verify """a""" & '''""""''' & """a""" =v "a\"\"\"\"a"
+
+			// weird
+			verify """\/""" =v "\\/"
+			verify """\\\""\\\""" =v "\\\\\\\"\"\\\\\\"
+
+			// embedded expressions
+			var exp string = "e"
+			// verify """{{}}""" =v ""
+			verify """{{exp}}""" =v "e"
+			verify """a{{exp}}""" =v "ae"
+			verify """{{exp}}a""" =v "ea"
+			verify """a{{exp}}b""" =v "aeb"
+			verify """a{{exp}}{{exp}}b""" =v "aeeb"
+			exp = "e1"
+			var exp2 string = "e2"
+			verify """{{exp}}{{exp2}}""" =v "e1e2"
+			verify """ {{exp}} {{exp2}} """ =v " e1 e2 "
+			verify """ab{{exp}}cd{{exp2}}{{exp2}}{{exp}}e""" =v "abe1cde2e2e1e"
+		end
+	end
+
+end service

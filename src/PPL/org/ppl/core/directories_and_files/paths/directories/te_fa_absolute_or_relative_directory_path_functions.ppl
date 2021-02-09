@@ -1,0 +1,13 @@
+template fa_absolute_or_relative_directory_path_functions
+
+    function names
+    
+        const r = mutable_indexed_list<directory_name>.create
+        java
+            a_java_value.iterator().forEachRemaining (
+                name_path -> c_r.append ( fa_directory_name.create ( new fa_string ( name_path.toString() ) ) ) );
+        end java
+        return r.make_immutable
+    .
+
+.

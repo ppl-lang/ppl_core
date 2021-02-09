@@ -1,0 +1,25 @@
+factory OS_standard_error_string_writer type:string_writer
+
+	java_header
+		import org.ppl.core.IO.writer.string.Java.fa_Java_BufferedWriter_string_writer;
+	end java_header
+
+    att delegate string_writer access:private
+    
+	functions
+        try_write          = a_delegate.try_write ( i_string )
+        try_write_line     = a_delegate.try_write_line ( i_string  )
+        try_write_new_line = a_delegate.try_write_new_line
+        try_close          = a_delegate.try_close
+        try_flush          = a_delegate.try_flush
+    .
+
+	creator create -> string_writer
+
+        java
+            c_this.a_delegate = new fa_Java_BufferedWriter_string_writer ( System.err, true );
+        end java
+
+        return this
+    .
+.

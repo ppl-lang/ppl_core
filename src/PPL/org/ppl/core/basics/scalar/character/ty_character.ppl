@@ -1,0 +1,39 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type character
+	
+	java
+		public char getJavaChar();
+	end java
+
+	inherit \
+		scalar,
+		has_compare_to < character >,
+		has_min_max < character >,
+		has_hash_code
+
+    functions
+    
+        is_equal_to_ignore_case ( other character ) -> yes_no
+
+        is_digit             -> yes_no
+        is_non_zero_digit    -> yes_no
+        is_letter            -> yes_no
+        is_lower_case_letter -> yes_no
+        is_upper_case_letter -> yes_no
+        is_digit_or_letter   -> yes_no
+        is_space             -> yes_no
+        is_whitespace        -> yes_no
+
+    	repeat ( count positive_32 ) -> string
+    
+        to_lower_case -> character
+        to_upper_case -> character
+        to_integer    -> zero_positive_32
+    .
+.

@@ -1,0 +1,51 @@
+factory reflecting_validator_for_input_argument \
+    type: object_validator<object:any, error:check_program_reflection_error>
+
+    java_header
+        import org.ppl.core.reflection.introspection.java.se_Java_method_introspection;
+        import org.ppl.core.reflection.execution.java.se_dynamic_Java_execution;
+    end java_header
+
+    attributes access: private
+        TFS_path TFS_path
+        command_id PPL_command_id
+        input_argument_id PPL_command_input_argument_id
+    .
+    
+    function validate
+    
+        const method_name = se_Java_method_introspection.input_argument_check_method_name (
+            command_id, input_argument_id )
+        assert method_name is not null // avoid 'not used' compiler warning
+            
+        variable error invalid_input_argument_program_error or null
+        java
+            v_error = (ty_invalid_input_argument_program_error) se_dynamic_Java_execution.invokeStaticClassMethod (
+                a_TFS_path.getValue().getJavaString(),
+                c_method_name.getJavaString(),
+                new Object[]{i_object} );
+        end java
+        assert error may be null
+        
+        if error is null then
+            return null
+        else
+            return fa_check_program_reflection_error.create_for_check_program_error ( error )
+        .
+    .
+    
+
+    // it is assumed that all input is valid
+    creator create -> object_validator<object:any, error:check_program_reflection_error>
+        in TFS_path TFS_path
+        in command_id PPL_command_id
+        in input_argument_id PPL_command_input_argument_id
+        
+        this.TFS_path = i_TFS_path
+        this.command_id = i_command_id
+        this.input_argument_id = i_input_argument_id
+        
+        return this
+    .
+.
+    

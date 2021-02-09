@@ -1,0 +1,26 @@
+service unanticipated_error
+
+    function write_to_OS_error ( error unanticipated_error )
+    
+        OS.err.write_line ( "Error:" )
+        OS.err.write_line ( get_source_error_info ( i_error ) )
+    .
+
+	function get_source_error_info ( error unanticipated_error ) -> string
+
+	    return get_source_error ( i_error ).info
+    .
+
+	function get_source_error ( error unanticipated_error ) -> unanticipated_error
+	
+        case type of i_error
+            when supplier_program_error s then
+                return s.source_error
+            otherwise
+                return i_error
+        .
+    .
+    
+    function to_runtime_error ( unanticipated_error ) -> runtime_error =
+        unanticipated_error_wrapper.create_for_unanticipated ( i_unanticipated_error )
+.

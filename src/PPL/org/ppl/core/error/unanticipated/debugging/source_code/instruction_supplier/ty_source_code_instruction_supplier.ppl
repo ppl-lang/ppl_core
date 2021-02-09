@@ -1,0 +1,5 @@
+type source_code_instruction_supplier
+
+    function get ( source_code_file file, line_number positive_32 ) -> string or null
+    
+.

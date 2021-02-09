@@ -1,0 +1,64 @@
+type mutable_set < element child_of:scalar_or_scalar_value usage:in_out >
+
+	inherit \
+		mutable_collection<t_element>,
+		mutable_or_immutable_set<t_element>
+		
+    // add
+
+	function add -> mutable_set<t_element>
+		in element t_element \
+		    check: not i_object_.contains ( element ) \
+		    message: """Element '{{element}}' is already contained in the set.""" id: element_contained_already_in_set
+	.
+
+	function add_if_not_contained ( element t_element ) -> mutable_set<t_element>
+
+	function add_or_replace ( element t_element ) -> mutable_set<t_element>
+	
+	
+	// remove
+
+	function remove -> mutable_set<t_element>
+		in element t_element \
+		    check: i_object_.contains ( element ) \
+		    message: """Element '{{element}}' is not contained in set.""" id: element_not_contained_in_set
+	.
+
+	function remove_if_contained ( element t_element ) -> mutable_set<t_element>
+
+	function remove_all -> mutable_set<t_element>
+	
+	
+	// replace
+
+	function replace -> mutable_set<t_element>
+		in to_replace t_element \
+		    check: i_object_.contains ( to_replace ) \
+		    message: """Element '{{to_replace}}' is not contained in set.""" id: element_not_contained_in_set
+		in replace_by t_element \
+		    check: not i_object_.contains ( replace_by ) \
+		    message: """Element '{{replace_by}}' is already contained in set.""" id: element_contained_already_in_set
+	.
+	
+	
+	// sort
+	
+	// function sort ( descending yes_no default:no )
+
+
+    // to_immutable
+
+	function copy_to_immutable -> set<t_element>
+		%object_not_empty_in_check
+	.
+
+	function copy_to_immutable_or_null -> set<t_element> or null
+
+	function make_immutable -> set<t_element>
+		%object_not_empty_in_check
+    .
+    
+	function make_immutable_or_null -> set<t_element> or null
+
+.

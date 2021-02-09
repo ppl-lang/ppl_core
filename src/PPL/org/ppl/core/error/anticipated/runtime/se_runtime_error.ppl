@@ -1,0 +1,56 @@
+service runtime_error
+
+    function write_to_OS_error ( error runtime_error )
+    
+        OS.err.write_line ( "Error:" )
+        // OS.err.write_line ( info_with_causes ( i_error ) )
+        // OS.err.write_line ( to_string_with_causes ( i_error ) )
+        OS.err.write_line ( to_long_string_with_causes ( i_error ) )
+    .
+
+    function to_long_string_with_causes ( error runtime_error ) -> string
+        return with_causes ( i_error, text_getter = { error => se_object.to_long_string ( error ) } )
+    .
+    
+    function to_string_with_causes ( error runtime_error ) -> string
+        return with_causes ( i_error, text_getter = { error => error.to_string } )
+    .
+    
+    function info_with_causes ( error runtime_error ) -> string
+        return with_causes ( i_error, text_getter = { error => error.info } )
+    .
+    
+    function source_cause  ( error runtime_error ) -> runtime_error
+    
+        variable r = i_error
+        repeat forever
+            const cause = r.cause
+            if cause is null then
+                exit repeat
+            else
+                r = cause
+            .
+        .
+        return r
+    .
+    
+    functions access:private
+    
+        with_causes -> string
+            in error runtime_error
+            in text_getter object_converter<in:runtime_error out:string>
+
+            const r = mutable_string.create_with ( i_text_getter.convert ( error ) )
+    
+            variable cause = i_error.cause
+            repeat while cause #r null
+                assert cause is not null
+                r.append_new_line
+                r.append ( """Cause: {{i_text_getter.convert ( cause )}}""" )
+                cause = cause.cause
+            .
+            
+            return r.to_string
+        .
+    .
+.

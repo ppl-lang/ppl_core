@@ -1,0 +1,42 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service file_utilities
+	
+	function try_get_existing_file_from_absolute_or_relative_path ( path absolute_or_relative_file_path ) \
+        -> file or file_inexistent_error
+
+        const file = get_file_from_absolute_or_relative_path ( i_path )
+
+        if check_file_exists ( file ) as error is null then
+            return file
+        else
+            return error
+        .
+    .
+
+	function get_file_from_absolute_or_relative_path ( path absolute_or_relative_file_path ) -> file
+
+        case type of i_path
+            when file_path
+                return fa_file.create ( i_path )
+            when relative_file_path 
+                return fa_file.create ( i_path.to_absolute_file )
+        .
+    .
+
+	function check_file_exists ( file ) -> file_inexistent_error or null
+
+        if i_file.exists then
+            return null
+        else
+            return fa_file_inexistent_error.create (
+                info = """File '{{i_file.path.to_current_OS_path}}' doesn't exist."""
+                resource = i_file )
+        .
+    .
+.

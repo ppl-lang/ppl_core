@@ -1,0 +1,117 @@
+factory signed_integer
+
+%fa_integer_java_header
+
+	java
+		private BigInteger a_java_value;
+
+		public BigInteger getJavaBigInteger() { return a_java_value; }
+
+		public fa_signed_integer ( BigInteger i_java_value ) {
+			if ( i_java_value == null ) {
+				throw new IllegalArgumentException ( "Input for fa_signed_integer constructor cannot be null." );
+			}
+			
+			this.a_java_value = i_java_value ;
+		}
+		
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_signed_integer ) ) return false;
+			
+			BigInteger other_integer = ((ty_signed_integer) other).getJavaBigInteger();
+			return a_java_value.equals ( other_integer );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_java_value.hashCode();
+		}
+
+		public int compareTo ( ty_signed_integer other ) {
+			if ( this == other ) return 0;
+			return a_java_value.compareTo ( other.getJavaBigInteger() );
+		}
+	end java 
+	
+%fa_integer_functions
+
+	function abs native:yes
+        java
+            return new fa_signed_integer ( a_java_value.abs() );
+        end java
+	.
+	
+	
+	creator create_from_int_32 native:yes ( value signed_int_32 ) -> signed_integer
+	    java
+	        return new fa_signed_integer ( BigInteger.valueOf ( i_value.getJavaInt() ) );
+	    end java
+    .
+	
+	creator create_from_int_64 native:yes ( value signed_int_64 ) -> signed_integer
+	    java
+	        return new fa_signed_integer ( BigInteger.valueOf ( i_value.getJavaLong() ) );
+	    end java
+    .
+	
+    creator try_parse ( string ) -> signed_integer or parse_object_error<signed_integer>
+        script
+			var java_exception java_exception or null = null
+			java
+				try {
+					c_this.a_java_value = new BigInteger ( i_string.getJavaString() );
+				} catch ( NumberFormatException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			assert java_exception may be null
+			
+			if java_exception is null then
+			    return this
+            else
+                return parse_object_error<signed_integer>.create (
+                    info = """'{{i_string}}' is not a valid integer number. Reason:
+{{java_exception.to_string}}"""
+    				data = i_string
+    				java_exception )
+            .
+        .
+    .
+    
+%parse_or_throw_creator<signed_integer>
+
+    tests
+        const v1 = create_from_int_32 ( 100 )
+        const v2 = create_from_int_64 ( -50L )
+        const v3 = try_parse ( "200" ) on_error: throw_error
+        const v4 = parse_or_throw ( "100" )
+        
+        verify v1.add ( v2 ) =v create_from_int_32 ( 50 )
+        verify v4.subtract ( v3 ) =v create_from_int_32 ( -100 )
+        verify v2.multiply ( v3 ) =v create_from_int_32 ( -10000 )
+        verify v3.divide ( v1 ) =v create_from_int_32 ( 2 )
+        
+        verify v1 =v v4
+        verify v1 #v v2
+
+        verify v1 >= v4
+        verify v1 ># v2
+        verify v1 <= v4
+        verify v1 <# v3
+
+        verify v1.min(v2) =v v2
+        verify v1.max(v2) =v v1
+        
+        try
+            parse_or_throw ( "-1.3" )
+            verify no
+        catch_any e
+            verify yes
+        .
+    .
+
+.

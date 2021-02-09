@@ -1,0 +1,11 @@
+service type_parameter_id_constants
+
+	attributes type:type_parameter_id
+
+		iterator_element = type_parameter_id.create ( "element" )
+
+		map_key   = type_parameter_id.create ( "key" )
+		map_value = type_parameter_id.create ( "value" )
+	.
+
+.

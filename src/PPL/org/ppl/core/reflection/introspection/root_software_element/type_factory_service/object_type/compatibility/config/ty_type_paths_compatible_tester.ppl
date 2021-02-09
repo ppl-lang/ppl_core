@@ -1,0 +1,5 @@
+type type_paths_compatible_tester
+
+    function is_compatible ( source virtual_type_path, target virtual_type_path ) -> yes_no
+    
+.

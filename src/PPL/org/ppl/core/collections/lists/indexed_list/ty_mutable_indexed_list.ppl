@@ -1,0 +1,37 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_indexed_list<element usage:in_out>
+	
+	inherit mutable_list<t_element>
+		redefine
+			function append        -> mutable_indexed_list<t_element>
+			function prepend       -> mutable_indexed_list<t_element>
+			function remove_first  -> mutable_indexed_list<t_element>
+			function remove_last   -> mutable_indexed_list<t_element>
+			function remove_all    -> mutable_indexed_list<t_element>
+			function replace_first -> mutable_indexed_list<t_element>
+			function replace_last  -> mutable_indexed_list<t_element>
+
+			function copy_to_immutable -> indexed_list<t_element>
+			function make_immutable    -> indexed_list<t_element>
+
+			function make_immutable_or_null -> null or indexed_list<t_element>
+		.
+    .
+
+	inherit mutable_or_immutable_indexed_list<t_element>
+
+	function insert_before ( element t_element, %index_input_argument ) -> mutable_indexed_list<t_element>
+
+	function insert_after ( element t_element, %index_input_argument ) -> mutable_indexed_list<t_element>
+
+	function remove_at_index ( %index_input_argument ) -> mutable_indexed_list<t_element>
+
+	function replace_at_index ( new_element t_element, %index_input_argument ) -> mutable_indexed_list<t_element>
+		
+.

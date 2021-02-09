@@ -1,0 +1,25 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory zero_neg_32
+
+%fa_int_32_java_code < \
+    type_id: zero_neg_32 &
+    invalid_check: "> 0" >
+
+	function to_zero_neg_64 native:yes
+        java
+            return new org.ppl.core.basics.scalar.number.integer.integer_64_bits.zero_negative_64.fa_zero_neg_64 ( getJavaInt() );
+        end java
+	.
+
+%fa_int_32_commands < \
+    type_id: zero_neg_32 \
+    unary_minus_result_factory_id: zero_pos_32 \
+    abs_result_factory_id: zero_pos_32 >
+
+.

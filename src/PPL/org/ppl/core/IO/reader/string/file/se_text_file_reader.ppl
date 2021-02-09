@@ -1,0 +1,73 @@
+service text_file_reader 
+
+	java_header
+		import java.io.IOException;
+		import java.nio.file.Files;
+		import java.nio.charset.Charset;
+        import java.util.stream.Stream;
+
+		import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.object_type.constants.se_common_object_types;
+		import org.ppl.core.stream.fa_stream;
+	end java_header
+	
+
+	function try_read_non_empty_content -> string or file_error
+		in file file
+		%supported_character_set_input_argument
+		
+		case type of try_read_content ( file, character_set )
+		    when string s
+		        return s
+            when null
+                return fa_file_read_error.create (
+                    info = """File '{{i_file.to_string}}' is empty."""
+                    resource = i_file )
+            when file_error e
+                return e
+        .
+    .
+
+	function try_read_content -> string or null or file_error
+		in file file
+		%supported_character_set_input_argument
+		
+		if not i_file.exists then
+		    return file_inexistent_error.create_for_file ( i_file )
+        .
+		
+        var r string or null = null
+        var java_exception java_exception or null = null
+        java
+            try {
+                String content = new String (
+                    Files.readAllBytes ( i_file.getJavaFile().toPath() ),
+                    Charset.forName ( i_character_set.to_string().getJavaString() ) );
+                if ( ! content.isEmpty() ) {
+                    v_r = new fa_string ( content );
+                }
+            } catch ( IOException e ) {
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+
+        if java_exception is null then
+            return r
+        else
+            return fa_file_read_error.create (
+                info = """Error reading content of file '{{i_file.to_string}}'."""
+                java_exception,
+                resource = i_file )
+        .
+	.
+	
+	function try_write_content_to_OS_out ( file ) -> file_error or null
+	
+	    const content = try_read_content ( file ) \
+	        on_error: return_error \
+	        on_null: return null
+
+	    se_OS.out.write_line ( content )
+	    return null
+    .
+.

@@ -1,0 +1,86 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service java_config
+
+	java_header
+		import org.ppl.core.basics.scalar.string.emptyable_string.fa_emptyable_string;
+	end java_header
+
+	attributes type:string
+        Unix_classpath_separator    = ":"
+        Windows_classpath_separator = ";"
+    .
+	
+    function java_root_directory -> directory = fa_directory.parse_or_throw ( get_non_null_system_property ( "java.home" ) )
+
+    // function JAVA_HOME_system_variable -> string or null = se_OS_environment_variables.get_string_value_or_null ( "JAVA_HOME" )
+
+    // function java_ext_directory -> directory = fa_directory.parse_or_throw ( get_system_property ( "java.ext.dirs" ) )
+    
+    function java_version -> string = get_non_null_system_property ( "java.version" )
+
+    // function java_class_version -> string = get_non_null_system_property ( "java.class.version" )
+    
+    // function java_class_path -> string = get_non_null_system_property ( "java.class.path" )
+    
+    // function java_library_path -> string = get_non_null_system_property ( "java.library.path" )
+    
+    function Java_jmods_directory -> directory = java_root_directory.append_name (
+        directory_name.create ( "jmods" ) )
+    
+    function current_OS_classpath_separator -> string = get_non_null_system_property ( "path.separator" )
+
+
+	function get_non_null_system_property_as_character ( property_name string ) -> character
+	
+	    const string = get_non_null_system_property ( property_name )
+	    assert string.size =v 1
+	    return string.first
+    .
+
+	function get_non_null_system_property ( property_name string ) -> string
+	
+	    const r = get_system_property ( property_name )
+	    assert r is not null
+	    return r
+    .
+	
+	function get_system_property ( property_name string ) -> string or null
+        return get_system_property_as_emptyable_string ( i_property_name )?.to_string_or_null
+    .
+	
+	function get_system_property_as_emptyable_string ( property_name string ) -> emptyable_string or null
+	    
+	    variable r emptyable_string or null = null
+        java
+            String value = System.getProperty ( i_property_name.to_string().getJavaString() );
+            if ( value != null ) {
+                v_r = fa_emptyable_string.create ( value );
+            }
+        end java
+        return r
+    .
+	
+	function get_java_exe_file ( use_javaw yes_no default:no ) -> file or file_inexistent_error
+
+        const file_name = if i_use_javaw then "javaw" else "java"
+        const relative_path = relative_file_path.create (
+            if se_OS_config.OS_is_Windows
+            then """bin\{{file_name}}.exe"""
+            else """bin/{{file_name}}""" )
+        const file = file.create ( relative_path.to_absolute_file ( java_root_directory.path ) )
+        
+        if file.exists then
+            return file
+        else
+            return file_inexistent_error.create (
+                info = """The Java executable file '{{file.to_string}}' doesn't exist."""
+                resource = file )
+        .
+    .
+.

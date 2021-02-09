@@ -1,0 +1,5 @@
+service source_code_template_constants
+    
+    att id_prefix string default:"te_"
+    
+.

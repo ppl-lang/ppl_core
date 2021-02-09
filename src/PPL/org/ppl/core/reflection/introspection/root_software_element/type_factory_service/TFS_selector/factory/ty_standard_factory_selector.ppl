@@ -1,0 +1,6 @@
+type standard_factory_selector
+
+	inherit factory_selector
+
+.
+

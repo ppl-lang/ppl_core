@@ -1,0 +1,70 @@
+factory comparator_from_key_getter type: object_comparator
+
+    java_header
+        import java.lang.invoke.MethodHandle;
+        import java.lang.invoke.MethodHandles;
+        import java.lang.invoke.MethodType;
+        
+        import org.ppl.core.basics.scalar.enumerated.ty_enumerated;
+        import org.ppl.core.basics.base_types.ty_any;
+        import org.ppl.core.basics.base_types.ty_non_null;
+    end java_header
+
+    attributes access:private
+        key_getter object_converter < in:object out:has_compare_to<*> >
+        descending yes_no
+    .
+
+    function compare
+    
+        const key_1 = a_key_getter.convert ( i_object_1 )
+        const key_2 = a_key_getter.convert ( i_object_2 )
+        
+        // suppress compiler warning 'not used'
+        assert key_1 is not null
+        assert key_2 is not null
+        
+        variable r comparator_result
+        
+        if not a_descending then
+            java
+                MethodHandles.Lookup lookup = MethodHandles.lookup();
+
+                MethodHandle handle = lookup.findVirtual ( 
+                    c_key_1.getClass(), 
+                    "compare_to",
+//                    MethodType.methodType ( ty_enumerated.class, ty_non_null.class ) );
+                    MethodType.methodType ( ty_enumerated.class, ty_any.class ) );
+//						MethodType.methodType ( ty_enumerated.class, c_key_2.getClass() ) );
+
+                v_r = (ty_enumerated) handle.invoke ( c_key_1, c_key_2 );
+            end java
+        else
+            java
+                MethodHandles.Lookup lookup = MethodHandles.lookup();
+
+                MethodHandle handle = lookup.findVirtual ( 
+                    c_key_2.getClass(), 
+                    "compare_to",
+//                    MethodType.methodType ( ty_enumerated.class, ty_non_null.class ) );
+                    MethodType.methodType ( ty_enumerated.class, ty_any.class ) );
+//						MethodType.methodType ( ty_enumerated.class, c_key_1.getClass() ) );
+                    
+                v_r = (ty_enumerated) handle.invoke ( c_key_2, c_key_1 );
+            end java
+        .
+        assert r is not null
+        
+        return r
+    .
+    
+    creator create -> object_comparator<object>
+        in key_getter object_converter<in:object out:has_compare_to<*>>
+        in descending yes_no
+        
+        this.key_getter = i_key_getter
+        this.descending = i_descending
+        
+        return this
+    .
+.

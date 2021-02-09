@@ -1,0 +1,21 @@
+factory standard_type_selector
+
+%fa_TFS_selector_commands
+
+	function is_equal_to
+
+		if this =r i_other then
+			return yes
+		.
+		
+		case type of i_other
+			when standard_type_selector other_selector
+				return a_path.value =v other_selector.path.value
+			otherwise
+				return no
+		.
+	.
+
+	creator create kind:in_all
+
+.

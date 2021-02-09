@@ -1,0 +1,7 @@
+type null \
+    child_types: none \
+    factories: none
+
+    inherit any
+
+.

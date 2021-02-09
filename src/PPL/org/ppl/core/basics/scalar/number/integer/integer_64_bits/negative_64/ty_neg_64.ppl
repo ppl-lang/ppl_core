@@ -1,0 +1,29 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type neg_64
+
+	///
+	inherit arithmeticable < \
+		operand_type:signed_int_64 \
+		result_type:signed_int_64 \
+		unary_minus_result_type:pos_64 \
+		abs_result_type:pos_64>
+	.///
+
+	inherit zero_neg_64
+		redefine
+			command unary_minus
+				out result pos_64
+			.
+			command abs
+				out result pos_64
+			.
+		.
+	.
+
+.

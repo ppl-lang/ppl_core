@@ -1,0 +1,13 @@
+type mutable_or_immutable_set < element child_of:scalar_or_scalar_value usage:in_out >
+	
+	inherit mutable_or_immutable_collection<t_element>
+
+	inherit has_to_long_string
+
+	function contains ( element t_element ) -> yes_no
+	
+	function stream -> stream<t_element>
+	function sorted_stream -> stream<t_element>
+	
+	// TD add set operations (union, intersection, etc.)
+.

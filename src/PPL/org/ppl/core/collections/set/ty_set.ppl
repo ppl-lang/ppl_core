@@ -1,0 +1,7 @@
+type set < element child_of:scalar_or_scalar_value usage:in_out >
+
+	inherit \
+		collection<t_element>,
+		mutable_or_immutable_set<t_element>
+
+.

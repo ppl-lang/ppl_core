@@ -1,0 +1,92 @@
+ ///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service text_file_writer
+
+	java_header
+		import java.io.*;
+		import java.nio.charset.Charset;
+
+		import org.ppl.core.java.se_java_IO;
+		import org.ppl.core.error.java.fa_java_exception;
+	end java_header
+	
+	function create_temporary_text_file -> file or directory_or_file_error
+		in directory default:se_OS_directories.temporary_files_directory
+		in file_name_extension default: fa_file_name_extension.create ( "txt" )
+		in delete_file_on_exit yes_no
+		in text string
+		%supported_character_set_input_argument
+		
+        const file = se_empty_file_utilities.try_create_new_empty_temporary_file (
+            directory, file_name_extension, delete_file_on_exit ) on_error:return_error
+        write_to_existing_file ( string = i_text, file, i_character_set ) on_error:return_error
+        return file
+    .
+
+	function write_to_new_file -> file_write_error or null
+		in string
+		%new_file_input_argument
+		%supported_character_set_input_argument
+		
+		return string_to_file ( i_string, i_file, i_character_set, append_mode = no )
+    .
+
+    function write_to_existing_file -> file_write_error or null
+		in string
+		%existing_file_input_argument
+		%supported_character_set_input_argument
+
+		return string_to_file ( i_string, i_file, i_character_set, append_mode = no )
+    .
+
+    function write_to_new_or_existing_file -> file_write_error or null
+		in string
+		%new_or_existing_file_input_argument
+		%supported_character_set_input_argument
+		
+		return string_to_file ( i_string, i_file, i_character_set, append_mode = no )
+    .
+
+    function append_to_existing_file -> file_write_error or null
+		in string
+		%existing_file_input_argument
+		%supported_character_set_input_argument
+
+		return string_to_file ( i_string, i_file, i_character_set, append_mode = yes )
+    .
+
+	function append_to_new_or_existing_file -> file_write_error or null
+		in string
+		%new_or_existing_file_input_argument
+		%supported_character_set_input_argument
+
+		return string_to_file ( i_string, i_file, i_character_set, append_mode = yes )
+    .
+
+	functions access:private
+
+        function string_to_file -> file_write_error or null
+            in string
+            in file
+            %supported_character_set_input_argument
+            in append_mode yes_no
+            
+            try
+                error? const file_writer = text_file_writer.create_for_new_or_existing_file (
+                    file, character_set, append_mode )
+                error? file_writer.try_write ( i_string )
+                error? file_writer.try_close
+                return null
+            on IO_error e
+                return file_write_error.create (
+                    info = """Error writing to file {{i_file.to_string}}. Reason: {{e.to_string}}"""
+                    resource = i_file )
+            .
+        .
+    .
+.

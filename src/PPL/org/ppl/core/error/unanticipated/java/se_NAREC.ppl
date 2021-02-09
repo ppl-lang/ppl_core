@@ -1,0 +1,145 @@
+// Non Anticipated Runtime Error Creator
+service NAREC
+
+	java_header
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.positive_32.fa_pos_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.positive_32.ty_pos_32;
+		import org.ppl.core.basics.scalar.string.fa_string;
+		import org.ppl.core.basics.scalar.string.ty_string;
+
+        import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.error.java.fa_Java_throwable;
+        		
+		import org.ppl.core.error.unanticipated.debugging.se_runtime_debug_helper;
+		import org.ppl.core.error.unanticipated.java.fa_unanticipated_Java_throwable;
+		import org.ppl.core.error.unanticipated.location.se_bug_source_code_location;
+		import org.ppl.core.error.unanticipated.location.fa_bug_source_code_location;
+		import org.ppl.core.error.unanticipated.location.ty_bug_source_code_location;
+        import org.ppl.core.error.unanticipated.program_error.null_pointer.fa_null_pointer_program_error;
+        import org.ppl.core.error.unanticipated.program_error.supplier.ty_supplier_program_error;
+        import org.ppl.core.error.unanticipated.program_error.unchecked_type.fa_unchecked_type_assignment_program_error;
+		import org.ppl.core.error.unanticipated.state.ty_script_state;
+		import org.ppl.core.error.unanticipated.program_error.supplier.fa_supplier_program_error;
+		import org.ppl.core.error.unanticipated.ty_unanticipated_error;
+
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.se_TFS_path;
+        import org.ppl.core.reflection.introspection.root_software_element.type_factory_service.ty_TFS_path;
+	end java_header
+
+	java
+	    private static Throwable pendingThrowable = null;
+	    
+		public static ty_unanticipated_error T_to_NARE ( Throwable throwable ) {
+		
+		    StackTraceElement thrownStackTraceElement = throwable.getStackTrace()[0];
+		    
+            Class<?> clazz = thrownStackTraceElement.getClass();
+            String script_id = thrownStackTraceElement.getMethodName();
+
+            // Note: thrownStackTraceElement.getLineNumber​() returns the Java line number, not the PPL line number
+
+		    return T_to_NARE ( throwable, clazz, script_id, 0, null );
+        }
+
+	    // Throwable to ty_unanticipated_error as RuntimeException
+		public static RuntimeException T_to_NARE_RE (
+		    Throwable throwable,
+		    Class<?> clazz,
+		    String script_id,
+		    int script_line_number,
+		    ty_script_state script_state ) {
+		    
+            // throwable.printStackTrace();
+
+            return (RuntimeException) T_to_NARE ( throwable, clazz, script_id, script_line_number, script_state );
+        }
+        
+	    // Throwable to ty_unanticipated_error
+		public static ty_unanticipated_error T_to_NARE (
+		    Throwable throwable,
+		    Class<?> clazz,
+		    String script_id,
+		    int script_line_number,
+		    ty_script_state script_state ) {
+		    
+		    // throwable.printStackTrace();
+
+            if ( pendingThrowable != null ) {
+                // panic!
+                pendingThrowable.printStackTrace();
+                System.err.println ( "Abnormal error condition!" );
+                System.err.println ( "An exception occurred while treating the above exception!" );
+                System.err.println ( "Now exiting with exit code 99." );
+                System.exit ( 99 );
+            }
+            pendingThrowable = throwable;
+            ty_unanticipated_error result = T_to_NARE_2 (
+                throwable, clazz, script_id, script_line_number, script_state );
+            pendingThrowable = null;
+            return result;
+        }
+
+		private static ty_unanticipated_error T_to_NARE_2 (
+		    Throwable throwable,
+		    Class<?> clazz,
+		    String script_id,
+		    int script_line_number,
+		    ty_script_state script_state ) {
+
+            ty_bug_source_code_location location = create_bug_source_code_location (
+                clazz, script_id, script_line_number );
+
+            if ( throwable instanceof ty_unanticipated_error ) {
+            
+                ty_unanticipated_error NARE = (ty_unanticipated_error) throwable;
+                if ( throwable instanceof ty_supplier_program_error ) {
+                    return fa_supplier_program_error.create_with_defaults ( location, script_state, NARE );
+                } else {
+                    boolean is_same_script = se_bug_source_code_location.is_same_script ( location,  NARE.getSource_code_location() ).getJavaBoolean();
+                    if ( is_same_script ) {
+                        return NARE;
+                    } else {
+                        return fa_supplier_program_error.create_with_defaults ( location, script_state, NARE );
+                    }
+                }
+
+            } else if ( throwable instanceof NullPointerException ) {
+                return fa_null_pointer_program_error.create_with_defaults (
+                    location,
+                    script_state,
+                    new fa_java_exception ( (NullPointerException) throwable ) );
+            
+            } else if ( throwable instanceof ClassCastException ) {
+                return fa_unchecked_type_assignment_program_error.create_with_defaults_2 (
+                    location,
+                    script_state,
+                    new fa_java_exception ( (ClassCastException) throwable ) );
+            
+            } else {
+                return fa_unanticipated_Java_throwable.create_with_defaults ( location, script_state, new fa_Java_throwable ( throwable ) );
+            }
+        }
+
+        public static ty_bug_source_code_location create_bug_source_code_location (
+		    Class<?> clazz,
+		    String script_id,
+		    int script_line_number ) {
+		    
+            ty_TFS_path TFS_id_path = se_TFS_path.parse_or_throw ( new fa_string ( clazz.getName() ) );
+                
+            ty_pos_32 line_number = script_line_number == 0 ? null : new fa_pos_32 ( script_line_number );
+            
+            ty_string instruction = null;
+            if ( line_number != null ) {
+                instruction = se_runtime_debug_helper.get_source_code_instruction ( TFS_id_path, line_number );
+            }
+
+            return fa_bug_source_code_location.create (
+                TFS_id_path,
+                new fa_string ( script_id ),
+                line_number, 
+                instruction );
+        }
+	end java
+
+.

@@ -1,0 +1,37 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type file_path
+
+	inherit absolute_or_relative_file_path
+		redefine
+			function directory -> directory_path
+        .
+    .
+
+	inherit directory_or_file_path
+	
+		///
+		command name
+			out result type:file_name end
+		end
+		end ///
+
+	inherit has_compare_to<file_path>
+	
+	command to_relative_file
+		in root_directory type:directory_path &
+			check: i_object_.to_current_OS_path.starts_with ( i_root_directory.to_current_OS_path ) end
+			
+		out result type:relative_file_path end
+	end
+	
+	function to_file -> file
+
+	function try_to_existing_file -> file or file_inexistent_error
+
+end

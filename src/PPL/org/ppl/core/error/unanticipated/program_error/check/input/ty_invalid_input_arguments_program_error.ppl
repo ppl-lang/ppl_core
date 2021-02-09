@@ -1,0 +1,4 @@
+type invalid_input_arguments_program_error
+
+	inherit check_program_error
+.

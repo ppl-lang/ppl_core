@@ -1,0 +1,61 @@
+         // triple quoted string literal tests
+
+         // simple string
+         verify """Hello""" =v "Hello"
+
+         // escape characters
+
+         // He said: "She said: 'How're you?'"
+         verify """He said: "She said: 'How're you?'"""" =v "He said: \"She said: 'How're you?'\""
+
+         // file = "c:\foo\bar.txt"
+         verify """file = "c:\foo\bar.txt"""" =v "file = \"c:\\foo\\bar.txt\""
+         
+         // SELECT "customers"."name" from "customers" where "city" = 'Deland'
+         verify """SELECT "customers"."name" from "customers" where "city" = 'Deland'""" =v &
+         "SELECT \"customers\".\"name\" from \"customers\" where \"city\" = 'Deland'"
+
+         // multi-line strings
+         
+         // line 1
+         // line 2
+         verify """line1
+line2""" =v "line1" & se_string_constants.current_OS_new_line & "line2"
+
+         //
+         // line 1
+         // line 2
+         // line 3
+         //
+         verify """
+line1
+line2
+line3
+""" =v se_string_constants.current_OS_new_line & "line1" & se_string_constants.current_OS_new_line & "line2" & se_string_constants.current_OS_new_line & "line3" & se_string_constants.current_OS_new_line
+
+         // embedded expressions
+
+         const first_name string = "Linus"
+         verify """Hi {{c_first_name}}!""" =v "Hi Linus!"
+
+         // triple apostrophed strings cannot contain embedded expressions
+         verify '''Hi {{c_first_name}}!''' =v "Hi {{c_first_name}}!"
+
+         const identifier positive_32 = 123
+         const last_name string = "Torvalds"
+         const embedded string = """
+            <person id="{{ (identifier + 1).to_string }}">
+               <first_name>{{first_name}}</first_name>         
+               <last_name>{{last_name}}</last_name>
+            </person>"""
+         const non_embedded string = '''
+            <person id="124">
+               <first_name>Linus</first_name>         
+               <last_name>Torvalds</last_name>
+            </person>'''
+         verify embedded =v non_embedded
+
+         // nullable embedded expression
+         
+         var null_string string or null = null
+         verify """abc {{? null_string }} def""" =v "abc  def"

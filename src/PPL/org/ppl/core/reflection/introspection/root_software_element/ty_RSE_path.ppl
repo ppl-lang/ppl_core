@@ -1,0 +1,13 @@
+type RSE_path
+
+    inherit PPL_identifier_path
+        redefine
+           	function id -> RSE_id
+        .
+    .
+
+    function library_path -> library_path
+
+    function prefixed_id_string -> string
+
+.

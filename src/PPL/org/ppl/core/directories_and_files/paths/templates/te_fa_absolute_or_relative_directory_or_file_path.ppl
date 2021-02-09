@@ -1,0 +1,174 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+template fa_absolute_or_relative_directory_or_file_path
+
+	param type_id end
+	param directory_or_file end
+
+	java_header
+		import java.io.File;
+		import java.io.IOException;
+		import java.nio.file.Path;
+		import java.nio.file.Paths;
+
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+        import org.ppl.core.directories_and_files.paths.files.absolute_file.fa_file_path;
+        import org.ppl.core.directories_and_files.paths.files.relative_file.fa_relative_file_path;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+	end java_header
+
+	java
+		private Path a_java_value ;
+
+		public Path getJavaPath() { return a_java_value; }
+		
+		public fa_{type_id} ( File file ) {
+
+			if (file == null) {
+				throw new IllegalArgumentException ("Input for fa_{type_id} constructor cannot be null.");
+			}
+
+			a_java_value = file.toPath();
+		}
+
+		public fa_{type_id} ( Path path ) {
+
+			if ( path == null ) {
+				throw new IllegalArgumentException ( "Input for fa_{type_id} constructor cannot be null." );
+			}
+
+			a_java_value = path;
+		}
+
+/* defined by fa_java_code_generator
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_{type_id} ) ) return false;
+			
+			File other_file = ((ty_{type_id}) other).getJavaFile();
+			return a_java_value.equals ( other_file );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_java_value.hashCode();
+		}
+*/
+		public int compareTo ( ty_{type_id} other ) {
+
+			if ( this == other ) return 0;
+			
+			return a_java_value.compareTo ( ((ty_{type_id}) other).getJavaPath() );
+		}
+	end java
+	
+	att value
+	    get
+	        variable r string
+	        java
+	            v_r = new fa_string ( a_java_value.toString() );
+	        end java
+	        assert r is not null
+	        return r
+        .
+        set
+            do nothing
+        .
+    .
+
+	function is_equal_to native:yes
+        java
+            return fa_yes_no.of ( a_java_value.equals ( i_other.getJavaPath() ) );
+        end java
+    .
+
+	function compare_to native:yes
+        java
+            return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+        end java
+    .
+
+	function hash_code native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value.hashCode() );
+        end java
+    .
+
+	function name
+
+        var value string
+        java
+            v_value = new fa_string ( a_java_value.toFile().getName() );
+        end java
+        assert v_value is not null
+        
+        return fa_{directory_or_file}_name.create ( v_value )
+    .
+	
+	function to_normalized_path native:yes
+        java
+            return new fa_string ( a_java_value.normalize().toString() );
+        end java
+    .
+
+    function to_current_OS_path
+
+        if se_OS_config.OS_is_Windows then
+            return to_Windows_path
+        else
+            return to_Unix_path
+        .
+    .
+    
+    function to_Unix_path = to_normalized_path.replace_all_character (
+        to_replace = se_directory_constants.Windows_directory_separator_character
+        replace_by = se_directory_constants.Unix_directory_separator_character )
+    
+    function to_Windows_path = to_normalized_path.replace_all_character (
+        to_replace = se_directory_constants.Unix_directory_separator_character
+        replace_by = se_directory_constants.Windows_directory_separator_character )
+
+///
+    function to_current_OS_path native:yes
+        java
+            try {
+                // toFile ALWAYS returns an absolute file path -> this works only for absolute paths
+                return new fa_string ( a_java_value.toFile().getCanonicalPath() );
+            } catch ( IOException e ) {
+                throw new RuntimeException ( e );
+            }
+        end java
+    .
+    
+    function to_Unix_path
+    
+        if se_OS_config.OS_is_Windows then
+            return to_current_OS_path.replace_all_character (
+                to_replace = se_directory_constants.Windows_directory_separator_character
+                replace_by = se_directory_constants.Unix_directory_separator_character )
+        else
+            return to_current_OS_path
+        .
+    .
+    
+    function to_Windows_path
+    
+        if se_OS_config.OS_is_Windows then
+            return to_current_OS_path
+        else
+            return to_current_OS_path.replace_all_character (
+                to_replace = se_directory_constants.Unix_directory_separator_character
+                replace_by = se_directory_constants.Windows_directory_separator_character )
+        .
+    .
+.///    
+.

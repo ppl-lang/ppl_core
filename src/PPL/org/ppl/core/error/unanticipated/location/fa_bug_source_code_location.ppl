@@ -1,0 +1,49 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory bug_source_code_location
+
+	command to_string
+
+        const r = fa_mutable_string.create
+
+	    r.append ( """{{a_TFS_id_path}}.{{a_script_id}}""" )
+	    
+        if a_script_line_number is not null then
+            r.append ( """, line {{a_script_line_number}}""" )
+        .
+
+        if a_script_instruction is not null then
+            r.append ( ":" )
+            r.append_new_line
+            r.append ( a_script_instruction )
+        .
+        
+        return r.to_string
+    .
+
+	command to_long_string
+	
+        const r = fa_mutable_string.create
+        
+        const id = a_TFS_id_path.id
+        const TFS_kind = TFS_id.id_to_kind_string ( id ).to_first_upper_case
+        r.append_line ( """{{TFS_kind}} {{id}}.{{a_script_id}} ({{a_TFS_id_path.library_path}})""" )
+
+        if a_script_line_number is not null then
+            r.append_line ( """line {{a_script_line_number}}""" )
+        .
+
+        if a_script_instruction is not null then
+            r.append_line ( a_script_instruction )
+        .
+            
+        return r.to_string
+    .
+
+	creator create kind:in_all
+.

@@ -1,0 +1,463 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory local_time
+
+	java_header
+		import java.time.DateTimeException;
+		import java.time.format.DateTimeFormatter;
+		import java.time.format.DateTimeParseException;
+		import java.time.LocalTime;
+		
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.fa_signed_int_32;
+		import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+		import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+		import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+		import org.ppl.core.error.java.fa_java_exception;
+	end java_header
+	
+	java
+		private LocalTime a_JavaLocalTime;
+
+		public LocalTime getJavaLocalTime() { return a_JavaLocalTime; }
+
+		public fa_local_time ( LocalTime localTime ) {
+
+			if (localTime == null) throw new IllegalArgumentException ( "Input for fa_local_time constructor cannot be null." );
+
+			a_JavaLocalTime = localTime;
+		}
+
+		@Override
+		public boolean equals ( Object other ) {
+
+			if ( this == other ) return true;
+
+			if ( ! ( other instanceof ty_local_time ) ) return false;
+		
+			return a_JavaLocalTime.equals ( ((ty_local_time) other).getJavaLocalTime() );
+		}
+		
+		@Override
+		public int hashCode() {
+			return a_JavaLocalTime.hashCode();
+		}
+
+		public int compareTo ( ty_local_time other ) {
+			if ( this == other ) return 0;
+			return a_JavaLocalTime.compareTo ( other.getJavaLocalTime() );
+		}
+	end java
+	
+	att hours
+		get
+			script
+                var value zero_positive_32
+                java
+                    v_value = new fa_zero_pos_32 ( a_JavaLocalTime.getHour() );
+                end java
+                assert value is not null
+                
+                return fa_hour_of_day.create ( value )
+            .
+			tests
+                const t = parse_or_throw ( "22:30:31" )
+                verify t.hours.value =v 22
+            .
+        .
+		set
+		    throw "Not supposed to be called."
+        .
+    .
+
+	att minutes
+		get
+			script
+                var value zero_positive_32
+                java
+                    v_value = new fa_zero_pos_32 ( a_JavaLocalTime.getMinute() );
+                end java
+                assert value is not null
+                
+                return fa_minutes_of_hour.create ( value )
+            .
+			tests
+                const t = parse_or_throw ( "22:30:31" )
+                verify t.minutes.value =v 30
+            .
+        .
+		set
+		    throw "Not supposed to be called."
+        .
+    .
+
+	att seconds
+		get
+			script
+                var value zero_positive_32
+                java
+                    v_value = new fa_zero_pos_32 ( a_JavaLocalTime.getSecond() );
+                end java
+                assert value is not null
+                
+                return fa_seconds_of_minute.create ( value )
+            .
+			tests
+                const t = parse_or_throw ( "22:30:31" )
+                verify t.seconds.value =v 31
+            .
+        .
+		set
+		    throw "Not supposed to be called."
+        .
+    .
+
+	att nano_seconds
+		get
+			script
+                var value zero_positive_32
+                java
+                    v_value = new fa_zero_pos_32 ( a_JavaLocalTime.getNano() );
+                end java
+                assert value is not null
+                
+                return fa_nano_seconds_of_second.create ( value )
+            .
+			tests
+                const t = parse_or_throw ( "22:30:31.000123" )
+                verify t.nano_seconds.value =v 123000
+            .
+        .
+		set
+		    throw "Not supposed to be called."
+        .
+    .
+
+	function to_string native:yes
+		script
+			java
+			    return new fa_string ( a_JavaLocalTime.format ( DateTimeFormatter.ISO_LOCAL_TIME ) );
+			end java
+		.
+		tests
+            const t1 = create_HMS (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 6 ) )
+            verify t1.to_string =v "21:07:06"
+
+            const t2 = create_HMS (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 0 ) )
+            verify t2.to_string =v "21:07:00"
+
+            const t3 = create_HM (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 ) )
+            verify t3.to_string =v "21:07:00"
+
+            const t4 = create (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 6 )
+                nano_seconds = fa_nano_seconds_of_second.create ( 123000 ) )
+            verify t4.to_string =v "21:07:06.000123"
+        .
+    .
+
+	function format native:yes
+		script
+			java
+			    return new fa_string ( a_JavaLocalTime.format ( DateTimeFormatter.ofPattern ( i_pattern.getJavaString() ) ) );
+			end java
+		.
+		tests
+            const t1 = create_HMS (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 59 ) )
+            verify t1.format ( "HH:mm" ) =v "21:07"
+            verify t1.format =v "21:07:59"
+        .
+    .
+    
+	function is_equal_to native:yes
+		script
+			java
+				return fa_yes_no.of ( equals ( i_other ) );
+			end java
+		.
+		tests
+            const t1 = create_HMS (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 6 ) )
+            const t2 = parse_or_throw ( "21:07:06" )
+            const t3 = parse_or_throw ( "21:07:05" )
+
+            verify t1 =v t2
+            verify t2 =v t1
+            verify t1 #v t3
+            verify t3 #v t1
+            verify t2 #v t3
+        .
+    .
+
+	function compare_to native:yes
+		script
+			java
+				return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+			end java
+		.
+		tests
+            const t1 = create_HMS (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 6 ) )
+            const t2 = parse_or_throw ( "21:07:06" )
+            const t3 = parse_or_throw ( "21:07:05" )
+
+            verify t1 =v t2
+            verify t1 ># t3
+            verify t1 >= t3
+            verify t3 <# t1
+            verify t3 <= t1
+        .
+    .
+
+	function hash_code native:yes
+        java
+            return new fa_signed_int_32 ( hashCode() );
+        end java
+    .
+
+	creator create kind:in_all native:yes
+		script
+			java
+			    return new fa_local_time ( LocalTime.of (
+					i_hours.getValue().getJavaInt(), 
+					i_minutes.getValue().getJavaInt(), 
+					i_seconds.getValue().getJavaInt(),
+					i_nano_seconds.getValue().getJavaInt() ) );
+			end java
+		.
+		tests
+            const t = create (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 6 )
+                nano_seconds = fa_nano_seconds_of_second.create ( 123 ) )
+
+            verify t.hours.value =v 21
+            verify t.minutes.value =v 7
+            verify t.seconds.value =v 6
+            verify t.nano_seconds.value =v 123
+            verify t.to_string =v "21:07:06.000000123"
+        .
+    .
+	
+	creator create_HMS native:yes -> local_time
+        in hours hour_of_day
+        in minutes minutes_of_hour
+        in seconds seconds_of_minute
+
+		script
+			java
+			    return new fa_local_time ( LocalTime.of (
+					i_hours.getValue().getJavaInt(), 
+					i_minutes.getValue().getJavaInt(), 
+					i_seconds.getValue().getJavaInt() ) );
+			end java
+		.
+		tests
+            const t = create_HMS (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 )
+                seconds = fa_seconds_of_minute.create ( 6 ) )
+
+            verify t.hours.value =v 21
+            verify t.minutes.value =v 7
+            verify t.seconds.value =v 6
+            verify t.nano_seconds.value =v 0
+            verify t.to_string =v "21:07:06"
+        .
+    .
+	
+	creator create_HM native:yes -> local_time
+        in hours hour_of_day
+        in minutes minutes_of_hour
+
+		script
+			java
+			    return new fa_local_time ( LocalTime.of (
+					i_hours.getValue().getJavaInt(), 
+					i_minutes.getValue().getJavaInt() ) );
+			end java
+		.
+		tests
+            const t = create_HM (
+                hours = fa_hour_of_day.create ( 21 )
+                minutes = fa_minutes_of_hour.create ( 7 ) )
+
+            verify t.hours.value =v 21
+            verify t.minutes.value =v 7
+            verify t.seconds.value =v 0
+            verify t.nano_seconds.value =v 0
+            verify t.to_string =v "21:07:00"
+        .
+    .
+	
+	creator now native:yes -> local_time
+		script
+			java
+				return new fa_local_time ( LocalTime.now() );
+			end java
+		.
+		tests
+            const t = now
+            OS.out.write_line ( "Current time: " & t.to_string )
+        .
+    .
+	
+	creator now_HMS native:yes -> local_time
+		script
+			java
+			    LocalTime now = LocalTime.now();
+				return new fa_local_time ( LocalTime.of ( now.getHour(), now.getMinute(), now.getSecond() ) );
+			end java
+		.
+		tests
+            const t = now_HMS
+            OS.out.write_line ( "Current time HMS: " & t.to_string )
+        .
+    .
+	
+	creator now_HM native:yes -> local_time
+		script
+			java
+			    LocalTime now = LocalTime.now();
+				return new fa_local_time ( LocalTime.of ( now.getHour(), now.getMinute() ) );
+			end java
+		.
+		tests
+            const t = now_HM
+            OS.out.write_line ( "Current time HM: " & t.to_string )
+        .
+    .
+	
+	creator try_parse ( string ) -> local_time or parse_object_error<local_time>
+        script
+            variable r local_time or null = null
+			var java_exception java_exception or null = null
+			java
+			    try {
+    			    v_r = new fa_local_time ( LocalTime.parse ( i_string.getJavaString() ) );
+				} catch ( DateTimeParseException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			assert java_exception may be null
+
+			if java_exception is null then
+				assert r is not null
+				return r
+			else
+			    return parse_object_error<local_time>.create (
+                    info = """'{{i_string}}' is not a valid ISO local time."""
+                    java_exception,
+                    data = i_string )
+            .
+		.
+		tests
+		    case type of try_parse ( "21:07:04" )
+		        when local_time t
+                    verify t.hours.value =v 21
+                    verify t.minutes.value =v 7
+                    verify t.seconds.value =v 4
+                    verify t.nano_seconds.value =v 0
+                    verify t.to_string =v "21:07:04"
+		        when error
+                    verify no
+            .
+            
+		    case type of try_parse ( "21:07" )
+		        when local_time t
+                    verify t.hours.value =v 21
+                    verify t.minutes.value =v 7
+                    verify t.seconds.value =v 0
+                    verify t.nano_seconds.value =v 0
+                    verify t.to_string =v "21:07:00"
+		        when error
+                    verify no
+            .
+            
+		    case type of try_parse ( "21:07:04.000123" )
+		        when local_time t
+                    verify t.hours.value =v 21
+                    verify t.minutes.value =v 7
+                    verify t.seconds.value =v 4
+                    verify t.nano_seconds.value =v 123000
+                    verify t.to_string =v "21:07:04.000123"
+		        when error
+                    verify no
+            .
+            
+		    case type of try_parse ( "21-07:04" )
+		        when local_time
+		            verify no
+		        when error
+            .
+        .
+    .
+    
+%parse_or_throw_creator<local_time>
+
+	creator try_create_from_integers -> local_time or invalid_data_error<local_time>
+		in hour zero_positive_32
+		in minutes zero_positive_32
+		in seconds zero_positive_32 or null default:null
+		in nano_seconds zero_positive_32 or null default:null
+		
+        script
+            variable r local_time or null = null
+			var java_exception java_exception or null = null
+			java
+			    try {
+    			    v_r = new fa_local_time ( LocalTime.of (
+    			        i_hour.getJavaInt(),
+    			        i_minutes.getJavaInt(),
+    			        i_seconds != null ? i_seconds.getJavaInt() : 0,
+    			        i_nano_seconds != null ? i_nano_seconds.getJavaInt() : 0 ) );
+				} catch ( DateTimeException e ) {
+					v_java_exception = new fa_java_exception ( e );
+				}
+			end java
+			assert java_exception may be null
+
+			if java_exception is null then
+				assert r is not null
+				return r
+			else
+			    return invalid_data_error<local_time>.create (
+                    info = "Error creating a local time object. One or more values are out of range."
+                    java_exception,
+                    data = null )
+            .
+		.
+		tests
+            test hour = 8, minutes = 7, seconds = 6
+            verify result.to_string =v "08:07:06"
+            
+            case type of try_create_from_integers ( hour = 24, minutes = 7, seconds = 6 )
+                when local_time
+                    verify no
+                when invalid_data_error<*>
+            .
+        .
+    .
+.

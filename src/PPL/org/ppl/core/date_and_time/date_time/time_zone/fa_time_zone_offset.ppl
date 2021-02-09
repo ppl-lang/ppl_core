@@ -1,0 +1,23 @@
+factory time_zone_offset
+
+	java_header
+		import java.time.ZoneOffset;
+	end java_header
+
+    java
+        public static ty_time_zone_offset createFromOffset ( ZoneOffset zoneOffset ) {
+            
+            // zoneOffset.getId() might return a string like "Europe/Berlin"
+            // convert it to +-hh:mm format
+            
+            int seconds = zoneOffset.getTotalSeconds();
+            String r = ZoneOffset.ofTotalSeconds ( seconds ).getId();
+            return create ( new fa_string ( r ) );
+        }
+    end java
+
+    function to_string = a_value
+
+    creator create kind:in_all
+    
+.

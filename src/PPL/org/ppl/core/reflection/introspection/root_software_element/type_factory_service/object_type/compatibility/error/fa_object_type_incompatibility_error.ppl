@@ -1,0 +1,19 @@
+factory object_type_incompatibility_error
+
+    function to_string = a_info
+    
+    // creator create kind:in_all
+    creator create access:private kind:in_all
+    
+    creator create_with_reason -> object_type_incompatibility_error
+        in source object_type
+        in target object_type
+        in reason string
+        
+        return create (
+            info = """Type '{{source.to_string}}' is not compatible to type '{{target.to_string}}'.
+Reason: {{reason}}"""
+            i_source,
+            i_target )
+    .
+.

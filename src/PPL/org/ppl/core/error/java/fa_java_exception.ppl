@@ -1,0 +1,39 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory java_exception type:java_exception
+
+	java_header
+		import org.ppl.core.error.unanticipated.handlers.java.se_Java_throwable_writer;
+	end java_header
+
+	java
+		private Exception a_exception;
+		
+		public Exception getJavaException() { return a_exception; }
+
+		public fa_java_exception ( Exception i_exception ) {
+			a_exception = i_exception;
+		}
+	end java
+
+
+	functions native:yes
+
+        to_string
+            java
+                return new fa_string ( "Java exception: " + a_exception.toString() );
+            end java
+        .
+        
+        to_long_string
+            java
+                return se_Java_throwable_writer.throwable_to_long_string ( a_exception, Thread.currentThread() );
+            end java
+        .
+    .
+.

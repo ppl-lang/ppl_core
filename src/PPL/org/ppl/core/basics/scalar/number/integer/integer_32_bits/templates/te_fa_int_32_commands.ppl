@@ -1,0 +1,605 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+. ///
+
+template fa_int_32_commands
+
+	param type_id
+	param unary_minus_result_factory_id
+	param abs_result_factory_id
+
+%fa_number_functions<a_java_value>
+
+	function to_string native:yes
+		script
+			java
+				return new fa_string ( String.valueOf ( a_java_value ) );
+			end java
+		.
+		tests
+            verify 1000.to_string =v "1000"
+            verify (-1000).to_string =v "-1000"
+
+            verify se_signed_int_32_constants.min_value.to_string =v "-2147483648"
+            verify (-1).to_string =v "-1"
+            verify 0.to_string =v "0"
+            verify 1.to_string =v "1"
+            verify se_signed_int_32_constants.max_value.to_string() =v "2147483647"
+		.
+	.
+	
+	// has_compare_to
+
+	function is_equal_to native:yes
+        java
+            return fa_yes_no.of ( equals ( i_other ) );
+        end java
+    .
+
+	function compare_to native:yes
+        java
+            return se_comparator_Java_bridge.Java_to_PPL_comparator_result ( compareTo ( i_other ) );
+        end java
+	.
+
+	function min native:yes
+        java
+            return ( a_java_value <= i_other.getJavaInt()) ? this : i_other;
+        end java
+	.
+
+	function max native:yes
+        java
+            return ( a_java_value >= i_other.getJavaInt()) ? this : i_other;
+        end java
+	.
+
+	function is_between native:yes
+        java
+            return fa_yes_no.of ( a_java_value >= i_min.getJavaInt() && a_java_value <= i_max.getJavaInt() );
+        end java
+	.
+
+	function hash_code = this
+
+	// arithmetic functions
+	
+	// TD ad, subtract, and multiply should use Math.addExact etc., as in template fa_int_64_commands
+	
+	function add native:yes
+	    script
+			java
+				long other_value = (long) i_operand.getJavaInt();
+
+				long result = (long) a_java_value + other_value;
+				if ( result > Integer.MAX_VALUE || result < Integer.MIN_VALUE ) {
+					throw (RuntimeException) co_arithmetic_overflow_error ( "add", a_java_value, other_value );
+				}
+
+				return new fa_signed_int_32 ( (int) result );
+				
+                /* alternative (maybe faster)
+                    try {
+                        o_result = new fa_signed_int_32 ( Math.addExact ( a_java_value, (int) i_operand.getJavaInt() ) );
+                    } catch ( ArithmeticException e ) {
+                        throw (RuntimeException) co_arithmetic_overflow_error ( "add", a_java_value, (int) i_operand.getJavaInt() );
+                    }
+                    
+                    Source code of Math.addExact:
+                        public static int addExact(int x, int y) {
+                            int r = x + y;
+                            // HD 2-12 Overflow iff both arguments have the opposite sign of the result
+                            if (((x ^ r) & (y ^ r)) < 0) {
+                                throw new ArithmeticException("integer overflow");
+                            }
+                            return r;
+                        }
+				*/
+			end java
+		.
+		///
+		tests
+            var v_test_result ty_integer32_value
+            v_test_result = se_signed_int_32_constants.a_min_value + se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            v_test_result = se_signed_int_32_constants.a_min_value + -1 on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_min_value + 0 =v se_signed_int_32_constants.a_min_value
+            verify se_signed_int_32_constants.a_min_value + 1 =v -2147483647
+            verify se_signed_int_32_constants.a_min_value + se_signed_int_32_constants.a_max_value =v -1
+
+            v_test_result = -1 + se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            verify -1 + -1 =v -2
+            verify -1 + 0 =v -1
+            verify -1 + 1 =v 0
+            verify -1 + se_signed_int_32_constants.a_max_value =v 2147483646
+
+            verify 0 + se_signed_int_32_constants.a_min_value =v se_signed_int_32_constants.a_min_value
+            verify 0 + -1 =v -1
+            verify 0 + 0 =v 0
+            verify 0 + 1 =v 1
+            verify 0 + se_signed_int_32_constants.a_max_value =v 2147483647
+
+            verify 1 + se_signed_int_32_constants.a_min_value =v -2147483647
+            verify 1 + -1 =v 0
+            verify 1 + 0 =v 1
+            verify 1 + 1 =v 2
+            v_test_result = 1 + se_signed_int_32_constants.a_max_value on_error:continue
+            verify v_program_error_ #r void
+
+            verify se_signed_int_32_constants.a_max_value + se_signed_int_32_constants.a_min_value =v -1
+            verify se_signed_int_32_constants.a_max_value + -1 =v 2147483646
+            verify se_signed_int_32_constants.a_max_value + 0 =v 2147483647
+            v_test_result = se_signed_int_32_constants.a_max_value + 1 on_error:continue
+            verify v_program_error_ #r void
+            v_test_result = se_signed_int_32_constants.a_max_value + se_signed_int_32_constants.a_max_value on_error:continue
+            verify v_program_error_ #r void
+
+            verify 100 + 100 =v 200
+
+            v_test_result = 2000000000 + 2000000000 on_error: continue
+            verify v_program_error_ #r void
+		.
+		.///
+	.
+
+	function subtract native:yes
+		script
+			java
+				long other_value = (long) i_operand.getJavaInt();
+
+				long result = (long) a_java_value - other_value;
+				if ( result > Integer.MAX_VALUE || result < Integer.MIN_VALUE ) {
+					throw (RuntimeException) co_arithmetic_overflow_error ( "subtract", a_java_value, other_value );
+				}
+
+				return new fa_signed_int_32 ( (int) result ) ;
+			end java
+		.
+		///
+		tests
+            verify se_signed_int_32_constants.a_min_value - se_signed_int_32_constants.a_min_value =v 0
+            verify se_signed_int_32_constants.a_min_value - -1 =v -2147483647
+            verify se_signed_int_32_constants.a_min_value - 0 =v se_signed_int_32_constants.a_min_value
+            var v_test_result ty_integer32_value
+            v_test_result = se_signed_int_32_constants.a_min_value - 1 on_error:continue
+            verify v_program_error_ #r void
+            v_test_result = se_signed_int_32_constants.a_min_value - se_signed_int_32_constants.a_max_value on_error:continue
+            verify v_program_error_ #r void
+
+            verify -1 - se_signed_int_32_constants.a_min_value =v 2147483647
+            verify -1 - -1 =v 0
+            verify -1 - 0 =v -1
+            verify -1 - 1 =v -2
+            verify -1 - se_signed_int_32_constants.a_max_value =v se_signed_int_32_constants.a_min_value
+
+            v_test_result = 0 - se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            verify 0 - -1 =v 1
+            verify 0 - 0 =v 0
+            verify 0 - 1 =v -1
+            verify 0 - se_signed_int_32_constants.a_max_value =v -2147483647
+
+            v_test_result = 1 - se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            verify 1 - -1 =v 2
+            verify 1 - 0 =v 1
+            verify 1 - 1 =v 0
+            verify 1 - se_signed_int_32_constants.a_max_value =v -2147483646
+
+            v_test_result = se_signed_int_32_constants.a_max_value - se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            v_test_result = se_signed_int_32_constants.a_max_value - -1 on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_max_value - 0 =v 2147483647
+            verify se_signed_int_32_constants.a_max_value - 1 =v 2147483646
+            verify se_signed_int_32_constants.a_max_value - se_signed_int_32_constants.a_max_value =v 0
+
+            verify 12 - 10 =v 2
+            verify 20 - 30 =v -10
+
+            v_test_result = -2000000000 - 2000000000 on_error: continue
+            verify v_program_error_ #r void
+		.
+		.///
+	.
+
+	function multiply native:yes
+		script
+			java
+				long other_value = (long) i_operand.getJavaInt();
+
+				long result = (long) a_java_value * other_value;
+				if ( result > Integer.MAX_VALUE || result < Integer.MIN_VALUE ) {
+					throw (RuntimeException) co_arithmetic_overflow_error ( "multiply", a_java_value, other_value );
+				}
+				
+				return new fa_signed_int_32 ( (int) result );
+			end java
+		.
+		///
+		test
+            var v_test_result ty_integer32_value
+            v_test_result = se_signed_int_32_constants.a_min_value * se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            v_test_result = se_signed_int_32_constants.a_min_value * -1 on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_min_value * 0 =v 0
+            verify se_signed_int_32_constants.a_min_value * 1 =v se_signed_int_32_constants.a_min_value
+            v_test_result = se_signed_int_32_constants.a_min_value * se_signed_int_32_constants.a_max_value on_error:continue
+            verify v_program_error_ #r void
+
+            v_test_result = -1 * se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            verify -1 * -1 =v 1
+            verify -1 * 0 =v 0
+            verify -1 * 1 =v -1
+            verify -1 * se_signed_int_32_constants.a_max_value =v -2147483647
+
+            verify 0 * se_signed_int_32_constants.a_min_value =v 0
+            verify 0 * -1 =v 0
+            verify 0 * 0 =v 0
+            verify 0 * 1 =v 0
+            verify 0 * se_signed_int_32_constants.a_max_value =v 0
+
+            verify 1 * se_signed_int_32_constants.a_min_value =v se_signed_int_32_constants.a_min_value
+            verify 1 * -1 =v -1
+            verify 1 * 0 =v 0
+            verify 1 * 1 =v 1
+            verify 1 * se_signed_int_32_constants.a_max_value =v 2147483647
+
+            v_test_result = se_signed_int_32_constants.a_max_value * se_signed_int_32_constants.a_min_value on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_max_value * -1 =v -2147483647
+            verify se_signed_int_32_constants.a_max_value * 0 =v 0
+            verify se_signed_int_32_constants.a_max_value * 1 =v 2147483647
+            v_test_result = se_signed_int_32_constants.a_max_value * se_signed_int_32_constants.a_max_value on_error:continue
+            verify v_program_error_ #r void
+
+            verify 7 * 8 =v 56
+            verify -7 * 8 =v -56
+            verify 7 * -8 =v -56
+            verify -7 * -8 =v 56
+
+            v_test_result = 2000000000 * 2000000000 on_error: continue
+            verify v_program_error_ #r void
+		.
+		.///
+	.
+
+	function divide native:yes
+		script
+			java
+				return new fa_signed_int_32 ( a_java_value / i_operand.getJavaInt() );
+			end java
+		.
+		///
+		tests
+            verify se_signed_int_32_constants.a_min_value / se_signed_int_32_constants.a_min_value =v 1
+            var v_test_result ty_integer32_value
+            v_test_result = se_signed_int_32_constants.a_min_value / -1 on_error:continue
+            verify v_program_error_ #r void
+            v_test_result = se_signed_int_32_constants.a_min_value / 0 on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_min_value / 1 =v se_signed_int_32_constants.a_min_value
+            verify se_signed_int_32_constants.a_min_value / se_signed_int_32_constants.a_max_value =v -1
+
+            verify -1 / se_signed_int_32_constants.a_min_value =v 0
+            verify -1 / -1 =v 1
+            v_test_result = -1 / 0 on_error:continue
+            verify v_program_error_ #r void
+            verify -1 / 1 =v -1
+            verify -1 / se_signed_int_32_constants.a_max_value =v 0
+
+            verify 0 / se_signed_int_32_constants.a_min_value =v 0
+            verify 0 / -1 =v 0
+            v_test_result = 0 / 0 on_error:continue
+            verify v_program_error_ #r void
+            verify 0 / 1 =v 0
+            verify 0 / se_signed_int_32_constants.a_max_value =v 0
+
+            verify 1 / se_signed_int_32_constants.a_min_value =v 0
+            verify 1 / -1 =v -1
+            v_test_result = 1 / 0 on_error:continue
+            verify v_program_error_ #r void
+            verify 1 / 1 =v 1
+            verify 1 / se_signed_int_32_constants.a_max_value =v 0
+
+            verify se_signed_int_32_constants.a_max_value / se_signed_int_32_constants.a_min_value =v 0
+            verify se_signed_int_32_constants.a_max_value / -1 =v -2147483647
+            v_test_result = se_signed_int_32_constants.a_max_value / 0 on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_max_value / 1 =v 2147483647
+            verify se_signed_int_32_constants.a_max_value / se_signed_int_32_constants.a_max_value =v 1
+
+            verify 0 / 10 =v 0
+            verify 1 / 10 =v 0
+            verify 9 / 10 =v 0
+            verify 10 / 10 =v 1
+            verify 11 / 10 =v 1
+            verify 19 / 10 =v 1
+            verify 20 / 10 =v 2
+		.
+		.///
+	.
+
+	function remainder native:yes
+		script
+			java
+				return new fa_signed_int_32 ( a_java_value % i_operand.getJavaInt() );
+			end java
+		.
+		///
+		tests
+            verify se_signed_int_32_constants.a_min_value.co_remainder(se_signed_int_32_constants.a_min_value) =v 0
+            var v_test_result ty_integer32_value
+            v_test_result = se_signed_int_32_constants.a_min_value.co_remainder(-1) on_error:continue
+            verify v_program_error_ #r void
+            v_test_result = se_signed_int_32_constants.a_min_value.co_remainder(0) on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_min_value.co_remainder(1) =v 0
+            verify se_signed_int_32_constants.a_min_value.co_remainder(se_signed_int_32_constants.a_max_value) =v -1
+
+            verify -1.co_remainder(se_signed_int_32_constants.a_min_value) =v -1
+            verify -1.co_remainder(-1) =v 0
+            v_test_result = -1.co_remainder(0) on_error:continue
+            verify v_program_error_ #r void
+            verify -1.co_remainder(1) =v 0
+            verify -1.co_remainder(se_signed_int_32_constants.a_max_value) =v -1
+
+            verify 0.co_remainder(se_signed_int_32_constants.a_min_value) =v 0
+            verify 0.co_remainder(-1) =v 0
+            v_test_result = 0.co_remainder(0) on_error:continue
+            verify v_program_error_ #r void
+            verify 0.co_remainder(1) =v 0
+            verify 0.co_remainder(se_signed_int_32_constants.a_max_value) =v 0
+
+            verify 1.co_remainder(se_signed_int_32_constants.a_min_value) =v 1
+            verify 1.co_remainder(-1) =v 0
+            v_test_result = 1.co_remainder(0) on_error:continue
+            verify v_program_error_ #r void
+            verify 1.co_remainder(1) =v 0
+            verify 1.co_remainder(se_signed_int_32_constants.a_max_value) =v 1
+
+            verify se_signed_int_32_constants.a_max_value.co_remainder(se_signed_int_32_constants.a_min_value) =v 2147483647
+            verify se_signed_int_32_constants.a_max_value.co_remainder(-1) =v 0
+            v_test_result = se_signed_int_32_constants.a_max_value.co_remainder(0) on_error:continue
+            verify v_program_error_ #r void
+            verify se_signed_int_32_constants.a_max_value.co_remainder(1) =v 0
+            verify se_signed_int_32_constants.a_max_value.co_remainder(se_signed_int_32_constants.a_max_value) =v 0
+
+            verify 0.co_remainder(10) =v 0
+            verify 1.co_remainder(10) =v 1
+            verify 9.co_remainder(10) =v 9
+            verify 10.co_remainder(10) =v 0
+            verify 11.co_remainder(10) =v 1
+            verify 19.co_remainder(10) =v 9
+            verify 20.co_remainder(10) =v 0
+
+            verify 19.co_remainder(-10) =v 9
+            verify -19.co_remainder(10) =v -9
+            verify -19.co_remainder(-10) =v -9
+		.
+		.///
+	.
+
+	function unary_minus native:yes
+		script
+			java
+				return new fa_{unary_minus_result_factory_id} ( -a_java_value );
+			end java
+		.
+		///
+		tests
+            var v_test_result ty_integer32_value
+            v_test_result = se_signed_int_32_constants.a_min_value.co_unary_minus() on_error:continue
+            verify v_program_error_ #r void
+
+            verify (se_signed_int_32_constants.a_min_value + 1).co_unary_minus() =v 2147483647
+            verify (-1).co_unary_minus() =v 1
+            verify 0.co_unary_minus() =v 0
+            verify 1.co_unary_minus() =v -1
+            verify se_signed_int_32_constants.a_max_value.co_unary_minus() =v -2147483647
+            verify 1000.co_unary_minus() =v -1000
+            verify (-1000).co_unary_minus() =v 1000
+		.
+		.///
+	.
+
+	function abs native:yes
+		script
+			java
+				int result = a_java_value >= 0 ? a_java_value : -a_java_value;
+				return new fa_{abs_result_factory_id} ( result );
+			end java
+		.
+		///
+		tests
+            var v_test_result ty_integer32_value
+            v_test_result = se_signed_int_32_constants.a_min_value.co_abs() on_error:continue
+            verify v_program_error_ #r void
+
+            verify (se_signed_int_32_constants.a_min_value + 1).co_abs() =v 2147483647
+            verify (-1).co_abs() =v 1
+            verify 0.co_abs() =v 0
+            verify 1.co_abs() =v 1
+            verify se_signed_int_32_constants.a_max_value.co_abs() =v 2147483647
+            verify 1000.co_abs() =v 1000
+            verify (-1000).co_abs() =v 1000
+		.
+		.///
+	.
+
+	// boolean functions
+
+	function and native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value & i_operand.getJavaInt() ) ;
+        end java
+	.
+
+	function or native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value | i_operand.getJavaInt() ) ;
+        end java
+	.
+
+	function xor native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value ^ i_operand.getJavaInt() ) ;
+        end java
+	.
+
+	function not native:yes
+        java
+            return new fa_signed_int_32 ( ~ a_java_value ) ;
+        end java
+	.
+
+	// bitshift functions native:yes
+
+	function shift_left native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value << i_count.getJavaInt() ) ;
+        end java
+	.
+
+	function shift_right native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value >> i_count.getJavaInt() ) ;
+        end java
+	.
+
+	function shift_left_once native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value << 1 ) ;
+        end java
+	.
+
+	function shift_right_once native:yes
+        java
+            return new fa_signed_int_32 ( a_java_value >> 1 ) ;
+        end java
+	.
+
+	function to_signed_int_64 native:yes
+        java
+            return new org.ppl.core.basics.scalar.number.integer.integer_64_bits.fa_signed_int_64 ( getJavaInt() );
+        end java
+	.
+
+    function to_float_64 = float_64.create_from_int_32 ( this )
+
+	// integer_to_string_converter
+
+	function to_hexadecimal_string native:yes
+		script
+			java
+				return new fa_string ( Integer.toHexString ( a_java_value ) );
+			end java
+		.
+		tests
+            verify 1000.to_hexadecimal_string =v "3e8"
+            verify (-1000).to_hexadecimal_string =v "fffffc18"
+
+            verify (-1).to_hexadecimal_string =v "ffffffff"
+            verify 0.to_hexadecimal_string =v "0"
+            verify 1.to_hexadecimal_string =v "1"
+            
+            verify se_signed_int_32_constants.max_value.to_hexadecimal_string =v "7fffffff"
+            verify se_signed_int_32_constants.min_value.to_hexadecimal_string =v "80000000"
+		.
+	.
+
+	function to_octal_string native:yes
+		script
+			java
+				return new fa_string ( Integer.toOctalString ( a_java_value ) );
+			end java
+		.
+		///
+		tests
+            verify se_signed_int_32_constants.a_min_value.co_to_octal_string() compare =v "20000000000"
+            verify (-1).co_to_octal_string() compare =v "37777777777"
+            verify 0.co_to_octal_string() compare =v "0"
+            verify 1.co_to_octal_string() compare =v "1"
+            verify se_signed_int_32_constants.a_max_value.co_to_octal_string() compare =v "17777777777"
+            verify 1000.co_to_octal_string() compare =v "1750"
+            verify (-1000).co_to_octal_string() compare =v "37777776030"
+		.
+		.///
+	.
+
+	function to_binary_string native:yes
+		script
+			java
+				return new fa_string ( Integer.toBinaryString ( a_java_value ) );
+			end java
+		.
+		///
+		tests
+            verify se_signed_int_32_constants.a_min_value.co_to_binary_string() compare =v "10000000000000000000000000000000"
+            verify (-1).co_to_binary_string() compare =v "11111111111111111111111111111111"
+            verify 0.co_to_binary_string() compare =v "0"
+            verify 1.co_to_binary_string() compare =v "1"
+            verify se_signed_int_32_constants.a_max_value.co_to_binary_string() compare =v "1111111111111111111111111111111"
+            verify 1000.co_to_binary_string() compare =v "1111101000"
+            verify (-1000).co_to_binary_string() compare =v "11111111111111111111110000011000"
+		.
+		.///
+	.
+
+	function to_character native:yes
+		script
+			java
+				return new fa_character ( (char) a_java_value );
+			end java
+		.
+		///
+		tests
+            var v_value ty_integer32_value = -1
+            var v_character ty_character = v_value.co_to_character on_error:continue
+            verify v_program_error_ #r void
+
+            verify 0.co_to_character() compare =v '\u0000'
+            verify 1.co_to_character() compare =v '\u0001'
+            verify se_signed_int_32_constants.a_max_value.co_to_character() compare =v '\uffff'
+            verify 65.co_to_character() compare =v 'A'
+            verify 112.co_to_character() compare =v 'p'
+		.
+		.///
+	.
+	
+	creator try_parse ( string ) -> {type_id} or parse_object_error<{type_id}>
+
+        variable r {type_id}
+        variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                int java_value = Integer.parseInt ( i_string.getJavaString() );
+                v_r = new fa_{type_id} ( java_value );
+            } catch ( NumberFormatException e ) {
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+
+        if exception is not null then
+            return parse_object_error<{type_id}>.create (
+                info = """'{{i_string}}' is not a valid 32 bits integer number.
+Reason: {{exception.to_string}}"""
+                cause = exception
+                data = string )
+        .
+        
+        assert r is not null
+        return r
+    .
+
+%parse_or_throw_creator<{type_id}>
+
+.

@@ -1,0 +1,45 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type relative_file_path
+
+	inherit absolute_or_relative_file_path
+		redefine
+			function directory -> relative_directory_path or null
+        .
+    .
+	
+	inherit relative_directory_or_file_path
+	
+		///
+		command name
+			out result type:file_name end
+		end
+		end ///
+
+	inherit has_compare_to<relative_file_path>
+	
+	// TD remove (replaced by to_file_path)
+	command to_absolute_file
+		in root_directory type:directory_path default:se_OS_directories.current_working_directory.path end
+		
+		out result type:file_path end
+	end
+	
+	function to_file_path -> file_path
+		in root_directory_path directory_path default:se_OS_directories.current_working_directory_path
+    .
+	
+	function to_file -> file
+        in root_directory_path directory_path default:se_OS_directories.current_working_directory_path
+    .
+
+	function try_to_existing_file -> file or file_inexistent_error
+        in root_directory_path directory_path default:se_OS_directories.current_working_directory_path
+    .
+	
+end

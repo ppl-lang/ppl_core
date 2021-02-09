@@ -1,0 +1,13 @@
+template fa_number_functions
+
+    param java_value_attribute
+
+	function format native:yes
+    	java
+    	    se_java_utilities.check_input_not_null ( i_pattern, "i_pattern", this.getClass(), "format" );
+    	    
+    	    DecimalFormat decimalFormat = new DecimalFormat ( i_pattern.getJavaString() );
+	        return new fa_string ( decimalFormat.format ( {java_value_attribute} ) );
+    	end java
+    .
+.

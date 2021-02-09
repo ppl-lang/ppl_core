@@ -1,0 +1,65 @@
+service TFS_path
+
+    function try_parse ( string ) -> TFS_path or parse_object_error<TFS_path>
+    
+        const separator_index = i_string.find_last ( "." )
+
+        if separator_index is null then
+            return parse_object_error<TFS_path>.create (
+                info = """'{{i_string}}' is an invalid TFS path, because it has no separator (.)."""
+                data = i_string )
+        .
+        
+        if separator_index =v i_string.size
+            return parse_object_error<TFS_path>.create (
+                info = """'{{i_string}}' is an invalid TFS path, because it ends with a separator (.)."""
+                data = i_string )
+        .
+
+        const prefixed_id = i_string.substring_from ( separator_index + 1 )
+        if prefixed_id.size <= 3 then
+            return parse_object_error<TFS_path>.create (
+                info = """'{{i_string}}' is an invalid TFS path, because it's prefixed id '{{prefixed_id}}' is invalid."""
+                data = i_string )
+        .
+        
+        
+        case value of prefixed_id.substring_to ( 3 )
+            
+            when se_type_constants.id_prefix
+                // return type_path.try_parse ( i_string )
+                return virtual_type_path.try_parse ( i_string )
+            
+            when se_factory_constants.id_prefix
+                // return factory_path.try_parse ( i_string )
+                return virtual_factory_path.try_parse ( i_string )
+            
+            when se_service_constants.id_prefix
+                // return service_path.try_parse ( i_string )
+                return virtual_service_path.try_parse ( i_string )
+            
+            otherwise
+                return parse_object_error<TFS_path>.create (
+                    info = """'{{i_string}}' is an invalid TFS path, because it's prefixed id '{{prefixed_id}}' is invalid."""
+                    data = i_string )
+        .
+    .
+    
+    // TD? add i_is_virtual_path
+    function parse_or_throw ( string ) -> TFS_path
+
+        case type of try_parse ( i_string )
+            when TFS_path r
+                return r
+            when parse_object_error<*> e
+                throw e.info
+        .
+    .
+    
+    function path_to_relative_file_path -> relative_file_path
+        in TFS_path TFS_path
+        in file_name_extension file_name_extension or null default:fa_file_name_extension.create ( "ppl" )
+        
+        return se_RSE_path.path_to_relative_file_path ( RSE_path = i_TFS_path, file_name_extension )
+    .
+.

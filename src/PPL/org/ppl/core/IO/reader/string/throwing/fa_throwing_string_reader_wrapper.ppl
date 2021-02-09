@@ -1,0 +1,24 @@
+factory throwing_string_reader_wrapper
+
+	function read_character
+        const r = reader.try_read_character on_error: throw_error
+        return r
+    .
+
+	function read_line
+        const r = reader.try_read_line on_error: throw_error
+        return r
+    .
+
+	function read_all
+        const r = reader.try_read_all on_error: throw_error
+        return r
+    .
+    
+    function try_close
+        return reader.try_close
+    .
+    
+    creator create kind:in_all
+
+.

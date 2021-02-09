@@ -1,0 +1,8 @@
+factory generified_factory_selector
+
+%fa_generified_TFS_selector_commands
+
+	creator create kind:in_all
+
+.
+

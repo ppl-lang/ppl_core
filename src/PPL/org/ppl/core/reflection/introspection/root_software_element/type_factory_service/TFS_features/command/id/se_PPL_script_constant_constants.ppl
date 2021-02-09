@@ -1,0 +1,5 @@
+service PPL_script_constant_constants
+    
+    att id_prefix string = "c_"
+    
+.

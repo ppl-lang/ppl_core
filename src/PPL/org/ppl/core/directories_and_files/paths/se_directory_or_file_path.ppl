@@ -1,0 +1,147 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service directory_or_file_path
+
+	java_header
+		import java.io.File;
+		import java.nio.file.InvalidPathException;
+		import java.nio.file.Path;
+		import java.nio.file.Paths;
+
+        import org.ppl.core.error.java.se_Java_exception;
+	    import org.ppl.core.basics.scalar.number.integer.integer_32_bits.positive_32.fa_pos_32;
+	    import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+	end java_header
+
+	function is_valid_absolute_or_relative_directory_or_file_path ( path string ) -> yes_no
+	
+	    return check_is_valid_absolute_or_relative_path ( path ) =r null
+    .
+	
+	function check_is_valid_absolute_or_relative_path ( path string ) \
+	    -> invalid_absolute_or_relative_directory_or_file_path_error or null
+	    
+	    variable error string or null = null
+	    variable index pos_32 or null = null
+	    variable exception Java_exception_runtime_error or null = null
+        java
+            try {
+                Path path = Paths.get ( i_path.getJavaString() );
+            } catch ( InvalidPathException e ) {
+                v_error = new fa_string ( e.getMessage() );
+                if ( e.getIndex() != -1 ) {
+                    v_index = new fa_pos_32 ( e.getIndex() + 1 );
+                }
+                v_exception = se_Java_exception.to_runtime_error ( e );
+            }
+        end java
+        assert exception may be null
+        
+        if exception is null then
+            return null
+        else
+            assert error is not null
+            
+            variable info = """'{{i_path}}' is an invalid path. """
+            if index is not null then
+                info = info & """Character '{{i_path.get(index)}}' at position {{index}} is not allowed."""
+            else
+                info = info & """Reason: {{error}}."""
+            .
+            
+            return invalid_absolute_or_relative_directory_or_file_path_error.create (
+                info,
+                data = i_path
+                error_position = index
+                cause = exception )
+        .
+    .
+    
+	function is_absolute_path ( path string ) -> yes_no
+	    
+	    // TD check exception
+	    variable r yes_no
+        java
+            Path path = Paths.get ( i_path.getJavaString() );
+            v_r = fa_yes_no.of ( path.isAbsolute() );
+        end java
+        assert r is not null
+        return r
+    .
+	
+	function is_relative_path ( path string ) -> yes_no
+        return not is_absolute_path ( path )
+    .
+	
+	function is_existing_directory ( path string ) -> yes_no
+
+	    // TD check exception
+	    variable r yes_no
+        java
+            File file = new File ( i_path.getJavaString() );
+            v_r = fa_yes_no.of ( file.isDirectory() );
+        end java
+        assert r is not null
+        return r
+	.
+	
+	function is_existing_file ( path string ) -> yes_no
+
+	    // TD check exception
+	    variable r yes_no
+        java
+            File file = new File ( i_path.getJavaString() );
+            v_r = fa_yes_no.of ( file.isFile() );
+        end java
+        assert r is not null
+        return r
+	.
+	
+	function to_Unix_path ( path string ) -> string
+        return i_path.replace_all (
+            to_replace = se_directory_constants.Windows_directory_separator
+            replace_by = se_directory_constants.Unix_directory_separator )
+    .
+	
+	function to_Windows_path ( path string ) -> string
+        return i_path.to_string.replace_all (
+            to_replace = se_directory_constants.Unix_directory_separator
+            replace_by = se_directory_constants.Windows_directory_separator )
+    .
+	
+	function try_parse_directory_or_file_path \
+	    ( path string ) -> directory_or_file_path or parse_object_error<directory_or_file_path>
+	    
+	    if is_existing_directory ( i_path ) then
+	        return directory_path.try_parse ( i_path )
+	    else
+	        return file_path.try_parse ( i_path )
+	    .
+    .
+	    
+
+	function try_parse_to_absolute_directory_or_file_path -> \
+	    directory_or_file_path or parse_object_error<directory_or_file_path>
+	    
+	    in path string
+	    in root_directory_for_relative_path directory_path default: se_OS_directories.current_working_directory_path
+	    
+	    variable absolute_path string
+	    if is_relative_path ( i_path ) then
+            java
+                Path root = i_root_directory_for_relative_path.getJavaPath();
+                v_absolute_path = new fa_string ( root.resolve ( i_path.getJavaString() ).normalize().toString() );
+            end java
+        else
+    	    absolute_path = i_path
+        .
+        assert absolute_path is not null
+        
+        return try_parse_directory_or_file_path ( absolute_path )
+    .
+.

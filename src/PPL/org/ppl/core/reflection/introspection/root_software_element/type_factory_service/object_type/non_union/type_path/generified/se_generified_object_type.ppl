@@ -1,0 +1,131 @@
+service generified_object_type
+
+    function check_type_parameters_compatible -> object_type_incompatibility_error or null
+        in source type_path_object_type
+        in target type_path_object_type
+        in source_type_parameter_assignments map<key:type_parameter_id, value:type_parameter_assignment> or null
+        in target_type_parameter_assignments map<key:type_parameter_id, value:type_parameter_assignment>
+        in config object_type_compatibility_config
+
+        const source_type_parameters = i_config.type_parameters_of_type_path_getter.get ( i_source.type_path )
+        const target_type_parameters = i_config.type_parameters_of_type_path_getter.get ( i_target.type_path )
+
+        repeat for each source_type_parameter in source_type_parameters
+            
+            const type_parameter_id = source_type_parameter.id
+
+            const target_type_parameter = target_type_parameters.get ( type_parameter_id )
+
+            const source_assignment = i_source_type_parameter_assignments?.get ( type_parameter_id )
+            const target_assignment = i_target_type_parameter_assignments.get ( type_parameter_id )
+
+            // variable source_kind = source_assignment.kind
+            const source_kind = source_assignment?.kind if_null: type_parameter_assignment_kind.wildcard
+            var target_kind = target_assignment.kind
+
+            /// By default (and in contrast to Java):
+                - covariance is applied if parameter is used only in output
+                - contravariance is applied if parameter is used only in input
+                - invariance is applied if parameter is used in input and output
+            .///
+            if target_kind =v type_parameter_assignment_kind.default then
+                if target_type_parameter.used_for_output and not target_type_parameter.used_for_input then
+                    target_kind = type_parameter_assignment_kind.child_of
+                else if target_type_parameter.used_for_input and not target_type_parameter.used_for_output then
+                    target_kind = type_parameter_assignment_kind.parent_of
+                else if target_type_parameter.used_for_input and target_type_parameter.used_for_output then
+                    target_kind = type_parameter_assignment_kind.only
+                else
+                    target_kind = type_parameter_assignment_kind.child_of
+                .
+            .
+
+            // Following rules are the same as in Java
+            
+            variable error_string string or null = null
+            
+            case enumerated of target_kind
+                
+                when child_of
+                
+                    case enumerated of source_kind
+                        
+                        when parent_of
+                            error_string = """'{{source_kind.to_string}}' is never compatible to '{{target_kind.to_string}}'"""
+                        otherwise
+                            const source_object_type = \
+                                source_assignment?.object_type if_null: source_type_parameter.min_object_type
+                            const target_object_type = \
+                                target_assignment.object_type if_null: target_type_parameter.max_object_type
+                            const error = source_object_type.check_compatible_to_other (
+                                other = target_object_type, i_config )
+                            error_string = error?.info 
+                    .
+                
+                when parent_of
+                    
+                    case enumerated of source_kind
+                        
+                        when child_of
+                            error_string = """'{{source_kind.to_string}}' is never compatible to '{{target_kind.to_string}}'"""
+                        otherwise
+                            const source_object_type = \
+                                source_assignment?.object_type if_null: source_type_parameter.max_object_type
+                            const target_object_type = \
+                                target_assignment.object_type if_null: target_type_parameter.min_object_type
+                            const error = target_object_type.check_compatible_to_other (
+                                other = source_object_type, i_config )
+                            error_string = error?.info 
+                    .
+
+                when wildcard
+                    error_string = null
+
+                when only
+                    if source_kind #v type_parameter_assignment_kind.default and \
+                        source_kind #v type_parameter_assignment_kind.only then
+                        error_string = """A value of kind '{{source_kind.to_string}}' is not compatible to a value of kind '{{target_kind.to_string}}'"""
+                    else
+                        const source_object_type = source_assignment?.object_type
+                        assert source_object_type is not null
+                        const target_object_type = target_assignment.object_type
+                        assert target_object_type is not null
+                        if source_object_type #v target_object_type then
+                            error_string = """Types must be equal if no 'child_of' or 'parent_of' clause is specified."""
+                        .
+                    .
+
+                when default
+                    error "case error"
+            .
+            
+            if error_string is not null then
+
+                // variable source_assignment_string = source_assignment.to_string
+                variable source_assignment_string = source_assignment?.to_string \
+                    if_null: """{{type_parameter_id}}: *"""
+                if source_assignment?.object_type is null then
+                    source_assignment_string = source_assignment_string & \
+                        """ (which means {{source_type_parameter.min_object_type.to_string}}) in this context"""
+                .
+
+                variable target_assignment_string = target_assignment.to_string
+                if target_assignment.object_type is null then
+                    target_assignment_string = target_assignment_string & \
+                        """ (which means {{target_type_parameter.max_object_type.to_string}}) in this context"""
+                .
+
+                const reason = """The types for parameter '{{type_parameter_id}}' are not compatible.
+Parameter '{{type_parameter_id}}' is defined as follows: {{source_type_parameter.to_string}}
+The source assignment is: {{source_assignment_string}}
+The target assignment is: {{target_assignment_string}}
+Error:
+{{error_string}}"""
+
+                return object_type_incompatibility_error.create_with_reason ( reason, source, target )
+            .
+        .
+
+        return null
+    .
+.

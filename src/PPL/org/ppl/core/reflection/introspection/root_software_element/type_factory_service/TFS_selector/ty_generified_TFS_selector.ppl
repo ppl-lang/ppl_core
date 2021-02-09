@@ -1,0 +1,10 @@
+type generified_TFS_selector
+
+	inherit TFS_selector
+
+    // is null if it is a total wildcard (e.g. map<*>)
+    att type_parameters map<key:type_parameter_id, value:type_parameter_assignment> or null
+
+    function is_wildcard -> yes_no
+	
+.

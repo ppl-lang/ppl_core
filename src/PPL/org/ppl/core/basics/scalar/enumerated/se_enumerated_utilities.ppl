@@ -1,0 +1,76 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service enumerated_utilities
+
+	java_header
+		import java.lang.Class;
+		import java.lang.reflect.Field;
+		
+		import org.ppl.core.basics.scalar.enumerated.ty_enumerated;
+		import org.ppl.core.reflection.introspection.java.se_PPL_type_Java_introspection;
+	end java_header
+	
+///
+	java
+	    public static ty_enumerated string_to_enumerated ( String string, String type_path ) {
+	        
+	        return parse_or_throw (
+	            new fa_string ( string ),
+	            fa_type_path.create ( new fa_string ( type_path ) ) );
+	    }
+	end java
+.///
+
+	command try_parse ( string, enumerated_type_id_path type_path ) -> enumerated or parse_object_error<enumerated>
+        try
+            return parse_or_throw ( string, enumerated_type_id_path )
+        catch_any
+            return parse_object_error<enumerated>.create (
+                info = """'{{i_string}}' cannot be converted to an enumerated of type '{{enumerated_type_id_path}}'."""
+                data = i_string )
+        .
+    .
+
+	command parse_or_throw ( string, enumerated_type_id_path type_path ) -> enumerated
+		script
+		    variable r enumerated
+			// get enumerated value declared as static field in class
+			java
+				Class clazz = se_PPL_type_Java_introspection.staticClassForTypePath ( i_enumerated_type_id_path );
+
+				for ( Field field : clazz.getFields() ) {
+					if ( field.getName().startsWith ( "en_" ) ) {
+						ty_enumerated enumerated = (ty_enumerated) field.get ( null );
+						if ( enumerated.getValue().getJavaString().equals ( i_string.getJavaString() ) ) {
+							v_r = enumerated;
+							break;
+						}
+					}
+				}
+			end java
+			assert r is not null
+			
+			return r
+		.
+		tests
+			const type_id_path = type_path.create ( 
+				"org.ppl.core.basics.common_extensions.object_comparison.ty_comparator_result" )
+			test string = "equal", enumerated_type_id_path = type_id_path
+			// verify result =r ty_comparator_result.equal
+			// verify result =v ty_comparator_result.equal.value
+			verify result.value =v ty_comparator_result.equal.value
+			const o1 non_null = result
+			const o2 non_null = ty_comparator_result.equal
+			verify o1 =r o2
+
+			test string = "xxx", enumerated_type_id_path = type_id_path
+			verify_error
+		.
+	.
+
+.

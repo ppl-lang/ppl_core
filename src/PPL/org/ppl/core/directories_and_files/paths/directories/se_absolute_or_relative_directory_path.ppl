@@ -1,0 +1,63 @@
+service absolute_or_relative_directory_path
+
+    function to_directory_path -> directory_path
+        in path absolute_or_relative_directory_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+
+        case type of i_path
+            when relative_directory_path
+                return i_path.to_directory_path ( i_root_directory_for_relative_path )
+            when directory_path
+                return i_path
+        .
+    .
+
+    function to_directory -> directory
+        in path absolute_or_relative_directory_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+        
+        return to_directory_path ( i_path, i_root_directory_for_relative_path ).to_directory
+    .
+
+    function try_to_existing_directory -> directory or directory_inexistent_error
+        in path absolute_or_relative_directory_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+
+        case type of i_path
+            when relative_directory_path
+                return i_path.try_to_existing_directory ( i_root_directory_for_relative_path )
+            when directory_path
+                return i_path.try_to_existing_directory
+        .
+    .
+
+    function check_is_existing_directory -> directory_inexistent_error or null
+        in path absolute_or_relative_directory_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+        
+        case type of try_to_existing_directory ( i_path, i_root_directory_for_relative_path )
+            when directory
+                return null
+            when directory_inexistent_error error
+                return error
+        .
+    .
+
+    function is_existing_directory -> yes_no
+        in path absolute_or_relative_directory_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+        
+        return check_is_existing_directory ( i_path, i_root_directory_for_relative_path ) =r null
+    .
+
+    function try_create_directory_if_not_exists -> directory or create_directory_error
+        in path absolute_or_relative_directory_path
+        in root_directory_for_relative_path directory_path default:se_OS_directories.current_working_directory_path
+
+        const directory = to_directory ( i_path, i_root_directory_for_relative_path )
+            
+        directory.try_create_path_if_not_exists on_error:return_error
+        
+        return directory
+    .
+.

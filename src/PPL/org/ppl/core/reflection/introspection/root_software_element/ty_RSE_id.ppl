@@ -1,0 +1,5 @@
+type RSE_id
+
+    inherit PPL_identifier
+    
+.

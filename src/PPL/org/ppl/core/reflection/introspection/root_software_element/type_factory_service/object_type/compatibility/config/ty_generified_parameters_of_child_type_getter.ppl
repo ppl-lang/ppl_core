@@ -1,0 +1,5 @@
+type generified_parameters_of_child_type_getter
+
+    function get ( child_type_path virtual_type_path, parent_generic_type_path virtual_type_path ) \
+        -> map<key:type_parameter_id, value:type_parameter_assignment>
+.

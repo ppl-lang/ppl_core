@@ -1,0 +1,47 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory mutable_list_with_nulls<element> type:mutable_list<t_element>
+	
+    java_header
+        import java.util.LinkedList;
+        import java.util.Collections;
+        import java.util.List;
+        import java.util.Spliterator;
+
+        import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+        import org.ppl.core.collections.iterators.finite_iterator.implementations.fa_Java_Spliterator_wrapper_iterator_with_size;
+        import org.ppl.core.collections.java.se_immutable_Java_collection_checker;
+        import org.ppl.core.java.comparator.se_comparator_Java_bridge;
+        import org.ppl.core.stream.fa_stream;
+    end java_header
+
+    java
+        private List<t_element> a_java_list = null ;
+        
+        public fa_mutable_list_with_nulls ( List<t_element> i_java_list, ty_object_type i_element_type ) {
+			if ( i_java_list == null ) throw new IllegalArgumentException ( "Input for fa_mutable_list_with_nulls constructor cannot be null." );
+
+            a_java_list = i_java_list;
+			t_element = i_element_type;
+        }
+    end java
+
+%fa_mutable_or_immutable_list_commands < zero_pos_32 >
+
+// %fa_list_with_nulls_commands
+
+%fa_mutable_list_commands < \
+    list_type: list \
+    list_factory: list_with_nulls \
+    java_list_factory: LinkedList >
+    
+%fa_mutable_list_with_nulls_commands
+
+%fa_mutable_list_creators
+
+.

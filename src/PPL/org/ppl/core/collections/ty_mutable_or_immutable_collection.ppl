@@ -1,0 +1,19 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+type mutable_or_immutable_collection<element>
+	
+	inherit has_finite_iterator_with_size<element>
+	
+	functions
+
+        // TD zero_pos_64
+        function size -> zero_pos_32
+
+        element_type -> object_type
+    .
+.

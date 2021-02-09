@@ -1,0 +1,230 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+service java_utilities
+
+    java_header
+        import java.util.function.Consumer;
+        import java.util.function.Function;
+        import java.util.function.Supplier;
+        import java.util.Objects;
+
+		import org.ppl.core.basics.base_types.ty_non_null;
+		import org.ppl.core.basics.scalar.string.ty_string;
+		import org.ppl.core.basics.scalar.string.fa_string;
+        import org.ppl.core.error.java.fa_java_stack_trace;
+        import org.ppl.core.error.unanticipated.program_error.java.se_PEC;
+		import org.ppl.core.error.unanticipated.program_error.ty_program_error;
+		import org.ppl.core.error.ty_error;
+    end java_header
+
+	java
+	    public static ty_string default_to_string ( ty_non_null object ) {
+	        return new fa_string ( object.getClass().getInterfaces()[0].getSimpleName().substring(3) );
+	    }
+	    
+        // if_null:, if_error:
+
+        // a if_null: b
+        @SuppressWarnings("unchecked")
+        public static<LEFT extends ty_non_null, RIGHT extends ty_non_null, RESULT extends ty_non_null> RESULT if_null_operator (
+            LEFT left_expression,
+            Supplier<RIGHT> right_expression_supplier ) {
+
+            if (left_expression != null) {
+                return (RESULT) left_expression;
+            } else {
+                return (RESULT) right_expression_supplier.get();
+            }
+        }
+
+        // a if_error: b
+        @SuppressWarnings("unchecked")
+        public static<LEFT extends ty_non_null, RIGHT extends ty_non_null, RESULT extends ty_non_null> RESULT if_error_operator (
+            LEFT left_expression,
+            Supplier<RIGHT> right_expression_supplier ) {
+
+            if (left_expression instanceof ty_error) {
+                return (RESULT) right_expression_supplier.get();
+            } else {
+                return (RESULT) left_expression;
+            }
+        }
+
+        // a if_null: error
+        public static<T> T if_null_error_operator (
+            T left_expression,
+            Supplier<ty_program_error> program_error_supplier )
+            throws Throwable {
+
+            if ( left_expression != null ) {
+                return left_expression;
+            } else {
+                throw (Throwable) program_error_supplier.get();
+            }
+        }
+
+        // a if_error: error
+        public static<T> T if_error_error_operator (
+            T left_expression,
+            Supplier<ty_program_error> program_error_supplier )
+            throws Throwable {
+
+            if (left_expression instanceof ty_error) {
+                throw (Throwable) program_error_supplier.get();
+            } else {
+                return left_expression;
+            }
+        }
+        
+        
+        // null?
+
+        // a.null?.b (with b returning a value)
+        public static<LEFT, RESULT> RESULT check_null_separator (
+            LEFT left_expression,
+            Function<LEFT, RESULT> mapper ) {
+
+            if ( left_expression == null ) {
+                return null;
+            } else {
+                return mapper.apply ( left_expression );
+            }
+        }
+
+        // a.null?.b (with b not returning a value (no output))
+        public static<LEFT> void check_null_separator_for_consumer (
+            LEFT left_expression,
+            Consumer<LEFT> consumer ) {
+
+            if ( left_expression != null ) {
+                consumer.accept ( (LEFT) left_expression );
+            }
+        }
+        
+        
+        // error?
+
+        // a.error?.b (with b returning a value)
+        @SuppressWarnings("unchecked")
+        public static<LEFT extends ty_non_null, RESULT extends ty_non_null> ty_non_null check_error_separator (
+            ty_non_null left_expression,
+            Function<LEFT, RESULT> mapper ) {
+
+            if ( left_expression instanceof ty_error ) {
+                return left_expression;
+            } else {
+                return mapper.apply ( (LEFT) left_expression );
+            }
+        }
+
+        // a.error?.b (with b not returning a value (no output))
+        @SuppressWarnings("unchecked")
+        public static<LEFT extends ty_non_null> ty_error check_error_separator_for_consumer (
+            ty_non_null left_expression,
+            Consumer<LEFT> consumer ) {
+
+            if ( left_expression instanceof ty_error ) {
+                return (ty_error) left_expression;
+            } else {
+                consumer.accept ( (LEFT) left_expression );
+                return null;
+            }
+        }
+        
+        
+        // null_or_error?
+
+        // a.null_or_error?.b (with b returning a value)
+        @SuppressWarnings("unchecked")
+        public static<LEFT extends ty_non_null, RESULT extends ty_non_null> ty_non_null check_null_or_error_separator (
+            ty_non_null left_expression,
+            Function<LEFT, RESULT> mapper ) {
+
+            if ( left_expression == null ) {
+                return null;
+            } else if ( left_expression instanceof ty_error ) {
+                return left_expression;
+            } else {
+                return mapper.apply ( (LEFT) left_expression );
+            }
+        }
+
+        // a.null_or_error?.b (with b not returning a value (no output))
+        @SuppressWarnings("unchecked")
+        public static<LEFT extends ty_non_null> ty_error check_null_or_error_separator_for_consumer (
+            ty_non_null left_expression,
+            Consumer<LEFT> consumer ) {
+
+            if ( left_expression == null ) {
+                return null;
+            } else if ( left_expression instanceof ty_error ) {
+                return (ty_error) left_expression;
+            } else {
+                consumer.accept ( (LEFT) left_expression );
+                return null;
+            }
+        }
+        
+
+		// thanks to http://weblogs.java.net/blog/emcmanus/archive/2007/03/getting_rid_of.html
+		// can be used to suppress Java compiler warnings 'java uses unchecked or unsafe operations'
+		@SuppressWarnings("unchecked")
+		public static <T> T unchecked_cast ( Object object ) {
+			return (T) object;
+		}
+		
+		
+		// TD? remove
+		public static void checkInputNotNull ( Object input, String input_argument_id ) {
+		
+		    Objects.requireNonNull ( input, "Input argument " + input_argument_id + " cannot be null." );
+		}
+
+		public static void check_input_not_null ( ty_non_null value, String input_argument_id ) {
+            
+            // if ( value == null ) throw new IllegalArgumentException ( "Input cannot be null." );
+		    if ( value == null ) throw (RuntimeException) 
+		        se_PEC.invalid_null_input_argument ( se_java_utilities.class, "check_input_not_null", input_argument_id );
+		}
+
+		public static void check_input_not_null ( ty_non_null value, String input_argument_id, Class<?> clazz, String script_id ) {
+            
+            // if ( value == null ) throw new IllegalArgumentException ( "Input cannot be null." );
+		    if ( value == null ) throw (RuntimeException)
+		        se_PEC.invalid_null_input_argument ( clazz, script_id, input_argument_id );
+		}
+	end java
+
+	function get_current_stack_trace ( low_levels_to_skip zero_pos_32 default:2 ) -> java_stack_trace
+
+        variable r java_stack_trace	
+        java
+            StackTraceElement[] full_stack_trace = Thread.currentThread().getStackTrace();
+            
+            // ignore the lowest level elements, for example to exclude the call to this script
+            int levels_to_skip = i_low_levels_to_skip.getJavaInt();
+            int length = full_stack_trace.length - levels_to_skip;
+            if ( length < 0 ) {
+                length = 1;
+            }
+
+            StackTraceElement[] stack_trace = new StackTraceElement[length];
+            System.arraycopy ( full_stack_trace, levels_to_skip, stack_trace, 0, length );
+            
+            v_r = new fa_java_stack_trace ( stack_trace );
+        end java
+        assert r is not null
+        return r
+    .
+
+	function run_garbage_collector
+        java
+            Runtime.getRuntime().gc();
+        end java
+	.
+.

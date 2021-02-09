@@ -1,0 +1,8 @@
+template wle // Write Long Expression
+
+	param expression
+	
+	OS.out.write_line ( '''{expression}: ''' )
+	OS.out.write_line ( se_object.to_long_string_or_null_string ( {expression} ) )
+	// se_object_writer.write_to_out ( object = {expression} )
+.

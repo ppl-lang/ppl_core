@@ -1,0 +1,21 @@
+service Java_exception
+
+    java_header
+        import org.ppl.core.error.anticipated.runtime.java.fa_Java_exception_runtime_error;
+        import org.ppl.core.error.anticipated.runtime.java.ty_Java_exception_runtime_error;
+    end java_header
+    
+    java
+        public static ty_Java_exception_runtime_error to_runtime_error ( Exception exception ) {
+            
+            return fa_Java_exception_runtime_error.createForException ( exception );
+        }
+    
+        static Exception throwableToException ( Throwable throwable ) {
+    
+            Exception exception = new Exception ( throwable.getMessage(), throwable.getCause() );
+            exception.setStackTrace ( throwable.getStackTrace() );
+            return exception;
+        }
+    end java
+.

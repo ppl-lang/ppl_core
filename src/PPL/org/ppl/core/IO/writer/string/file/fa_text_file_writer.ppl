@@ -1,0 +1,124 @@
+factory text_file_writer
+
+	java_header
+		import java.io.FileOutputStream;
+		import java.io.FileNotFoundException;
+
+		import org.ppl.core.error.java.fa_java_exception;
+		import org.ppl.core.IO.writer.string.Java.fa_Java_BufferedWriter_string_writer;
+	end java_header
+	
+    att delegate string_writer access:private
+    
+	functions
+        try_write          = a_delegate.try_write ( i_string )
+        try_write_line     = a_delegate.try_write_line ( i_string  )
+        try_write_new_line = a_delegate.try_write_new_line
+        try_close          = a_delegate.try_close
+        try_flush          = a_delegate.try_flush
+    .
+
+	creator create -> text_file_writer or IO_error
+		%new_or_existing_file_input_argument
+		in file_write_mode
+		%supported_character_set_input_argument
+
+        case enum of i_file_write_mode
+            when create_or_replace_file
+                return create_for_new_or_existing_file ( file, character_set, append_mode = no )
+            when create_or_append_to_file
+                return create_for_new_or_existing_file ( file, character_set, append_mode = yes )
+            when create_file then
+                return create_for_new_file ( file, character_set )
+            when append_to_file
+                return create_for_existing_file ( file, character_set, append_mode = yes )
+            when replace_file
+                return create_for_existing_file ( file, character_set, append_mode = no )
+        .
+    .
+
+	creator create_for_new_or_existing_file -> text_file_writer or file_write_error
+	    %new_or_existing_file_input_argument
+		%supported_character_set_input_argument
+        in append_mode yes_no
+        
+        this.file = i_file
+        this.character_set = i_character_set
+        this.append_mode = i_append_mode
+
+        variable java_exception java_exception or null = null
+        java
+            try {
+                FileOutputStream file_output_stream = new FileOutputStream (
+                    i_file.getJavaFile(), i_append_mode.getJavaBoolean() );
+                c_this.a_delegate = new fa_Java_BufferedWriter_string_writer (
+                    file_output_stream, i_character_set, false );
+            } catch ( FileNotFoundException e ) { 
+                v_java_exception = new fa_java_exception ( e );
+            }
+        end java
+        assert java_exception may be null
+    
+        if java_exception is null then
+            return this
+        else
+            return file_write_error.create (
+                info = """Error writing to file {{i_file.to_string}}. Cause: {{java_exception.to_string}}"""
+                java_exception,
+                resource = i_file )
+        .
+    .
+	
+	creator create_for_new_file -> text_file_writer or IO_error
+		%new_file_input_argument
+		%supported_character_set_input_argument
+		
+		return create_for_new_or_existing_file ( file, character_set, append_mode = no )
+    .
+
+	creator create_for_existing_file -> text_file_writer or IO_error
+		%existing_file_input_argument
+		%supported_character_set_input_argument
+		in append_mode yes_no
+		
+		return create_for_new_or_existing_file ( file, character_set, append_mode )
+    .
+			
+	creator create_for_new_temporary_file -> text_file_writer or IO_error
+		in directory default:se_OS_directories.temporary_files_directory
+		in file_name_extension default: fa_file_name_extension.co_create ( "tmp" )
+		in delete_file_on_exit yes_no
+		%supported_character_set_input_argument
+
+        variable file file
+        case type of se_empty_file_utilities.try_create_new_empty_temporary_file ( directory, file_name_extension, delete_file_on_exit )
+            when file f
+                file = f
+            when directory_or_file_error e
+                return e
+        .
+        assert file is not null
+
+        return create_for_existing_file ( file, character_set, append_mode = no )
+	.
+
+    tests
+        const file = se_empty_file_utilities.try_create_new_empty_temporary_file ( delete_file_on_exit = yes ) \
+            on_error:throw_error
+
+        const writer = text_file_writer.create_for_new_or_existing_file ( file, append_mode = yes ) on_error:throw_error
+        writer.try_write ( "Hello" )
+        writer.try_write_line ( " my dear" )
+        writer.try_write_new_line
+        writer.try_write_line ( "end" )
+        writer.try_close
+        
+        const file_content = se_text_file_reader.try_read_content ( file ) on_error:throw_error
+        verify file_content is not null
+        verify file_content =v '''Hello my dear
+
+end
+'''
+        file.try_delete
+    .
+.    

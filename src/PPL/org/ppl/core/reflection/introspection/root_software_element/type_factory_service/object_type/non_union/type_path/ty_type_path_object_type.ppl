@@ -1,0 +1,10 @@
+type type_path_object_type \
+    child_types: standard_object_type, enumerated_object_type, generified_object_type \
+    factories: none
+
+    inherit non_union_object_type
+    
+    att type_path virtual_type_path
+    
+    function type_selector -> type_selector
+.

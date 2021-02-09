@@ -1,0 +1,4 @@
+service type_parameter_constants
+
+	att id_prefix string = "t_"
+.

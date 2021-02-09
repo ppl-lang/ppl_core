@@ -1,0 +1,33 @@
+///
+   Copyright (C) 2009-2014 Christian Neumanns (www.practical-programming.org)
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory program_check_comparison_values
+
+	function to_string
+	    return """{{se_object.to_string_or_null_string ( a_left_value )}}, {{se_object.to_string_or_null_string ( a_right_value )}}"""
+	.
+	
+	function to_long_string
+
+        const r = fa_mutable_string.create
+        
+        se_program_error_writer.append_label_value_line (
+            string = r
+            label = "Left value"
+            value = se_object.to_string_or_null ( a_left_value) )
+
+        se_program_error_writer.append_label_value_line (
+            string = r
+            label = "Right value"
+            value = se_object.to_string_or_null ( a_right_value ) )
+
+        return r.to_string
+    .
+
+	creator create kind:in_all
+
+.

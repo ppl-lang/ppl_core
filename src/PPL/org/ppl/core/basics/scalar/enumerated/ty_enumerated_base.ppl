@@ -1,0 +1,11 @@
+type enumerated_base
+
+	inherit \
+		scalar,
+		has_hash_code
+
+	att value string
+
+	att index positive_32
+
+.

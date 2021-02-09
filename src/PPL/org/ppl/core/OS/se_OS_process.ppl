@@ -1,0 +1,83 @@
+service OS_process
+
+    java_header
+        import org.ppl.core.basics.scalar.string.fa_string;
+    end java_header
+
+    java
+        private static String[] a_command_line_arguments = null;
+        
+        public static void save_command_line_arguments ( String[] i_arguments ) {
+            a_command_line_arguments = i_arguments;
+        }
+
+        public static String[] get_command_line_arguments() {
+            return a_command_line_arguments;
+        }
+    end java
+    
+    function command_line_arguments -> indexed_list<string or null> or null
+        java
+            if ( a_command_line_arguments == null || a_command_line_arguments.length == 0 ) {
+                return null;
+            }
+        end java
+        
+        const r = mutable_indexed_list_with_nulls<string or null>.create
+        java
+            for ( String argument : a_command_line_arguments ) {
+                if ( ! argument.isEmpty() ) {
+                    c_r.append ( new fa_string ( argument ) );
+                } else {
+                    c_r.append ( null );
+                }
+            }
+        end java
+        return r.make_immutable
+    .
+
+    function try_get_n_non_empty_command_line_arguments ( n pos_32 ) -> indexed_list<string> or OS_config_error
+    
+        const arguments = try_get_non_empty_command_line_arguments on_error: return_error
+        
+        if arguments.size #v n then
+            return OS_config_error.create ( info = """{{n}} command line arguments are required. But {{arguments.size}} have been provided.""" )
+        .
+        
+        return arguments
+    .
+
+    function try_get_non_empty_command_line_arguments -> indexed_list<string> or OS_config_error
+    
+        const arguments = command_line_arguments
+        if arguments is null then
+            return OS_config_error.create ( info = "Command line arguments are required." )
+        .
+    
+        const r = mutable_indexed_list<string>.create
+        repeat for each argument in arguments counter: index
+            if argument is null then
+                return OS_config_error.create ( info = """Command line argument at position {{index}} cannot be empty.""" )
+            .
+            r.append ( argument )
+        .
+        
+        return r.make_immutable
+    .
+
+	command exit_with_success
+        exit ( 0 )
+	.
+
+	//command exit_with_error ( exit_code signed_integer_32 default: 1 )
+	command exit_with_error ( exit_code pos_32 default: 1 )
+        exit ( i_exit_code )
+	.
+
+	command exit ( exit_code signed_integer_32 )
+        java
+            System.exit ( i_exit_code.getJavaInt() );
+        end java
+	.
+
+.

@@ -1,0 +1,61 @@
+factory mutable_set
+    
+    java_header
+        import java.util.Collections;
+        import java.util.HashSet;
+        import java.util.Set;
+        import java.util.Spliterator;
+        
+        import org.ppl.core.basics.scalar.number.integer.integer_32_bits.zero_positive_32.fa_zero_pos_32;
+        import org.ppl.core.collections.iterators.finite_iterator.implementations.fa_Java_Spliterator_wrapper_iterator_with_size;
+        import org.ppl.core.collections.java.se_immutable_Java_collection_checker;
+        import org.ppl.core.stream.fa_stream;
+    end java_header
+
+    java
+        private Set <t_element> a_java_set;
+    end java
+
+%fa_mutable_or_immutable_set_commands < zero_pos_32 >
+%fa_mutable_set_commands
+
+    function make_immutable
+    
+        variable r set<t_element>
+        java
+            a_java_set = Collections.unmodifiableSet ( a_java_set );
+            v_r = new fa_set<t_element> ( a_java_set, t_element );
+        end java
+        assert r is not null
+        return r
+    .
+
+    function copy_to_immutable
+    
+        variable r set<t_element>
+        java
+            Set<t_element> copy = new HashSet<t_element> ( a_java_set );
+            v_r = new fa_set<t_element> ( Collections.unmodifiableSet ( copy ), t_element );
+        end java
+        assert r is not null
+        return r
+    .
+
+
+    creator create -> mutable_set<t_element>
+
+        java
+            c_this.a_java_set = new HashSet<t_element>() ;
+        end java
+        
+        return this
+    .
+
+    creator create_singleton ( element t_element ) -> mutable_set<t_element>
+
+        const r = create
+        r.add ( i_element )
+        return r
+    .
+
+.

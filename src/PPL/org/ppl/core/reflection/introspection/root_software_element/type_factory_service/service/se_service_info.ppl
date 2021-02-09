@@ -1,0 +1,51 @@
+service service_info
+
+    java_header
+        import org.ppl.core.reflection.java.se_Java_reflection_class_loader;
+        
+        import org.ppl.core.basics.scalar.yes_no.fa_yes_no;
+    end java_header
+    
+    // TD? cache
+    function service_paths -> set<service_path>
+    
+        script
+            const r = mutable_set<service_path>.create
+    
+            se_PPL_module_info.for_each_service_path ( consumer = { service_path ->
+                r.add ( service_path )
+            } )
+            
+            return r.make_immutable
+        .
+        tests
+            verify service_paths.contains ( service_path.create ( "org.ppl.core.basics.scalar.string.se_string_constants" ) )
+        .
+    .
+
+///
+    function is_existing_service_path ( service_path ) -> yes_no = \
+        is_existing_service_path_string ( service_path.value )
+.///
+    
+    function is_existing_service_path_string native:yes ( service_path string ) -> yes_no
+        java
+            // TD for better performance it might be better to use a cached set of all ModuleReader.list() resources
+            // in all PPL modules. But this might not work for dynamically loaded classes at runtime
+            boolean exists = se_Java_reflection_class_loader.getClassOrNull ( i_service_path.getJavaString() ) != null;
+            return fa_yes_no.of ( exists );
+        end java
+    .
+    
+    tests
+        const timer = simple_timer.create
+        timer.start
+        const service_paths = service_paths
+        assert service_paths.size ># 1
+        const service_paths_time = timer.stop_milliseconds
+        %we<service_paths_time>
+        // write_line ( service_paths.to_long_string  )
+        ///
+        .///
+    .
+.

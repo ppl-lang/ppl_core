@@ -1,0 +1,85 @@
+///
+   Copyright (C) 2013-2014 by Christian Neumanns
+   This code can be used under the terms of the 'GNU Afero General Public License version 3'
+   The full text of this license can be found at http://www.gnu.org/licenses/agpl.html
+   THIS CODE IS DISTRIBUTED WITHOUT ANY WARRANTY. See the license for details.
+end ///
+
+factory file_path type:file_path
+
+	%fa_absolute_or_relative_directory_or_file_path < \
+		type_id: file_path \
+		directory_or_file: file >
+		
+	function to_string = to_current_OS_path
+	
+	function directory
+        var value string
+        java
+            v_value = new fa_string ( a_java_value.getParent().toString() );
+        end java
+        assert value is not null
+
+        return directory_path.create ( value )
+        // TD ? o_result = fa_directory_path.co_create ( v_value & se_directory_constants.current_OS_directory_separator )
+	.
+
+	function file_name_without_extension
+	    return name.remove_extension
+    .
+
+	function file_name_extension
+	    return name.extension
+    .
+
+	function to_relative_file native:yes
+	    java
+	        return new fa_relative_file_path ( i_root_directory.getJavaPath().relativize ( a_java_value ) );
+	    end java
+    .
+    
+    function to_file = fa_file.create ( this )
+
+	function try_to_existing_file
+	
+	    const file = to_file
+	    
+	    if file.exists then
+            return file
+        else
+            return file_inexistent_error.create_for_file ( file )
+        .
+    .
+	
+
+	
+	creator create kind:in_all
+
+        java
+            c_this.a_java_value = Paths.get ( i_value.getJavaString() );
+        end java
+        
+        return this
+	.
+	
+	creator create_for_relative_path ( path relative_file_path, root_directory directory_path ) -> file_path
+
+        java
+            c_this.a_java_value = i_root_directory.getJavaPath().resolve ( i_path.getJavaPath() );
+        end java
+        
+        return this
+    .
+
+    creator create_for_name ( file_name, directory directory_path ) -> file_path
+
+        java
+            c_this.a_java_value = i_directory.getJavaPath().resolve ( i_file_name.getValue().getJavaString() );
+        end java
+        
+        return this
+    .
+    
+%string_value_factory_try_parse_creator<file_path>
+
+.

@@ -1,0 +1,4 @@
+type file_empty_error
+
+	inherit file_error
+.

@@ -1,0 +1,35 @@
+factory anticipated_error_thrown_program_error java: "extends RuntimeException"
+
+%fa_unanticipated_error_Java_code
+
+    function to_string = """{{a_info}}
+{{a_anticipated_error.info}}"""
+    
+	function to_long_string
+
+        const r = fa_mutable_string.create
+        
+        r.append_line ( se_program_error_writer.error_with_check_to_long_string ( program_error = this, failure_info ) )
+        
+        se_program_error_writer.append_label_value_line (
+            string = r
+            label = "Anticipated error"
+            value = anticipated_error.to_string )
+//            value = se_anticipated_error.get_to_string_with_causes ( anticipated_error ) )
+        
+        return r.to_string
+    .
+    
+    creator create access:private kind:in_all
+    
+	creator create_with_defaults (
+	    source_code_location bug_source_code_location,
+	    script_state script_state or null,
+	    anticipated_error anticipated_error ) -> anticipated_error_thrown_program_error
+	    
+        return create (
+            info = "A program error has been explicitly thrown, because of an anticipated runtime error."
+            source_code_location, script_state, failure_info = null, anticipated_error )
+    .
+
+.
